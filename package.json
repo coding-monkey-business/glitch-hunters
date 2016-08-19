@@ -1,0 +1,40 @@
+{
+  "name": "glitch-busters",
+  "version": "0.0.1",
+  "description": "Preparation for js13k",
+  "scripts": {
+    "test": "./grunt"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "grunt": "^1.0.1",
+    "grunt-cli": "^1.2.0",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-compress": "^1.3.0",
+    "grunt-contrib-cssmin": "^1.0.1",
+    "grunt-contrib-htmlmin": "^1.4.0",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-uglify": "^2.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-env": "^0.4.4",
+    "grunt-exec": "^1.0.0",
+    "grunt-inline": "^0.3.6",
+    "grunt-jscs": "^2.8.0",
+    "grunt-karma": "^2.0.0",
+    "grunt-md5symlink": "^0.2.0",
+    "grunt-replace": "^1.0.1",
+    "grunt-symlinkassets": "^0.1.1",
+    "grunt-zopfli": "^0.3.3",
+    "jasmine": "^2.4.1",
+    "jasmine-core": "^2.4.1",
+    "karma": "^1.1.2",
+    "karma-jasmine": "^1.0.2",
+    "karma-mocha-reporter": "^2.0.4",
+    "karma-phantomjs-launcher": "^1.0.1",
+    "phantomjs-polyfill": "^0.0.2"
+  },
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "node-static": "^0.7.8"
+  }
+}

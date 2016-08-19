@@ -1,0 +1,18 @@
+{
+	"disallowTrailingWhitespace": true,
+	"disallowTrailingComma": true,
+	"disallowFunctionDeclarations": true,
+	"disallowNewlineBeforeBlockStatements": true,
+	"disallowMixedSpacesAndTabs": true,
+	"requireDotNotation": true,
+	"requireMultipleVarDecl": true,
+	"requireSpaceAfterKeywords": true,
+	"requireSpaceBeforeBlockStatements": true,
+	"requireSpacesInConditionalExpression": true,
+	"requireCurlyBraces": true,
+	"disallowKeywordsOnNewLine": ["else"],
+	"validateIndentation": 2,
+	"requireSpacesInFunction": {
+		"beforeOpeningCurlyBrace": true
+	}
+}
