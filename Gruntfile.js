@@ -19,10 +19,16 @@ var
         'files': [{
           'src'   : ['src/a.js'],
           'dest'  : 'build/a.js'
-        },{
-          'src'   : ['src/img.js'],
-          'dest'  : 'build/img.js'
         }]
+      }
+    },
+
+    'copy' : {
+      'img' : {
+        'expand'  : true,
+        'cwd'     : 'src',
+        'src'     : 'img.js',
+        'dest'    : 'build/'
       }
     },
 
@@ -35,7 +41,10 @@ var
       },
 
       'build': {
-        'files': { 'build/a.js': ['build/a.js'] }
+        'files': {
+          'build/a.js'    : ['build/a.js'],
+          'build/img.js'  : ['src/img.js']
+        }
       }
     },
 
@@ -75,7 +84,6 @@ var
 
     'jscs' : {
       'options' : {/* moved to .jscsrc */},
-
       'default' : ALL_JS
     },
 
@@ -126,25 +134,6 @@ var
       }
     },
 
-    'md5symlink' : {
-      'options' : {
-        'patterns'  : ['.js', '.css'],
-        'hashWidth' : 4
-      },
-
-      'build': {
-        'src'   : 'build/**/*',
-        'dest'  : 'build'
-      }
-    },
-
-    'symlinkassets' : {
-      'build': {
-        'root'  : 'build',
-        'src'   : 'build/**/*'
-      }
-    },
-
     'compress' : {
       'main' : {
         'options' : {
@@ -156,7 +145,7 @@ var
           {
             'expand'  : true,
             'cwd'     : 'build',
-            'src'     : ['a-*', 'index.html']
+            'src'     : ['index.html']
           }
         ]
       }
@@ -168,28 +157,31 @@ var
         'tasks' : ['build:dev']
       }
     },
+
     'inline': {
       'dist': {
         'options': {
           'tag': ''
         },
-        'src': 'build/index.html',
-        'dest': 'dist/index.html'
+        'src' : 'build/index.html',
+        'dest': 'build/index.html'
       }
     },
+
     'zopfli': {
       'inlined': {
         'options': {
           'format': 'gzip'
         },
         'files': {
-          'dist/index.html.gz': 'dist/index.html' // unfortunately this cannot create zip files
+          'dist/index.html.gz': 'build/index.html' // unfortunately this cannot create zip files
         }
         // 'path': '' // Optional full path to `zopfli` binary; defaults to `zopfli` in `$PATH`
       }
     },
+
     'exec': {
-      'advzip': 'advzip -a dist/index.html.zip dist/index.html -4 -i 100' // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
+      'advzip': 'advzip -a dist/index.html.zip build/index.html -4 -i 100' // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
     }
   },
 
@@ -214,38 +206,32 @@ var
       'watch:dev'
     ],
 
+    'compile' : [
+      'replace',
+      'copy'
+    ],
+
     'minify' : [
       'uglify',
       'htmlmin',
       'cssmin'
     ],
 
-    'md5' : [
-      'md5symlink',
-      'symlinkassets'
-    ],
-
     'build' : [
       'clean',
-      'replace',
+      'compile',
       'minify',
-      'md5',
+      'inline',
       'compress'
     ],
 
     'build:zopfli' : [
-      'clean',
-      'replace',
-      'minify',
-      'inline',
+      'build',
       'zopfli'
     ],
 
     'build:advzip' : [
-      'clean',
-      'replace',
-      'minify',
-      'inline',
+      'build',
       'exec:advzip'
     ],
 
@@ -278,6 +264,7 @@ var
 
         grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-contrib-compress');
+        grunt.loadNpmTasks('grunt-contrib-copy');
         grunt.loadNpmTasks('grunt-contrib-cssmin');
         grunt.loadNpmTasks('grunt-contrib-htmlmin');
         grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -285,9 +272,7 @@ var
         grunt.loadNpmTasks('grunt-contrib-watch');
         grunt.loadNpmTasks('grunt-jscs');
         grunt.loadNpmTasks('grunt-karma');
-        grunt.loadNpmTasks('grunt-md5symlink');
         grunt.loadNpmTasks('grunt-replace');
-        grunt.loadNpmTasks('grunt-symlinkassets');
         grunt.loadNpmTasks('grunt-zopfli');
         grunt.loadNpmTasks('grunt-exec');
         grunt.loadNpmTasks('grunt-inline');
