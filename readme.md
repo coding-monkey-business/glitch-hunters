@@ -1,4 +1,4 @@
-# glitch-busters
+# glitch-busters [![build status](https://gitlab.com/coding-monkey-business/glitch-busters/badges/master/build.svg)](https://gitlab.com/coding-monkey-business/glitch-busters/commits/master)
 > an entry for js13k.  
 > [![js13k][js13k-image]][js13k-url]
 
