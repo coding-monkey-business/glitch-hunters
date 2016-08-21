@@ -15,12 +15,14 @@ var
   rand      = Math.random,
   floor     = Math.floor,
   drawImage = 'drawImage',
+  updaters  = [],
 
   ctx,
   bctx,
-  draw,
   canvas,
+  updater,
   abcImage,
+  playerImage,
 
   getId = function getId() {
     return ++id;
@@ -125,15 +127,32 @@ var
     }
   },
 
-  setDraw = function setDraw(fn) {
-    draw = fn;
+  drawPlayer = function drawPlayer(x, y, frame) {
+    frame = 0;
+
+    bctx[drawImage](
+      playerImage, //img
+      frame * 40, //sx
+      0, //sy
+      40, //sw
+      40, //sh
+      x, //dx
+      y, //dy
+      40,
+      40
+    );
   },
 
-  drawGame = function drawGame() {
-    text('GAME SHOULD BE HERE', 1, 1);
+  setUpdater = function setUpdater(fn) {
+    updater = fn;
   },
 
-  drawIntro = function drawIntro() {
+  updateGame = function updateGame() {
+    drawPlayer(0, 0, frames);
+    glitch();
+  },
+
+  updateIntro = function updateIntro() {
     starField();
     text(doc.title = '- GLITCHBUSTERS -', 90, 120, 2, frames);
     glitch();
@@ -148,7 +167,7 @@ var
     bctx.fillStyle = '#222';
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-    draw();
+    updater();
 
     ctx[drawImage](buffer, 0, 0, 2 * WIDTH, 2 * HEIGHT);
     win.requestAnimationFrame(updateLoop);
@@ -158,14 +177,17 @@ var
     updateLoop();
   },
 
+  setScreen = function setScreen(newScreen) {
+    screen = newScreen;
+
+    setUpdater(updaters[screen]);
+  },
+
   /**
    * @param {Event} event
    */
   onclick = function onclick(event) {
-    if (!screen) {
-      screen = 1;
-      setDraw(drawGame);
-    }
+    setScreen(1);
   },
 
   createImage = function createImage(src, image) {
@@ -178,12 +200,18 @@ var
   loadImages = function loadImages(imgs) {
     imgs        = win.img;
     abcImage    = createImage(imgs[0]);
+    playerImage = createImage(imgs[1]);
   },
 
   init = function init() {
     canvas  = doc[getE]('c'); // just 'c' would also work ... not sure if mangling breaks that
     ctx     = canvas.getContext('2d');
     bctx    = buffer.getContext('2d');
+
+    updaters = [
+      updateIntro,
+      updateGame
+    ];
 
     loadImages();
 
@@ -193,7 +221,7 @@ var
     canvas[h] = 2 * HEIGHT;
 
     win.onclick = onclick;
-    setDraw(drawIntro);
+    setScreen(0);
 
     // just testing
     ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
