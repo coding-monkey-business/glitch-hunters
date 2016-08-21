@@ -9,14 +9,15 @@ var
   screen    = 0, // 0 =  title, 1 = game, etc
   w         = 'width',
   h         = 'height',
-  abc       = new Image(),
   buffer    = doc.createElement('canvas'),
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
+  rand      = Math.random,
 
   ctx,
   bctx,
   draw,
   canvas,
+  abcImage,
 
   getId = function getId() {
     return ++id;
@@ -24,10 +25,9 @@ var
 
   /**
    * Just some color jittering (for now)
-   * @param  {CanvasRenderingContext2D} context
    */
-  glitch = function glitch(context, obj, data, i) {
-    obj  = context.getImageData(0, 0, WIDTH, HEIGHT);
+  glitch = function glitch(obj, data, i) {
+    obj  = bctx.getImageData(0, 0, WIDTH, HEIGHT);
     data = obj.data;
     i    = data.length;
 
@@ -43,16 +43,20 @@ var
         }
       }
     }
-    context.putImageData(obj, 0, 0);
+
+    bctx.putImageData(obj, 0, 0);
   },
 
   /**
    * Creates a basic star [x, y, z]
    * @return {Array.<Number>}
    */
-  star = function star(r, a) {
-    r = Math.random;
-    return [a = 0.5 - r(), 0.5 - r(), r()* 3 ];
+  star = function star() {
+    return [
+      0.5 - rand(),
+      0.5 - rand(),
+      rand() * 3
+    ];
   },
 
   /**
@@ -62,24 +66,26 @@ var
     while (amount--) {
       a[amount] = star();
     }
+
     return a;
   })([], 100),
 
   /**
    * renders the title starfield effect
    * can be thrown away if we need the additional bytes.
-   * @param  {CanvasRenderingContext2D}
    */
-  starField = function starField(context, i, f, z) {
-    context.fillStyle = '#fff';
+  starField = function starField(i, f, z) {
+    bctx.fillStyle = '#fff';
     i = field.length;
 
     while (i--) {
       f = field[i];
+
       if ((z = f[2]) < 0.5) {
         field[i] = star(); // spawn new stars if they fade out
       }
-      context.fillRect(
+
+      bctx.fillRect(
         WIDTH / 2  + f[0] * z * WIDTH,
         HEIGHT / 2 + f[1] * z * HEIGHT,
         z,
@@ -91,20 +97,19 @@ var
   /**
    * Renders a given string
    * @param  {String} str must be uppercase
-   * @param  {CanvasRenderingContext2D} context
    * @param  {Number} x
    * @param  {Number} y
    * @param  {Number} wave make waving text
    * @param  {Number} frame current frame
    */
-  text = function text(str, context, x, y, wave, frame, i) {
-    // text = function (str, context, x, y, wave = 0, frame, alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-', i = 0)
+  text = function text(str, x, y, wave, frame, i) {
+    // text = function (str, x, y, wave = 0, frame, alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-', i = 0)
     // no ES6 support in uglify :/
     wave = wave || 0;
 
     for (i = 0; i < str.length; i++) {
-      context.drawImage(
-        abc, //img
+      bctx.drawImage(
+        abcImage, //img
         alphabet.indexOf(str[i]) * 8, //sx
         0, //sy
         8, //sw
@@ -122,13 +127,13 @@ var
   },
 
   drawGame = function drawGame() {
-    text('GAME SHOULD BE HERE', bctx, 1, 1);
+    text('GAME SHOULD BE HERE', 1, 1);
   },
 
   drawIntro = function drawIntro() {
-    starField(bctx);
-    text(doc.title = '- GLITCHBUSTERS -', bctx, 90, 120, 2, frames);
-    glitch(bctx);
+    starField();
+    text(doc.title = '- GLITCHBUSTERS -', 90, 120, 2, frames);
+    glitch();
   },
 
   /**
@@ -160,11 +165,24 @@ var
     }
   },
 
+  createImage = function createImage(src, image) {
+    image     = new Image();
+    image.src = src;
+
+    return image;
+  },
+
+  loadImages = function loadImages(imgs) {
+    imgs        = win.img;
+    abcImage    = createImage(imgs[0]);
+  },
+
   init = function init() {
     canvas  = doc[getE]('c'); // just 'c' would also work ... not sure if mangling breaks that
     ctx     = canvas.getContext('2d');
     bctx    = buffer.getContext('2d');
-    abc.src = win.img.abc;
+
+    loadImages();
 
     buffer[w] = WIDTH;
     buffer[h] = HEIGHT;
