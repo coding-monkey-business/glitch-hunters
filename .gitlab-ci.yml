@@ -1,0 +1,13 @@
+before_script:
+  - apt-get update -qq && apt-get install -y -qq nodejs npm
+  - nodejs_path=`which nodejs`
+  - node_path='/usr/bin/node'
+  - echo "symlink ${nodejs_path} to ${node_path}"
+  - ln -s $nodejs_path $node_path
+  - node -v
+  - npm -v
+  - npm install
+test:
+  script:
+    - npm run test
+
