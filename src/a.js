@@ -86,6 +86,34 @@ var
   },
 
   /**
+   * Renders a given string
+   * @param  {String} str must be uppercase
+   * @param  {CanvasRenderingContext2D} context
+   * @param  {Number} x
+   * @param  {Number} y
+   * @param  {Number} wave make waving text
+   * @param  {Number} frame current frame
+   */
+  text = function text(str, context, x, y, wave, frame, i) {
+    // text = function (str, context, x, y, wave = 0, frame, alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-', i = 0)
+    // no ES6 support in uglify :/
+    wave = wave || 0;
+    for (i = 0;i < str.length; i++) {
+      context.drawImage(
+        abc, //img
+        alphabet.indexOf(str[i]) * 8, //sx
+        0, //sy
+        8, //sw
+        8, //sh
+        x + i * 9, //dx
+        y + (wave * Math.sin(frame / 10 + i) | 0) || 0, //dy
+        8, //dh
+        8 //dw
+      );
+    }
+  },
+
+  /**
    * rendering loop
    */
   updateLoop = function updateLoop() {
@@ -113,38 +141,11 @@ var
   },
 
   /**
-   * Renders a given string
-   * @param  {String} str must be uppercase
-   * @param  {CanvasRenderingContext2D} context
-   * @param  {Number} x
-   * @param  {Number} y
-   * @param  {Number} wave make waving text
-   * @param  {Number} frame current frame
-   */
-  text = function (str, context, x, y, wave, frame, i) {
-    // text = function (str, context, x, y, wave = 0, frame, alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-', i = 0) { // no ES6 support in uglify :/
-    wave = wave || 0;
-    for (i = 0;i < str.length; i++) {
-      context.drawImage(
-        abc, //img
-        alphabet.indexOf(str[i]) * 8, //sx
-        0, //sy
-        8, //sw
-        8, //sh
-        x + i * 9, //dx
-        y + (wave * Math.sin(frame / 10 + i) | 0) || 0, //dy
-        8, //dh
-        8 //dw
-      );
-    }
-  },
-
-  /**
    * @param {Event} event
    */
   onclick = function onclick(event) {
     if (!screen) {
-      return screen = 1;
+      return (screen = 1);
     }
     console.log(event);
   },
