@@ -19,6 +19,9 @@ var
         'files': [{
           'src'   : ['src/a.js'],
           'dest'  : 'build/a.js'
+        },{
+          'src'   : ['src/img.js'],
+          'dest'  : 'build/img.js'
         }]
       }
     },
@@ -26,7 +29,6 @@ var
     'uglify': {
       'options' : {
         'enclose' : {},
-
         'mangle' : {
           'toplevel' : true
         }

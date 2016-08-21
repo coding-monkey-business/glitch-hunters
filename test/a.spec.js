@@ -12,3 +12,14 @@ describe('.getId', function () {
     expect(test.getId()).toBe(2);
   });
 });
+
+describe('title: field', function () {
+  it('should be an array', function () {
+    expect(test.field).toEqual(jasmine.any(Array));
+    expect(test.field[0]).toEqual([
+        jasmine.any(Number),
+        jasmine.any(Number),
+        jasmine.any(Number)
+      ]);
+  });
+});
