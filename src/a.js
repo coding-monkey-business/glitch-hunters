@@ -1,20 +1,22 @@
 var
-  win     = window,
-  doc     = document,
-  getE    = 'getElementById',
-  WIDTH   = 320,
-  HEIGHT  = 240,
-  id      = 0,
-  frames  = 0,
-  screen  = 0, // 0 =  title, 1 = game, etc
-  w       = 'width',
-  h       = 'height',
-  abc     = new Image(),
+  win       = window,
+  doc       = document,
+  getE      = 'getElementById',
+  WIDTH     = 320,
+  HEIGHT    = 240,
+  id        = 0,
+  frames    = 0,
+  screen    = 0, // 0 =  title, 1 = game, etc
+  w         = 'width',
+  h         = 'height',
+  abc       = new Image(),
+  buffer    = doc.createElement('canvas'),
+  alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
+
   ctx,
   bctx,
+  draw,
   canvas,
-  buffer = doc.createElement('canvas'),
-  alphabet= 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
 
   getId = function getId() {
     return ++id;
@@ -52,6 +54,7 @@ var
     r = Math.random;
     return [a = 0.5 - r(), 0.5 - r(), r()* 3 ];
   },
+
   /**
    * @type {Array.<Array.<Number>>}
    */
@@ -98,7 +101,8 @@ var
     // text = function (str, context, x, y, wave = 0, frame, alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-', i = 0)
     // no ES6 support in uglify :/
     wave = wave || 0;
-    for (i = 0;i < str.length; i++) {
+
+    for (i = 0; i < str.length; i++) {
       context.drawImage(
         abc, //img
         alphabet.indexOf(str[i]) * 8, //sx
@@ -113,24 +117,30 @@ var
     }
   },
 
+  setDraw = function setDraw(fn) {
+    draw = fn;
+  },
+
+  drawGame = function drawGame() {
+    text('GAME SHOULD BE HERE', bctx, 1, 1);
+  },
+
+  drawIntro = function drawIntro() {
+    starField(bctx);
+    text(doc.title = '- GLITCHBUSTERS -', bctx, 90, 120, 2, frames);
+    glitch(bctx);
+  },
+
   /**
    * rendering loop
    */
   updateLoop = function updateLoop() {
     ++frames;
+
     bctx.fillStyle = '#222';
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
-    switch (screen) {
-      case 0: {
-        starField(bctx);
-        text(doc.title = '- GLITCHBUSTERS -', bctx, 90, 120, 2, frames);
-        glitch(bctx);
-        break;
-      }
-      case 1: {
-        text('GAME SHOULD BE HERE', bctx, 1, 1);
-      }
-    }
+
+    draw();
 
     ctx.drawImage(buffer, 0, 0, 2 * WIDTH, 2 * HEIGHT);
     win.requestAnimationFrame(updateLoop);
@@ -145,10 +155,11 @@ var
    */
   onclick = function onclick(event) {
     if (!screen) {
-      return (screen = 1);
+      screen = 1;
+      setDraw(drawGame);
     }
-    console.log(event);
   },
+
   init = function init() {
     canvas  = doc[getE]('c'); // just 'c' would also work ... not sure if mangling breaks that
     ctx     = canvas.getContext('2d');
@@ -161,6 +172,7 @@ var
     canvas[h] = 2 * HEIGHT;
 
     win.onclick = onclick;
+    setDraw(drawIntro);
 
     // just testing
     ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
