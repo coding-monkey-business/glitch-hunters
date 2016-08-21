@@ -4,6 +4,7 @@ var
   getE      = 'getElementById',
   WIDTH     = 320,
   HEIGHT    = 240,
+  TIME_UNIT = 35,
   id        = 0,
   frames    = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
@@ -12,6 +13,8 @@ var
   buffer    = doc.createElement('canvas'),
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
   rand      = Math.random,
+  floor     = Math.floor,
+  drawImage = 'drawImage',
 
   ctx,
   bctx,
@@ -108,14 +111,14 @@ var
     wave = wave || 0;
 
     for (i = 0; i < str.length; i++) {
-      bctx.drawImage(
+      bctx[drawImage](
         abcImage, //img
         alphabet.indexOf(str[i]) * 8, //sx
         0, //sy
         8, //sw
         8, //sh
         x + i * 9, //dx
-        y + (wave * Math.sin(frame / 10 + i) | 0) || 0, //dy
+        y + (wave * Math.sin(frame / 4 + i) | 0) || 0, //dy
         8, //dh
         8 //dw
       );
@@ -139,15 +142,15 @@ var
   /**
    * rendering loop
    */
-  updateLoop = function updateLoop() {
-    ++frames;
+  updateLoop = function updateLoop(timestamp) {
+    frames = floor(timestamp / TIME_UNIT);
 
     bctx.fillStyle = '#222';
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
 
     draw();
 
-    ctx.drawImage(buffer, 0, 0, 2 * WIDTH, 2 * HEIGHT);
+    ctx[drawImage](buffer, 0, 0, 2 * WIDTH, 2 * HEIGHT);
     win.requestAnimationFrame(updateLoop);
   },
 
