@@ -6,6 +6,11 @@ var
   id        = 0,
   aFrames   = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
+
+  MAP_SIZE_X=20,
+  MAP_SIZE_Y=20,
+  buffer    = doc.createElement('canvas'),
+
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
   rand      = Math.random,
   floor     = Math.floor,
@@ -16,6 +21,7 @@ var
   applied   = {},
 
   ANIMATION_TIME_UNIT = 90,
+  runLoop   = true,
   ctx,
   bctx,
   buffer,
@@ -44,6 +50,110 @@ var
       'ddx' : 0,
       'ddy' : 0
     };
+  },
+
+  /**
+   * [drawPath description]
+   * @param {Array} arr
+   * @param {Number} ax
+   * @param {Number} ay
+   * @param {Number} bx
+   * @param {Number} by
+   */
+  drawPath = function drawPath(arr, ax, ay, bx, by, xIncrement, yIncrement) {
+    xIncrement = yIncrement = 1;
+    if (ax > bx) {
+      xIncrement = -1;
+    }
+    if (ay > by) {
+      yIncrement = -1;
+    }
+
+    var r = 255; // temporary, debugging purposes
+    for (;ax !== bx && ax < arr.length - 1; ax+= xIncrement) {
+      arr[ax][ay] = arr[ax][ay] || 3;
+
+      // temporary, debugging purposes
+      bctx.fillStyle = 'rgb(' + (r-=20) + ',0,0)';
+      bctx.fillRect(ax * 5 + 1, ay * 5 + 1, 2, 2);
+    }
+
+    for (;ay !== by && ay < arr[ax].length - 1; ay+= yIncrement) {
+      arr[ax][ay] = arr[ax][ay] || 3;
+
+      // temporary, debugging purposes
+      bctx.fillStyle = 'rgb(' + (r-=20) + ',0,0)';
+      bctx.fillRect(ax * 5 + 1, ay * 5 + 1, 2, 2);
+    }
+
+  },
+  /**
+   * Creates rooms and connects them with paths
+   * @param {Array.<Array>} arr [description]
+   * @param {Number} xc centered x coordinate of this room
+   * @param {Number} yc see xc
+   * @param {Number} w width
+   * @param {Number} h height
+   * @param {Number} color base color (or base tile) of this room
+   * @param {Number} iteration safety feature to prevent stack issues
+   */
+  createRoom = function createRoom(arr, xc, yc, w, h, color, iteration, sizeX, sizeY, i, j, xi, yj, x, y, m, n) {
+    if (w * h > 3) { // single tile wide rooms are stupid
+      i = 0;
+      // find top left corner of new room
+      x = Math.min(Math.max(xc - (w >> 1), 0), sizeX - 1);
+      y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - 1);
+
+      bctx.fillStyle = '#555';// temporary, debugging purposes
+      while (i++ < w && (xi = x + i) < sizeX) {
+        j = 0;
+        while (j++ < h && y + j < sizeY) {
+          arr[xi][y + j] = arr[xi][y + j] || color;
+          // temporary, debugging purposes
+          bctx.fillRect(xi * 5, (y + j) * 5, 4, 4);
+        }
+      }
+
+      // spawn more rooms
+      if (iteration < 3) {
+        i = 4;
+        while (i--) {
+          // TODO: fiddle around with those values
+          createRoom(
+            arr,
+            m = (xc + w * (+(rand() > 0.5) || -1)), // (+(rand() > 0.5) || -1) -> 1 || -1
+            n = (yc + h * (+(rand() > 0.5) || -1)),
+            xi = (3 - iteration * (rand() * w) | 0),
+            yj = (3 - iteration * (rand() * h) | 0),
+            rand() * 3 | 0,
+            iteration + 1,
+            sizeX,
+            sizeY
+          );
+          if (xi * yj > 3) {
+            drawPath(arr, xc, yc, m, n);
+          }
+        }
+      }
+    }
+  },
+  /**
+   * [mapGen description]
+   * @param {Number} sizeX [description]
+   * @param {Number} sizeY [description]
+   */
+  mapGen = function mapGen(sizeX, sizeY, x, arr) {
+    arr = [];
+    arr.length = sizeX;
+
+    x = sizeX;
+    while (x--) {
+      arr[x] = [];
+      arr[x].length = sizeY;
+    }
+
+    // create center room
+    createRoom(arr, sizeX >> 1, sizeY >> 1, 4, 4, 1, 0, sizeX, sizeY);
   },
 
   /**
@@ -189,7 +299,9 @@ var
   updateGame = function updateGame() {
     updateEntity(player);
     drawEntity(player, aFrames);
-    glitch();
+    mapGen(MAP_SIZE_X, MAP_SIZE_Y);
+    runLoop = false;
+    // glitch();
   },
 
   updateIntro = function updateIntro() {
@@ -210,7 +322,9 @@ var
     updater();
 
     ctx.drawImage(buffer, 0, 0, 2 * WIDTH, 2 * HEIGHT);
-    win.requestAnimationFrame(updateLoop);
+    if (runLoop) {
+      win.requestAnimationFrame(updateLoop);
+    }
   },
 
   startLoop = function startLoop() {
