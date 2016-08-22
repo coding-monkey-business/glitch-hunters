@@ -346,7 +346,7 @@ var
       result += format('\'data:image/png;base64,' + base64Encode(filepath) + suffix);
     }
 
-    result += '];';
+    result += '];\n';
 
     fs.writeFileSync(targetPath, result);
   },
