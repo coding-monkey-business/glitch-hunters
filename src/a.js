@@ -1,9 +1,6 @@
 var
-  IMAGE     = 'Image',
   win       = window,
-  Img       = win[IMAGE],
   doc       = document,
-  getE      = 'getElementById',
   WIDTH     = 320,
   HEIGHT    = 240,
   id        = 0,
@@ -13,10 +10,11 @@ var
   h         = 'height',
   buffer    = doc.createElement('canvas'),
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
-  rand      = Math.random,
-  floor     = Math.floor,
-  min       = Math.min,
-  max       = Math.max,
+  M         = Math,
+  rand      = M.random,
+  floor     = M.floor,
+  min       = M.min,
+  max       = M.max,
   drawImage = 'drawImage',
   updaters  = [],
   imgs      = [],
@@ -287,7 +285,7 @@ var
   },
 
   createImage = function createImage(src, image) {
-    image     = new Img();
+    image     = new win.Image();
     image.src = src;
 
     return image;
@@ -302,7 +300,7 @@ var
   },
 
   init = function init() {
-    canvas  = doc[getE]('c'); // just 'c' would also work ... not sure if mangling breaks that
+    canvas  = doc.getElementById('c'); // just 'c' would also work ... not sure if mangling breaks that
     ctx     = canvas.getContext('2d');
     bctx    = buffer.getContext('2d');
 
