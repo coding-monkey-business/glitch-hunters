@@ -259,7 +259,7 @@ var
   chalk     = require('chalk'),
   filesize  = require('filesize'),
 
-  reportFileSizes = function reportFileSizes() {
+  reportSizes = function reportSizes() {
     var
       dirPath = 'dist',
       done    = this.async();
@@ -306,7 +306,7 @@ var
 
         grunt.initConfig(TASK_CONFIG);
 
-        grunt.registerTask('report:size', 'Display file sizes in dir', reportFileSizes);
+        grunt.registerTask('report:size',     'Display file sizes in dir', reportSizes);
 
         grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-contrib-compress');
