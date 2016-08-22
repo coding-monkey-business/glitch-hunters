@@ -17,6 +17,7 @@ var
   floor     = Math.floor,
   drawImage = 'drawImage',
   updaters  = [],
+  imgs      = [],
 
   ANIMATION_TIME_UNIT = 90,
 
@@ -200,10 +201,12 @@ var
     return image;
   },
 
-  loadImages = function loadImages(imgs) {
-    imgs        = win.img;
-    abcImage    = createImage(imgs[0]);
-    playerImage = createImage(imgs[1]);
+  loadImages = function loadImages(len) {
+    len = win.img.length;
+
+    while (len--) {
+      imgs.unshift(createImage(win.img[len]));
+    }
   },
 
   init = function init() {
@@ -218,13 +221,16 @@ var
 
     loadImages();
 
+    abcImage    = imgs[0];
+    playerImage = imgs[1];
+
     buffer[w] = WIDTH;
     buffer[h] = HEIGHT;
     canvas[w] = 2 * WIDTH;
     canvas[h] = 2 * HEIGHT;
 
     win.onclick = onclick;
-    setScreen(0);
+    setScreen(screen);
 
     // just testing
     ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
