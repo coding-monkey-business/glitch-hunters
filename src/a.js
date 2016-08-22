@@ -15,6 +15,8 @@ var
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
   rand      = Math.random,
   floor     = Math.floor,
+  min       = Math.min,
+  max       = Math.max,
   drawImage = 'drawImage',
   updaters  = [],
   imgs      = [],
@@ -24,12 +26,30 @@ var
   ctx,
   bctx,
   canvas,
+  player,
   updater,
   abcImage,
-  playerImage,
+
+  UP    = 87,
+  DOWN  = 83,
+  RIGHT = 68,
+  LEFT  = 65,
 
   getId = function getId() {
     return ++id;
+  },
+
+  createEntity = function createEntity(x, y, i) {
+    return {
+      'i'   : i,
+      'x'   : x,
+      'y'   : y,
+      'md'  : 3,
+      'dx'  : 0,
+      'dy'  : 0,
+      'ddx' : 0,
+      'ddy' : 0
+    };
   },
 
   /**
@@ -131,17 +151,17 @@ var
     }
   },
 
-  drawPlayer = function drawPlayer(x, y, frame) {
+  drawEntity = function drawEntity(entity, frame) {
     frame %= 2;
 
     bctx[drawImage](
-      playerImage, //img
+      entity.i, //img
       frame * 20, //sx
       0, //sy
       20, //sw
       20, //sh
-      x, //dx
-      y, //dy
+      entity.x, //dx
+      entity.y, //dy
       20,
       20
     );
@@ -151,8 +171,28 @@ var
     updater = fn;
   },
 
+  getSpeed = function getSpeed(dx, ddx, md, friction) {
+    dx += ddx;
+    dx *= friction;
+    dx = min(dx, md);
+    dx = max(dx, -md);
+
+    return dx;
+  },
+
+  updateEntity = function updateEntity(entity, dx, dy) {
+    dx = getSpeed(entity.dx, entity.ddx, entity.md, 0.8);
+    dy = getSpeed(entity.dy, entity.ddy, entity.md, 0.8);
+
+    entity.x += dx;
+    entity.dx = dx;
+    entity.y += dy;
+    entity.dy = dy;
+  },
+
   updateGame = function updateGame() {
-    drawPlayer(0, 0, aFrames);
+    updateEntity(player);
+    drawEntity(player, aFrames);
     glitch();
   },
 
@@ -185,6 +225,58 @@ var
     screen = newScreen;
 
     setUpdater(updaters[screen]);
+  },
+
+  getCode = function getCode(event) {
+    return event.keyCode || event.which;
+  },
+
+  /**
+   * @param {Event} event
+   */
+  onkeyup = function onkeyup(event, code) {
+    code = getCode(event);
+
+    switch (code) {
+      case UP:
+      case DOWN: {
+        player.ddy = 0;
+        break;
+      }
+
+      case RIGHT:
+      case LEFT: {
+        player.ddx = 0;
+        break;
+      }
+    }
+  },
+
+  /**
+   * @param {Event} event
+   */
+  onkeydown = function onkeydown(event, code, ddvalue) {
+    code    = getCode(event);
+    ddvalue = 0.5;
+
+    switch (code) {
+      case UP: {
+        player.ddy = -ddvalue;
+        break;
+      }
+      case DOWN: {
+        player.ddy = ddvalue;
+        break;
+      }
+      case RIGHT: {
+        player.ddx = ddvalue;
+        break;
+      }
+      case LEFT: {
+        player.ddx = -ddvalue;
+        break;
+      }
+    }
   },
 
   /**
@@ -221,15 +313,17 @@ var
 
     loadImages();
 
-    abcImage    = imgs[0];
-    playerImage = imgs[1];
-
+    abcImage  = imgs[0];
+    player    = createEntity(100, 100, imgs[1]);
     buffer[w] = WIDTH;
     buffer[h] = HEIGHT;
     canvas[w] = 2 * WIDTH;
     canvas[h] = 2 * HEIGHT;
 
-    win.onclick = onclick;
+    win.onclick   = onclick;
+    win.onkeydown = onkeydown;
+    win.onkeyup   = onkeyup;
+
     setScreen(screen);
 
     // just testing
