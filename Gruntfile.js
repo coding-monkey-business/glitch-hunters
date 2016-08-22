@@ -315,7 +315,7 @@ var
   assetStringify = function assetStringify() {
     var
       i,
-      result      = 'window.img = [\n',
+      result      = '// Generated file (grunt compile:asset), no point of modifying it by hand.\n\nwindow.img = [\n',
       buildPath   = 'build',
       targetPath  = path.join('src', 'img.js'),
       list        = fs.readdirSync(buildPath),
