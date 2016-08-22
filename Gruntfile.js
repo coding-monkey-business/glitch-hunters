@@ -138,7 +138,7 @@ var
       'main' : {
         'options' : {
           'mode'    : 'zip',
-          'archive' : 'dist/o.zip'
+          'archive' : 'dist/index.html.zip'
         },
 
         'files': [
@@ -221,7 +221,11 @@ var
       'clean',
       'compile',
       'minify',
-      'inline',
+      'inline'
+    ],
+
+    'build:compress' : [
+      'build',
       'compress'
     ],
 
@@ -237,7 +241,7 @@ var
 
     'default' : [
       'test',
-      'build'
+      'build:compress'
     ]
   },
 
