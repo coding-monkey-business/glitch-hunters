@@ -1,4 +1,6 @@
 var
+  grunt,
+
   ALL_JS = ['*.js', 'src/**/*.js', 'test/**/*.js'],
 
   TASK_CONFIG = {
@@ -29,14 +31,6 @@ var
         'cwd'     : 'src',
         'src'     : 'img.js',
         'dest'    : 'build/'
-      }
-    },
-
-    'size_report': {
-      'dist': {
-        'files': {
-          'list': ['dist/*']
-        }
       }
     },
 
@@ -233,7 +227,7 @@ var
     ],
 
     'info' : [
-      'size_report'
+      'report:size'
     ],
 
     'build:compress' : [
@@ -260,7 +254,38 @@ var
     ]
   },
 
-  runGrunt = function runGrunt(grunt) {
+  fs        = require('fs'),
+  path      = require('path'),
+  chalk     = require('chalk'),
+  filesize  = require('filesize'),
+
+  reportFileSizes = function reportFileSizes() {
+    var
+      dirPath = 'dist',
+      done    = this.async();
+
+    fs.readdir(dirPath, function (err, list) {
+      var
+        stat,
+        size,
+        filename,
+        len = list.length;
+
+      while (len--) {
+        filename  = path.join(dirPath, list[len]);
+        stat      = fs.statSync(filename);
+        size      = stat.size;
+
+        grunt.log.writeln(chalk.green('# ' + filename + ' <=== ' + filesize(size)));
+      }
+
+      done();
+    });
+  },
+
+  runGrunt = function runGrunt(gruntObj) {
+    grunt = gruntObj;
+
     var
       registerTask = function registerTask(taskName, task) {
         grunt.registerTask(taskName, task);
@@ -281,6 +306,8 @@ var
 
         grunt.initConfig(TASK_CONFIG);
 
+        grunt.registerTask('report:size', 'Display file sizes in dir', reportFileSizes);
+
         grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-contrib-compress');
         grunt.loadNpmTasks('grunt-contrib-copy');
@@ -294,7 +321,6 @@ var
         grunt.loadNpmTasks('grunt-jscs');
         grunt.loadNpmTasks('grunt-karma');
         grunt.loadNpmTasks('grunt-replace');
-        grunt.loadNpmTasks('grunt-size-report');
         grunt.loadNpmTasks('grunt-zopfli');
 
         registerTasks(TASKS);
