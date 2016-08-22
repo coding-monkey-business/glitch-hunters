@@ -131,21 +131,21 @@ var
         'indent'      : 2
       },
 
-      'default' : ALL_JS
+      'default' : ALL_JS,
 
       //
       // ATM this is not needed, as uglify wraps and removes unused stuff.
       //
-      // 'strict' : {
-      //   'options' : {
-      //     'noempty' : true,
-      //     'unused'  : 'vars'
-      //   },
+      'strict' : {
+        'options' : {
+          'noempty' : true,
+          'unused'  : 'vars'
+        },
 
-      //   'files' : {
-      //     'default' : ALL_JS
-      //   }
-      // }
+        'files' : {
+          'default' : ALL_JS
+        }
+      }
     },
 
     'karma' : {
@@ -213,7 +213,7 @@ var
     ],
 
     'test:dev' : [
-      'jshint',
+      'jshint:default',
       'karma'
     ],
 
@@ -320,8 +320,6 @@ var
       targetPath  = path.join('src', 'img.js'),
       list        = fs.readdirSync(buildPath),
       len,
-      stat,
-      size,
       suffix,
       filename,
       filepath;
