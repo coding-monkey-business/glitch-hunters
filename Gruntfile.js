@@ -32,6 +32,14 @@ var
       }
     },
 
+    'size_report': {
+      'dist': {
+        'files': {
+          'list': ['dist/*']
+        }
+      }
+    },
+
     'uglify': {
       'options' : {
         'enclose' : {},
@@ -224,19 +232,26 @@ var
       'inline'
     ],
 
+    'info' : [
+      'size_report'
+    ],
+
     'build:compress' : [
       'build',
-      'compress'
+      'compress',
+      'info'
     ],
 
     'build:zopfli' : [
       'build',
-      'zopfli'
+      'zopfli',
+      'info'
     ],
 
     'build:advzip' : [
       'build',
-      'exec:advzip'
+      'exec:advzip',
+      'info'
     ],
 
     'default' : [
@@ -274,12 +289,13 @@ var
         grunt.loadNpmTasks('grunt-contrib-jshint');
         grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-watch');
+        grunt.loadNpmTasks('grunt-exec');
+        grunt.loadNpmTasks('grunt-inline');
         grunt.loadNpmTasks('grunt-jscs');
         grunt.loadNpmTasks('grunt-karma');
         grunt.loadNpmTasks('grunt-replace');
+        grunt.loadNpmTasks('grunt-size-report');
         grunt.loadNpmTasks('grunt-zopfli');
-        grunt.loadNpmTasks('grunt-exec');
-        grunt.loadNpmTasks('grunt-inline');
 
         registerTasks(TASKS);
       };
