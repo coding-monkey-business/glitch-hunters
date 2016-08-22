@@ -1,12 +1,13 @@
 var
+  IMAGE     = 'Image',
   win       = window,
+  Img       = win[IMAGE],
   doc       = document,
   getE      = 'getElementById',
   WIDTH     = 320,
   HEIGHT    = 240,
-  TIME_UNIT = 35,
   id        = 0,
-  frames    = 0,
+  aFrames   = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
   w         = 'width',
   h         = 'height',
@@ -16,6 +17,8 @@ var
   floor     = Math.floor,
   drawImage = 'drawImage',
   updaters  = [],
+
+  ANIMATION_TIME_UNIT = 90,
 
   ctx,
   bctx,
@@ -120,7 +123,7 @@ var
         8, //sw
         8, //sh
         x + i * 9, //dx
-        y + (wave * Math.sin(frame / 4 + i) | 0) || 0, //dy
+        y + (wave * Math.sin(frame / 2 + i) | 0) || 0, //dy
         8, //dh
         8 //dw
       );
@@ -128,18 +131,18 @@ var
   },
 
   drawPlayer = function drawPlayer(x, y, frame) {
-    frame = 0;
+    frame %= 2;
 
     bctx[drawImage](
       playerImage, //img
-      frame * 40, //sx
+      frame * 20, //sx
       0, //sy
-      40, //sw
-      40, //sh
+      20, //sw
+      20, //sh
       x, //dx
       y, //dy
-      40,
-      40
+      20,
+      20
     );
   },
 
@@ -148,13 +151,13 @@ var
   },
 
   updateGame = function updateGame() {
-    drawPlayer(0, 0, frames);
+    drawPlayer(0, 0, aFrames);
     glitch();
   },
 
   updateIntro = function updateIntro() {
     starField();
-    text(doc.title = '- GLITCHBUSTERS -', 90, 120, 2, frames);
+    text(doc.title = '- GLITCHBUSTERS -', 90, 120, 2, aFrames);
     glitch();
   },
 
@@ -162,7 +165,7 @@ var
    * rendering loop
    */
   updateLoop = function updateLoop(timestamp) {
-    frames = floor(timestamp / TIME_UNIT);
+    aFrames = floor(timestamp / ANIMATION_TIME_UNIT);
 
     bctx.fillStyle = '#222';
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -191,7 +194,7 @@ var
   },
 
   createImage = function createImage(src, image) {
-    image     = new Image();
+    image     = new Img();
     image.src = src;
 
     return image;

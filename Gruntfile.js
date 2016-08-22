@@ -109,13 +109,14 @@ var
     'jshint' : {
       'options': {
         'globals'     : {
-          'define'    : false,
-          'requirejs' : false,
-          'inject'    : false
+          'describe'  : true,
+          'it'        : true,
+          'expect'    : true,
+          'jasmine'   : true,
+          'window'    : true,
+          'document'  : true
         },
 
-        'jasmine'     : true,
-        'browser'     : true,
         'curly'       : true,
         'eqeqeq'      : true,
         'eqnull'      : true,
