@@ -9,6 +9,23 @@ var
       'dist'  : 'dist/**/*'
     },
 
+    'pngmin' : {
+      'compile' : {
+        'options' : {
+          'ext' : '.png'
+        },
+
+        'files' : [
+          {
+            'expand': true,
+            'src'   : ['**/*.png'],
+            'cwd'   : 'img',
+            'dest'  : 'build'
+          }
+        ]
+      }
+    },
+
     'replace' : {
       'removetest': {
         'options': {
@@ -208,7 +225,12 @@ var
       'watch:dev'
     ],
 
-    'compile' : [
+    'compile:asset' : [
+      'pngmin',
+      'asset:stringify'
+    ],
+
+    'compile:js' : [
       'replace',
       'copy'
     ],
@@ -221,7 +243,8 @@ var
 
     'build' : [
       'clean',
-      'compile',
+      'compile:asset',
+      'compile:js',
       'minify',
       'inline'
     ],
@@ -259,28 +282,73 @@ var
   chalk     = require('chalk'),
   filesize  = require('filesize'),
 
-  reportSizes = function reportSizes() {
+  reportSize = function reportSize() {
     var
       dirPath = 'dist',
-      done    = this.async();
+      list    = fs.readdirSync(dirPath),
+      len     = list.length,
+      stat,
+      size,
+      filename;
 
-    fs.readdir(dirPath, function (err, list) {
-      var
-        stat,
-        size,
-        filename,
-        len = list.length;
+    while (len--) {
+      filename  = path.join(dirPath, list[len]);
+      stat      = fs.statSync(filename);
+      size      = stat.size;
 
-      while (len--) {
-        filename  = path.join(dirPath, list[len]);
-        stat      = fs.statSync(filename);
-        size      = stat.size;
+      grunt.log.writeln(chalk.green('# ' + filename + ' <=== ' + filesize(size)));
+    }
+  },
 
-        grunt.log.writeln(chalk.green('# ' + filename + ' <=== ' + filesize(size)));
-      }
+  base64Encode = function base64Encode(filepath) {
+    var
+      img = fs.readFileSync(filepath);
 
-      done();
+    return new Buffer(img).toString('base64');
+  },
+
+  format = function format(string) {
+    return '  ' + string + '\n';
+  },
+
+  assetStringify = function assetStringify() {
+    var
+      i,
+      result      = 'window.img = [\n',
+      buildPath   = 'build',
+      targetPath  = path.join('src', 'img.js'),
+      list        = fs.readdirSync(buildPath),
+      len,
+      stat,
+      size,
+      suffix,
+      filename,
+      filepath;
+
+
+    list = list.filter(function (filename) {
+      return filename.indexOf('png') !== -1;
     });
+
+    // Alphabetical sort them files.
+    list.sort();
+
+    len = list.length;
+
+    for (i = 0; i < len; i++) {
+      filename  = list[i];
+      filepath  = path.join(buildPath, filename);
+
+      grunt.log.writeln(chalk.green('# stringifying: ' + filepath));
+
+      suffix  = '\'' + (i < len - 1 ? ',\n' : '');
+      result += format('// ' + filename);
+      result += format('\'data:image/png;base64,' + base64Encode(filepath) + suffix);
+    }
+
+    result += '];';
+
+    fs.writeFileSync(targetPath, result);
   },
 
   runGrunt = function runGrunt(gruntObj) {
@@ -306,7 +374,8 @@ var
 
         grunt.initConfig(TASK_CONFIG);
 
-        grunt.registerTask('report:size',     'Display file sizes in dir', reportSizes);
+        grunt.registerTask('report:size',     'Display file sizes in dir', reportSize);
+        grunt.registerTask('asset:stringify', 'Convert all png to base64', assetStringify);
 
         grunt.loadNpmTasks('grunt-contrib-clean');
         grunt.loadNpmTasks('grunt-contrib-compress');
@@ -320,6 +389,7 @@ var
         grunt.loadNpmTasks('grunt-inline');
         grunt.loadNpmTasks('grunt-jscs');
         grunt.loadNpmTasks('grunt-karma');
+        grunt.loadNpmTasks('grunt-pngmin');
         grunt.loadNpmTasks('grunt-replace');
         grunt.loadNpmTasks('grunt-zopfli');
 
