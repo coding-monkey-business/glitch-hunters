@@ -6,23 +6,18 @@ var
   id        = 0,
   aFrames   = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
-  w         = 'width',
-  h         = 'height',
-  buffer    = doc.createElement('canvas'),
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
-  M         = Math,
-  rand      = M.random,
-  floor     = M.floor,
-  min       = M.min,
-  max       = M.max,
-  drawImage = 'drawImage',
+  rand      = Math.random,
+  floor     = Math.floor,
+  min       = Math.min,
+  max       = Math.max,
   updaters  = [],
   imgs      = [],
 
   ANIMATION_TIME_UNIT = 90,
-
   ctx,
   bctx,
+  buffer,
   canvas,
   player,
   updater,
@@ -135,7 +130,7 @@ var
     wave = wave || 0;
 
     for (i = 0; i < str.length; i++) {
-      bctx[drawImage](
+      bctx.drawImage(
         abcImage, //img
         alphabet.indexOf(str[i]) * 8, //sx
         0, //sy
@@ -152,7 +147,7 @@ var
   drawEntity = function drawEntity(entity, frame) {
     frame %= 2;
 
-    bctx[drawImage](
+    bctx.drawImage(
       entity.i, //img
       frame * 20, //sx
       0, //sy
@@ -211,7 +206,7 @@ var
 
     updater();
 
-    ctx[drawImage](buffer, 0, 0, 2 * WIDTH, 2 * HEIGHT);
+    ctx.drawImage(buffer, 0, 0, 2 * WIDTH, 2 * HEIGHT);
     win.requestAnimationFrame(updateLoop);
   },
 
@@ -291,6 +286,10 @@ var
     return image;
   },
 
+  createBuffer = function createBuffer() {
+    return doc.createElement('canvas');
+  },
+
   loadImages = function loadImages(len) {
     len = win.img.length;
 
@@ -300,8 +299,12 @@ var
   },
 
   init = function init() {
-    canvas  = doc.getElementById('c'); // just 'c' would also work ... not sure if mangling breaks that
+    canvas  = createBuffer();
     ctx     = canvas.getContext('2d');
+
+    doc.body.appendChild(canvas);
+
+    buffer  = createBuffer();
     bctx    = buffer.getContext('2d');
 
     updaters = [
@@ -311,12 +314,12 @@ var
 
     loadImages();
 
-    abcImage  = imgs[0];
-    player    = createEntity(100, 100, imgs[1]);
-    buffer[w] = WIDTH;
-    buffer[h] = HEIGHT;
-    canvas[w] = 2 * WIDTH;
-    canvas[h] = 2 * HEIGHT;
+    abcImage      = imgs[0];
+    player        = createEntity(100, 100, imgs[1]);
+    buffer.width  = WIDTH;
+    buffer.height = HEIGHT;
+    canvas.width  = 2 * WIDTH;
+    canvas.height = 2 * HEIGHT;
 
     win.onclick   = onclick;
     win.onkeydown = onkeydown;
