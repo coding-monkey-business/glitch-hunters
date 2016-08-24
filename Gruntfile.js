@@ -201,7 +201,8 @@ var
     },
 
     'exec': {
-      'advzip': 'advzip -a dist/index.html.zip build/index.html -4 -i 100' // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
+      'advzip': 'advzip -a dist/index.html.zip build/index.html -4 -i 100', // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
+      'zopflipng': require('zopflipng-bin') + ' --lossy_transparent -m -y --prefix="" build/*.png'
     }
   },
 
@@ -228,6 +229,7 @@ var
 
     'compile:asset' : [
       'pngmin',
+      'exec:zopflipng',
       'asset:stringify'
     ],
 
@@ -334,6 +336,12 @@ var
       return filename.indexOf('png') !== -1;
     });
 
+
+    // if exec:zopflipng has been run before:
+    if (list.some(a => a.indexOf('zopfli_') >= 0)) {
+      list = list.filter(a => a.indexOf('zopfli_') === 0);
+    }
+
     // Alphabetical sort them files.
     list.sort();
 
@@ -387,7 +395,7 @@ var
         grunt.loadNpmTasks('grunt-contrib-cssmin');
         grunt.loadNpmTasks('grunt-contrib-htmlmin');
         grunt.loadNpmTasks('grunt-contrib-jshint');
-        grunt.loadNpmTasks('grunt-contrib-uglify');
+        grunt.loadNpmTasks('grunt-contrib-uglify')
         grunt.loadNpmTasks('grunt-contrib-watch');
         grunt.loadNpmTasks('grunt-exec');
         grunt.loadNpmTasks('grunt-inline');
