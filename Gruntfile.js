@@ -116,7 +116,7 @@ var
           'window'    : true,
           'document'  : true
         },
-
+        'esversion'   : 6,
         'curly'       : true,
         'eqeqeq'      : true,
         'eqnull'      : true,
@@ -395,7 +395,7 @@ var
         grunt.loadNpmTasks('grunt-contrib-cssmin');
         grunt.loadNpmTasks('grunt-contrib-htmlmin');
         grunt.loadNpmTasks('grunt-contrib-jshint');
-        grunt.loadNpmTasks('grunt-contrib-uglify')
+        grunt.loadNpmTasks('grunt-contrib-uglify');
         grunt.loadNpmTasks('grunt-contrib-watch');
         grunt.loadNpmTasks('grunt-exec');
         grunt.loadNpmTasks('grunt-inline');
