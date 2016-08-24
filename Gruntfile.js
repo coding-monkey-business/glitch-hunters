@@ -116,7 +116,6 @@ var
           'window'    : true,
           'document'  : true
         },
-        'esversion'   : 6,
         'curly'       : true,
         'eqeqeq'      : true,
         'eqnull'      : true,
@@ -338,8 +337,12 @@ var
 
 
     // if exec:zopflipng has been run before:
-    if (list.some(a => a.indexOf('zopfli_') >= 0)) {
-      list = list.filter(a => a.indexOf('zopfli_') === 0);
+    if (list.some(function (filename) {
+      return filename.indexOf('zopfli_') >= 0;
+    })) {
+      list = list.filter(function (filename) {
+        return filename.indexOf('zopfli_') === 0;
+      });
     }
 
     // Alphabetical sort them files.
