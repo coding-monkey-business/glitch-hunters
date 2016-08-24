@@ -335,7 +335,9 @@ var
 win.onload = init;
 
 //
-// DO NOT REMOVE THIS
+// GRUNT WILL REMOVE FROM HERE, DO NOT REMOVE THIS!
+//
+// Any kind of debug logic can be placed here.
 //
 // Export every function here which should be tested by karma,
 // on build this block will be removed automatically by `replace`
