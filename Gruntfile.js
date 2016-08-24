@@ -30,7 +30,7 @@ var
       'removetest': {
         'options': {
           'patterns': [{
-            'match'       : /win.test[^]*/,
+            'match'       : /\/\/\ GRUNT\ WILL\ REMOVE[^]*/,
             'replacement' : ''
           }]
         },

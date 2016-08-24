@@ -13,6 +13,7 @@ var
   max       = Math.max,
   updaters  = [],
   imgs      = [],
+  applied   = {},
 
   ANIMATION_TIME_UNIT = 90,
   ctx,
@@ -173,14 +174,16 @@ var
     return dx;
   },
 
-  updateEntity = function updateEntity(entity, dx, dy) {
-    dx = getSpeed(entity.dx, entity.ddx, entity.md, 0.8);
-    dy = getSpeed(entity.dy, entity.ddy, entity.md, 0.8);
+  updateEntity = function updateEntity(entity, dx, dy, friction) {
+    friction = 0.8;
 
-    entity.x += dx;
-    entity.dx = dx;
-    entity.y += dy;
-    entity.dy = dy;
+    dx = getSpeed(entity.dx, entity.ddx, entity.md, friction);
+    dy = getSpeed(entity.dy, entity.ddy, entity.md, friction);
+
+    entity.x   += dx;
+    entity.dx   = dx;
+    entity.y   += dy;
+    entity.dy   = dy;
   },
 
   updateGame = function updateGame() {
@@ -224,22 +227,31 @@ var
     return event.keyCode || event.which;
   },
 
-  /**
-   * @param {Event} event
-   */
-  onkeyup = function onkeyup(event, code) {
+  command = function command(event, apply, code, ddvalue) {
     code = getCode(event);
 
+    if (!(applied[code]^apply)) {
+      return;
+    }
+
+    applied[code] = apply;
+    ddvalue       = apply ? 0.5 : -0.5;
+
     switch (code) {
-      case UP:
-      case DOWN: {
-        player.ddy = 0;
+      case UP: {
+        player.ddy += -ddvalue;
         break;
       }
-
-      case RIGHT:
+      case DOWN: {
+        player.ddy += ddvalue;
+        break;
+      }
+      case RIGHT: {
+        player.ddx += ddvalue;
+        break;
+      }
       case LEFT: {
-        player.ddx = 0;
+        player.ddx += -ddvalue;
         break;
       }
     }
@@ -248,28 +260,15 @@ var
   /**
    * @param {Event} event
    */
-  onkeydown = function onkeydown(event, code, ddvalue) {
-    code    = getCode(event);
-    ddvalue = 0.5;
+  onkeyup = function onkeyup(event) {
+    command(event);
+  },
 
-    switch (code) {
-      case UP: {
-        player.ddy = -ddvalue;
-        break;
-      }
-      case DOWN: {
-        player.ddy = ddvalue;
-        break;
-      }
-      case RIGHT: {
-        player.ddx = ddvalue;
-        break;
-      }
-      case LEFT: {
-        player.ddx = -ddvalue;
-        break;
-      }
-    }
+  /**
+   * @param {Event} event
+   */
+  onkeydown = function onkeydown(event) {
+    command(event, true);
   },
 
   /**
@@ -335,7 +334,9 @@ var
 win.onload = init;
 
 //
-// DO NOT REMOVE THIS
+// GRUNT WILL REMOVE FROM HERE, DO NOT REMOVE THIS!
+//
+// Any kind of debug logic can be placed here.
 //
 // Export every function here which should be tested by karma,
 // on build this block will be removed automatically by `replace`
