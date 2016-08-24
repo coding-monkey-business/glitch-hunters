@@ -1,7 +1,7 @@
 {
   "name": "glitch-busters",
   "version": "0.0.1",
-  "description": "Preparation for js13k",
+  "description": "A js13k entry",
   "scripts": {
     "test": "./grunt"
   },
