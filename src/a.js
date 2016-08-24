@@ -137,7 +137,7 @@ var
     for (i = 0; i < str.length; i++) {
       bctx[drawImage](
         abcImage, //img
-        alphabet.i(str[i]) * 8, //sx
+        alphabet.indexOf(str[i]) * 8, //sx
         0, //sy
         8, //sw
         8, //sh
@@ -299,27 +299,6 @@ var
     }
   },
 
-  extend = function extend() {
-    var
-      string    = String,
-      array     = Array,
-      indexOf   = 'indexOf',
-      proto     = 'prototype',
-      sProto    = string[proto],
-      aProto    = array[proto];
-
-    sProto.i = sProto[indexOf];
-    aProto.i = aProto[indexOf];
-
-    aProto.r = function remove(i) {
-      this.splice(i, 1);
-    };
-
-    aProto.h = function has(value) {
-      return this.i(value) > -1;
-    };
-  },
-
   init = function init() {
     canvas  = doc.getElementById('c'); // just 'c' would also work ... not sure if mangling breaks that
     ctx     = canvas.getContext('2d');
@@ -349,8 +328,6 @@ var
     ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
     startLoop();
   };
-
-extend();
 
 win.onload = init;
 
