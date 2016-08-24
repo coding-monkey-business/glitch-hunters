@@ -285,6 +285,7 @@ var
 
   reportSize = function reportSize() {
     var
+      MAX_SIZE = 13312,
       dirPath = 'dist',
       list    = fs.readdirSync(dirPath),
       len     = list.length,
@@ -297,7 +298,11 @@ var
       stat      = fs.statSync(filename);
       size      = stat.size;
 
-      grunt.log.writeln(chalk.green('# ' + filename + ' <=== ' + filesize(size)));
+      if (size > MAX_SIZE) {
+        grunt.fail.fatal('Final zipped size is above 13,312 bytes!');
+      }
+
+      grunt.log.writeln(chalk.green('# ' + filename + ' <=== ' + filesize(size) + ' (' + filesize(size, {'exponent': 0}) + ')'));
     }
   },
 
