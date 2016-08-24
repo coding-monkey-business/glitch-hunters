@@ -110,6 +110,7 @@ var
       'options': {
         'globals'     : {
           'describe'  : true,
+          'beforeEach': true,
           'it'        : true,
           'expect'    : true,
           'jasmine'   : true,

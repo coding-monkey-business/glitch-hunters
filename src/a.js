@@ -7,8 +7,8 @@ var
   aFrames   = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
 
-  MAP_SIZE_X=20,
-  MAP_SIZE_Y=20,
+  MAP_SIZE_X= 20,
+  MAP_SIZE_Y= 20,
   buffer    = doc.createElement('canvas'),
 
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
@@ -29,7 +29,8 @@ var
   player,
   updater,
   abcImage,
-
+  tileset,
+  map,
   UP    = 87,
   DOWN  = 83,
   RIGHT = 68,
@@ -69,21 +70,25 @@ var
       yIncrement = -1;
     }
 
-    var r = 255; // temporary, debugging purposes
+    // var r = 255; // temporary, debugging purposes
     for (;ax !== bx && ax < arr.length - 1; ax+= xIncrement) {
       arr[ax][ay] = arr[ax][ay] || 3;
 
       // temporary, debugging purposes
-      bctx.fillStyle = 'rgb(' + (r-=20) + ',0,0)';
-      bctx.fillRect(ax * 5 + 1, ay * 5 + 1, 2, 2);
+      // if (bctx) {
+      //   bctx.fillStyle = 'rgb(' + (r-=20) + ',0,0)';
+      //   bctx.fillRect(ax * 5 + 1, ay * 5 + 1, 2, 2);
+      // }
     }
 
     for (;ay !== by && ay < arr[ax].length - 1; ay+= yIncrement) {
       arr[ax][ay] = arr[ax][ay] || 3;
 
       // temporary, debugging purposes
-      bctx.fillStyle = 'rgb(' + (r-=20) + ',0,0)';
-      bctx.fillRect(ax * 5 + 1, ay * 5 + 1, 2, 2);
+      // if (bctx) {
+      //   bctx.fillStyle = 'rgb(' + (r-=20) + ',0,0)';
+      //   bctx.fillRect(ax * 5 + 1, ay * 5 + 1, 2, 2);
+      // }
     }
 
   },
@@ -110,7 +115,7 @@ var
         while (j++ < h && y + j < sizeY) {
           arr[xi][y + j] = arr[xi][y + j] || color;
           // temporary, debugging purposes
-          bctx.fillRect(xi * 5, (y + j) * 5, 4, 4);
+          // bctx.fillRect(xi * 5, (y + j) * 5, 4, 4);
         }
       }
 
@@ -154,6 +159,26 @@ var
 
     // create center room
     createRoom(arr, sizeX >> 1, sizeY >> 1, 4, 4, 1, 0, sizeX, sizeY);
+    return arr;
+  },
+
+  renderMap = function renderMap(arr, x, y) {
+    x = 0;
+    for (x = 0; x < arr.length; x++) {
+      for (y = 0; y < arr[x].length; y++) {
+        bctx.drawImage(
+          tileset, //img
+          arr[x][y] ? 16 : 32, //sx
+          arr[x][y] ? 16 : 9, //sy
+          16, //sw
+          arr[x][y] ? 16 : 32, //sh
+          x * 16, //dx
+          y * 16 - (arr[x][y] ? 0 : 9), //dy
+          16, //dh
+          arr[x][y] ? 16 : 32 //dw
+        );
+      }
+    }
   },
 
   /**
@@ -298,9 +323,9 @@ var
 
   updateGame = function updateGame() {
     updateEntity(player);
+    renderMap(map);
     drawEntity(player, aFrames);
-    mapGen(MAP_SIZE_X, MAP_SIZE_Y);
-    runLoop = false;
+    // runLoop = false;
     // glitch();
   },
 
@@ -316,12 +341,12 @@ var
   updateLoop = function updateLoop(timestamp) {
     aFrames = floor(timestamp / ANIMATION_TIME_UNIT);
 
-    bctx.fillStyle = '#222';
+    bctx.fillStyle = '#000';
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
 
     updater();
 
-    ctx.drawImage(buffer, 0, 0, 2 * WIDTH, 2 * HEIGHT);
+    ctx.drawImage(buffer, 0, 0, 3 * WIDTH, 3 * HEIGHT);
     if (runLoop) {
       win.requestAnimationFrame(updateLoop);
     }
@@ -428,15 +453,18 @@ var
     loadImages();
 
     abcImage      = imgs[0];
-    player        = createEntity(100, 100, imgs[1]);
+    tileset       = imgs[3];
+    player        = createEntity(100, 100, imgs[2]);
     buffer.width  = WIDTH;
     buffer.height = HEIGHT;
-    canvas.width  = 2 * WIDTH;
-    canvas.height = 2 * HEIGHT;
+    canvas.width  = 3 * WIDTH;
+    canvas.height = 3 * HEIGHT;
 
     win.onclick   = onclick;
     win.onkeydown = onkeydown;
     win.onkeyup   = onkeyup;
+
+    map = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
 
     setScreen(screen);
 
@@ -457,6 +485,8 @@ win.onload = init;
 // task.
 //
 win.test = {
-  'getId' : getId,
-  'field' : field
+  'getId'     : getId,
+  'field'     : field,
+  'drawPath'  : drawPath,
+  'createRoom': createRoom
 };
