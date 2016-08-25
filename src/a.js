@@ -7,11 +7,6 @@ var
   aFrames   = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
-  rand      = Math.random,
-  floor     = Math.floor,
-  min       = Math.min,
-  max       = Math.max,
-  round     = Math.round,
   updaters  = [],
   imgs      = [],
   applied   = {},
@@ -94,8 +89,8 @@ var
     if (w * h > 3) { // single tile wide rooms are stupid
       i = 0;
       // find top left corner of new room
-      x = min(max(xc - (w >> 1), 0), sizeX - 1);
-      y = min(max(yc - (h >> 1), 0), sizeY - 1);
+      x = Math.min(Math.max(xc - (w >> 1), 0), sizeX - 1);
+      y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - 1);
 
       while (i++ < w && (xi = x + i) < sizeX) {
         j = 0;
@@ -108,14 +103,14 @@ var
       if (iteration < 3) {
         i = 4;
         while (i--) {
-          // TODO: fiddle around with those values
+          // TODO: fiddle aMath.round with those values
           createRoom(
             arr,
-            m = (xc + w * (+(rand() > 0.5) || -1)), // (+(rand() > 0.5) || -1) -> 1 || -1
-            n = (yc + h * (+(rand() > 0.5) || -1)),
-            xi = (3 - iteration * (rand() * w) | 0),
-            yj = (3 - iteration * (rand() * h) | 0),
-            rand() * 3 | 0,
+            m = (xc + w * (+(Math.random() > 0.5) || -1)), // (+(Math.random() > 0.5) || -1) -> 1 || -1
+            n = (yc + h * (+(Math.random() > 0.5) || -1)),
+            xi = (3 - iteration * (Math.random() * w) | 0),
+            yj = (3 - iteration * (Math.random() * h) | 0),
+            Math.random() * 3 | 0,
             iteration + 1,
             sizeX,
             sizeY
@@ -212,9 +207,9 @@ var
    */
   star = function star() {
     return [
-      0.5 - rand(),
-      0.5 - rand(),
-      rand() * 3
+      0.5 - Math.random(),
+      0.5 - Math.random(),
+      Math.random() * 3
     ];
   },
 
@@ -310,8 +305,8 @@ var
   getSpeed = function getSpeed(dx, ddx, md, friction) {
     dx += ddx;
     dx *= friction;
-    dx = min(dx, md);
-    dx = max(dx, -md);
+    dx = Math.min(dx, md);
+    dx = Math.max(dx, -md);
 
     return dx;
   },
@@ -325,8 +320,8 @@ var
     x = entity.x + dx;
     y = entity.y + dy;
 
-    tileX = round(x / TILESIZE_X);
-    tileY = round(y / TILESIZE_X);
+    tileX = Math.round(x / TILESIZE_X);
+    tileY = Math.round(y / TILESIZE_X);
 
     // TODO: this is the naive implementation
     if (!map2DArray[tileX][tileY]) {
@@ -359,7 +354,7 @@ var
    * rendering loop
    */
   updateLoop = function updateLoop(timestamp) {
-    aFrames = floor(timestamp / ANIMATION_TIME_UNIT);
+    aFrames = Math.floor(timestamp / ANIMATION_TIME_UNIT);
 
     bctx.fillStyle = '#000';
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
