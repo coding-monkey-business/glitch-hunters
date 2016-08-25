@@ -6,22 +6,25 @@ var
   id        = 0,
   aFrames   = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
-
-  MAP_SIZE_X= 20,
-  MAP_SIZE_Y= 20,
-  TILESIZE_X= 16,// everything is square right now
-  buffer    = doc.createElement('canvas'),
-
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
   rand      = Math.random,
   floor     = Math.floor,
   min       = Math.min,
   max       = Math.max,
+  round     = Math.round,
   updaters  = [],
   imgs      = [],
   applied   = {},
 
   ANIMATION_TIME_UNIT = 90,
+  MAP_SIZE_X          = 20,
+  MAP_SIZE_Y          = 20,
+  TILESIZE_X          = 16, // everything is square right now
+  UP                  = 87, // w
+  DOWN                = 83, // s
+  RIGHT               = 68, // d
+  LEFT                = 65, // a
+
   ctx,
   bctx,
   buffer,
@@ -31,10 +34,6 @@ var
   abcImage,
   tileset,
   map2DArray,
-  UP    = 87, // w
-  DOWN  = 83, // s
-  RIGHT = 68, // d
-  LEFT  = 65, // a
 
   getId = function getId() {
     return ++id;
@@ -93,8 +92,8 @@ var
     if (w * h > 3) { // single tile wide rooms are stupid
       i = 0;
       // find top left corner of new room
-      x = Math.min(Math.max(xc - (w >> 1), 0), sizeX - 1);
-      y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - 1);
+      x = min(max(xc - (w >> 1), 0), sizeX - 1);
+      y = min(max(yc - (h >> 1), 0), sizeY - 1);
 
       while (i++ < w && (xi = x + i) < sizeX) {
         j = 0;
@@ -323,8 +322,9 @@ var
 
     x = entity.x + dx;
     y = entity.y + dy;
-    tileX = Math.round(x / TILESIZE_X);
-    tileY = Math.round(y / TILESIZE_X);
+
+    tileX = round(x / TILESIZE_X);
+    tileY = round(y / TILESIZE_X);
 
     // TODO: this is the naive implementation
     if (!map2DArray[tileX][tileY]) {
