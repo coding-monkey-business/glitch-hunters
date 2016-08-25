@@ -15,6 +15,7 @@ var
   updaters  = [],
   imgs      = [],
   applied   = {},
+  commands  = {},
 
   ANIMATION_TIME_UNIT = 90,
   MAP_SIZE_X          = 20,
@@ -24,6 +25,7 @@ var
   DOWN                = 83, // s
   RIGHT               = 68, // d
   LEFT                = 65, // a
+  SPACE               = 32,
 
   ctx,
   bctx,
@@ -39,9 +41,9 @@ var
     return ++id;
   },
 
-  createEntity = function createEntity(x, y, i) {
+  createEntity = function createEntity(x, y, img) {
     return {
-      'i'   : i,
+      'img' : img,
       'x'   : x,
       'y'   : y,
       'md'  : 3,
@@ -289,7 +291,7 @@ var
     // sy = 0;
     // }
     bctx.drawImage(
-      entity.i, //img
+      entity.img, //img
       frame * 16, //sx
       16, //sy
       16, //sw
@@ -390,25 +392,9 @@ var
     }
 
     applied[code] = apply;
-    ddvalue       = apply ? 0.5 : -0.5;
 
-    switch (code) {
-      case UP: {
-        player.ddy += -ddvalue;
-        break;
-      }
-      case DOWN: {
-        player.ddy += ddvalue;
-        break;
-      }
-      case RIGHT: {
-        player.ddx += ddvalue;
-        break;
-      }
-      case LEFT: {
-        player.ddx += -ddvalue;
-        break;
-      }
+    if (commands[code]) {
+      commands[code](apply);
     }
   },
 
@@ -452,6 +438,32 @@ var
     }
   },
 
+  teleport = function teleport(apply) {
+    if (!apply) {
+      return;
+    }
+
+    player.x += (player.ddx > 0 ? 1 : -1) * 40;
+  },
+
+  accelerate = function accelerate(ddx, ddy, apply) {
+    if (!apply) {
+      ddx *= -1;
+      ddy *= -1;
+    }
+
+    player.ddx += ddx;
+    player.ddy += ddy;
+  },
+
+  setCommands = function setCommands() {
+    commands[UP]    = accelerate.bind(null, 0, -0.5);
+    commands[DOWN]  = accelerate.bind(null, 0,  0.5);
+    commands[LEFT]  = accelerate.bind(null, -0.5, 0);
+    commands[RIGHT] = accelerate.bind(null, 0.5,  0);
+    commands[SPACE] = teleport;
+  },
+
   init = function init() {
     canvas  = createBuffer();
     ctx     = canvas.getContext('2d');
@@ -467,6 +479,7 @@ var
     ];
 
     loadImages();
+    setCommands();
 
     abcImage      = imgs[0];
     tileset       = imgs[3];
