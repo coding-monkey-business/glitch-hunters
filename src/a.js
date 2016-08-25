@@ -21,7 +21,6 @@ var
   applied   = {},
 
   ANIMATION_TIME_UNIT = 90,
-  runLoop   = true,
   ctx,
   bctx,
   buffer,
@@ -30,11 +29,11 @@ var
   updater,
   abcImage,
   tileset,
-  map,
-  UP    = 87,
-  DOWN  = 83,
-  RIGHT = 68,
-  LEFT  = 65,
+  map2DArray,
+  UP    = 87, // w
+  DOWN  = 83, // s
+  RIGHT = 68, // d
+  LEFT  = 65, // a
 
   getId = function getId() {
     return ++id;
@@ -70,25 +69,12 @@ var
       yIncrement = -1;
     }
 
-    // var r = 255; // temporary, debugging purposes
     for (;ax !== bx && ax < arr.length - 1; ax+= xIncrement) {
       arr[ax][ay] = arr[ax][ay] || 3;
-
-      // temporary, debugging purposes
-      // if (bctx) {
-      //   bctx.fillStyle = 'rgb(' + (r-=20) + ',0,0)';
-      //   bctx.fillRect(ax * 5 + 1, ay * 5 + 1, 2, 2);
-      // }
     }
 
     for (;ay !== by && ay < arr[ax].length - 1; ay+= yIncrement) {
       arr[ax][ay] = arr[ax][ay] || 3;
-
-      // temporary, debugging purposes
-      // if (bctx) {
-      //   bctx.fillStyle = 'rgb(' + (r-=20) + ',0,0)';
-      //   bctx.fillRect(ax * 5 + 1, ay * 5 + 1, 2, 2);
-      // }
     }
 
   },
@@ -109,13 +95,10 @@ var
       x = Math.min(Math.max(xc - (w >> 1), 0), sizeX - 1);
       y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - 1);
 
-      bctx.fillStyle = '#555';// temporary, debugging purposes
       while (i++ < w && (xi = x + i) < sizeX) {
         j = 0;
         while (j++ < h && y + j < sizeY) {
           arr[xi][y + j] = arr[xi][y + j] || color;
-          // temporary, debugging purposes
-          // bctx.fillRect(xi * 5, (y + j) * 5, 4, 4);
         }
       }
 
@@ -162,29 +145,45 @@ var
     return arr;
   },
 
-  renderMap = function renderMap(arr, x, y) {
-    x = 0;
+  renderMap = function renderMap(arr, x, y, tilesizeX, tilesizeY) {
+    tilesizeX = tilesizeY = 16;
     for (x = 0; x < arr.length; x++) {
       for (y = 0; y < arr[x].length; y++) {
-        bctx.drawImage(
-          tileset, //img
-          arr[x][y] ? 16 : 32, //sx
-          arr[x][y] ? 16 : 9, //sy
-          16, //sw
-          arr[x][y] ? 16 : 32, //sh
-          x * 16, //dx
-          y * 16 - (arr[x][y] ? 0 : 9), //dy
-          16, //dh
-          arr[x][y] ? 16 : 32 //dw
-        );
+        if (arr[x][y]) {
+          bctx.drawImage(
+            tileset, //img
+            ((x + y) % 2) * tilesizeX, //sx
+            tilesizeY, //sy
+            tilesizeX, //sw
+            tilesizeY, //sh
+            x * tilesizeX, //dx
+            y * tilesizeY, //dy
+            tilesizeX, //dw
+            tilesizeY //dh
+          );
+        } else {
+          //wall
+          bctx.drawImage(
+            tileset, //img
+            32, //sx
+            9, //sy
+            tilesizeX, //sw
+            32, //sh
+            x * tilesizeX, //dx
+            y * tilesizeY - 7, //dy
+            tilesizeX, //dw
+            32 //dh
+          );
+        }
       }
     }
   },
 
   /**
    * Just some color jittering (for now)
+   * @param {Number} type e.g. JITTER
    */
-  glitch = function glitch(obj, data, i) {
+  glitch = function glitch(type, obj, data, i) {
     obj  = bctx.getImageData(0, 0, WIDTH, HEIGHT);
     data = obj.data;
     i    = data.length;
@@ -281,18 +280,24 @@ var
   },
 
   drawEntity = function drawEntity(entity, frame) {
-    frame %= 2;
+    frame %= 4;
 
+    // if (playerIsMoving) {
+    // sy = 16
+    // }
+    // if (playerIsIdling) {
+    // sy = 0;
+    // }
     bctx.drawImage(
       entity.i, //img
-      frame * 20, //sx
-      0, //sy
-      20, //sw
-      20, //sh
+      frame * 16, //sx
+      16, //sy
+      16, //sw
+      16, //sh
       entity.x, //dx
       entity.y, //dy
-      20,
-      20
+      16,
+      16
     );
   },
 
@@ -323,10 +328,11 @@ var
 
   updateGame = function updateGame() {
     updateEntity(player);
-    renderMap(map);
+
+    renderMap(map2DArray);
+
     drawEntity(player, aFrames);
-    // runLoop = false;
-    // glitch();
+    glitch();
   },
 
   updateIntro = function updateIntro() {
@@ -347,9 +353,7 @@ var
     updater();
 
     ctx.drawImage(buffer, 0, 0, 3 * WIDTH, 3 * HEIGHT);
-    if (runLoop) {
-      win.requestAnimationFrame(updateLoop);
-    }
+    win.requestAnimationFrame(updateLoop);
   },
 
   startLoop = function startLoop() {
@@ -464,7 +468,7 @@ var
     win.onkeydown = onkeydown;
     win.onkeyup   = onkeyup;
 
-    map = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
+    map2DArray = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
 
     setScreen(screen);
 
