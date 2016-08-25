@@ -9,6 +9,7 @@ var
 
   MAP_SIZE_X= 20,
   MAP_SIZE_Y= 20,
+  TILESIZE_X= 16,// everything is square right now
   buffer    = doc.createElement('canvas'),
 
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
@@ -149,7 +150,7 @@ var
     tilesizeX = tilesizeY = 16;
     for (x = 0; x < arr.length; x++) {
       for (y = 0; y < arr[x].length; y++) {
-        if (arr[x][y]) {
+        if (arr[x][y] !== undefined) {
           bctx.drawImage(
             tileset, //img
             ((x + y) % 2) * tilesizeX, //sx
@@ -314,15 +315,26 @@ var
     return dx;
   },
 
-  updateEntity = function updateEntity(entity, dx, dy, friction) {
+  updateEntity = function updateEntity(entity, dx, dy, friction, x, y, tileX, tileY) {
     friction = 0.8;
 
     dx = getSpeed(entity.dx, entity.ddx, entity.md, friction);
     dy = getSpeed(entity.dy, entity.ddy, entity.md, friction);
 
-    entity.x   += dx;
+    x = entity.x + dx;
+    y = entity.y + dy;
+    tileX = Math.round(x / TILESIZE_X);
+    tileY = Math.round(y / TILESIZE_X);
+
+    // TODO: this is the naive implementation
+    if (!map2DArray[tileX][tileY]) {
+      x = entity.x;
+      y = entity.y;
+    }
+
+    entity.x    = x;
     entity.dx   = dx;
-    entity.y   += dy;
+    entity.y    = y;
     entity.dy   = dy;
   },
 
@@ -332,7 +344,7 @@ var
     renderMap(map2DArray);
 
     drawEntity(player, aFrames);
-    glitch();
+    // glitch();
   },
 
   updateIntro = function updateIntro() {
@@ -458,7 +470,7 @@ var
 
     abcImage      = imgs[0];
     tileset       = imgs[3];
-    player        = createEntity(100, 100, imgs[2]);
+    player        = createEntity(160, 160, imgs[2]); // MAP_SIZE_X * TILESIZE_X) >> 1, there should always be some room in the center
     buffer.width  = WIDTH;
     buffer.height = HEIGHT;
     canvas.width  = 3 * WIDTH;
