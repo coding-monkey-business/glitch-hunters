@@ -379,32 +379,32 @@ var
     return event.keyCode || event.which;
   },
 
-  command = function command(event, apply, code, ddvalue) {
-    code = getCode(event);
+  runCommand = function runCommand(event, apply, code, command) {
+    code    = getCode(event);
+    command = applied[code]^apply && commands[code];
 
-    if (!(applied[code]^apply)) {
+    if (!command) {
       return;
     }
 
     applied[code] = apply;
 
-    if (commands[code]) {
-      commands[code](apply);
-    }
+    command(apply);
+    event.preventDefault();
   },
 
   /**
    * @param {Event} event
    */
   onkeyup = function onkeyup(event) {
-    command(event);
+    runCommand(event);
   },
 
   /**
    * @param {Event} event
    */
   onkeydown = function onkeydown(event) {
-    command(event, true);
+    runCommand(event, true);
   },
 
   /**
