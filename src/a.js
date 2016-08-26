@@ -276,19 +276,24 @@ var
     }
   },
 
-  drawEntity = function drawEntity(entity, frame) {
-    frame %= 4;
+  isEntityMoving = function isEntityMoving(entity) {
+    if (entity.ddx > 0) {
+      return 1;
+    }
 
-    // if (playerIsMoving) {
-    // sy = 16
-    // }
-    // if (playerIsIdling) {
-    // sy = 0;
-    // }
+    if (entity.ddx < 0) {
+      return -1;
+    }
+  },
+
+  drawEntity = function drawEntity(entity, frame, sy) {
+    frame %= 4;
+    sy     = isEntityMoving(entity) ? 16 : 0;
+
     bctx.drawImage(
       entity.img, //img
       frame * 16, //sx
-      16, //sy
+      sy, //sy
       16, //sw
       16, //sh
       entity.x, //dx
@@ -433,12 +438,15 @@ var
     }
   },
 
-  teleport = function teleport(apply) {
+  teleport = function teleport(apply, moving) {
+    moving  = isEntityMoving(player);
+    apply   = moving && apply;
+
     if (!apply) {
       return;
     }
 
-    player.x += (player.ddx > 0 ? 1 : -1) * 40;
+    player.x += moving * 40;
   },
 
   accelerate = function accelerate(ddx, ddy, apply) {
