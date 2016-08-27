@@ -453,8 +453,12 @@ var
     return image;
   },
 
-  createBuffer = function createBuffer() {
-    return doc.createElement('canvas');
+  createCanvas = function createCanvas(factor, canvas) {
+    canvas        = doc.createElement('canvas');
+    canvas.width  = factor * WIDTH;
+    canvas.height = factor * HEIGHT;
+
+    return canvas;
   },
 
   loadImages = function loadImages(len) {
@@ -501,12 +505,12 @@ var
   },
 
   init = function init() {
-    canvas  = createBuffer();
+    canvas  = createCanvas(1);
     ctx     = canvas.getContext('2d');
 
     doc.body.appendChild(canvas);
 
-    buffer  = createBuffer();
+    buffer  = createCanvas(3);
     bctx    = buffer.getContext('2d');
 
     updaters = [
@@ -537,10 +541,6 @@ var
 
     abcImage      = imgs[0];
     tileset       = imgs[3];
-    buffer.width  = WIDTH;
-    buffer.height = HEIGHT;
-    canvas.width  = 3 * WIDTH;
-    canvas.height = 3 * HEIGHT;
 
     win.onclick   = onclick;
     win.onkeydown = onkeydown;
