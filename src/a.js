@@ -505,12 +505,12 @@ var
   },
 
   init = function init() {
-    canvas  = createCanvas(1);
+    canvas  = createCanvas(3);
     ctx     = canvas.getContext('2d');
 
     doc.body.appendChild(canvas);
 
-    buffer  = createCanvas(3);
+    buffer  = createCanvas(1);
     bctx    = buffer.getContext('2d');
 
     updaters = [
