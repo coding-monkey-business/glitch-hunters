@@ -39,6 +39,14 @@ var
     return ++id;
   },
 
+  createCanvas = function createCanvas(factor, canvas) {
+    canvas        = doc.createElement('canvas');
+    canvas.width  = factor * WIDTH;
+    canvas.height = factor * HEIGHT;
+
+    return canvas;
+  },
+
   createEntity = function createEntity(x, y, img, cfg) {
     return {
       'img' : img,
@@ -451,14 +459,6 @@ var
     image.src = src;
 
     return image;
-  },
-
-  createCanvas = function createCanvas(factor, canvas) {
-    canvas        = doc.createElement('canvas');
-    canvas.width  = factor * WIDTH;
-    canvas.height = factor * HEIGHT;
-
-    return canvas;
   },
 
   loadImages = function loadImages(len) {
