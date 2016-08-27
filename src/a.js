@@ -39,9 +39,10 @@ var
     return ++id;
   },
 
-  createEntity = function createEntity(x, y, img) {
+  createEntity = function createEntity(x, y, img, cfg) {
     return {
       'img' : img,
+      'cfg' : cfg,
       'pos' : [x, y],
       'spd' : [0, 0],
       'acc' : [0, 0]
@@ -282,14 +283,14 @@ var
     return res[0] === 0 && res[1] === 0 ? 0 : res;
   },
 
-  drawEntity = function drawEntity(entity, frame, sy) {
-    frame %= 4;
-    sy     = entity.moving ? 16 : 0;
+  drawEntity = function drawEntity(entity, frame, cfg) {
+    cfg    = entity.cfg[entity.state];
+    frame %= cfg.frames;
 
     bctx.drawImage(
       entity.img, //img
       frame * 16, //sx
-      sy, //sy
+      cfg.y || 0, //sy
       16, //sw
       16, //sh
       entity.pos[0], //dx
@@ -311,7 +312,7 @@ var
     return axisSpd;
   },
 
-  updateSpeed = function updateSpeed(entity, acc, spd) {
+  updateEntitySpeed = function updateEntitySpeed(entity, acc, spd) {
     acc = entity.acc;
     spd = entity.spd;
 
@@ -321,16 +322,13 @@ var
     return spd;
   },
 
-  updatePosition = function updatePosition(entity, spd, pos, oldX, oldY, tileX, tileY) {
+  updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldX, oldY, tileX, tileY) {
     pos  = entity.pos;
     spd  = entity.spd;
 
     if (!getMovingDirection(entity)) {
-      entity.moving = 0;
       return;
     }
-
-    entity.moving = 1;
 
     oldX = pos[0];
     oldY = pos[1];
@@ -348,6 +346,14 @@ var
     }
   },
 
+  updateEntityState = function updateEntityState(entity) {
+    if (getMovingDirection(entity)) {
+      entity.state = 'moving';
+    } else {
+      entity.state = 'idling';
+    }
+  },
+
   updateEntity = function updateEntity(entity, command, apply) {
     while (execute.length) {
       command = execute.shift();
@@ -355,8 +361,9 @@ var
       command(apply);
     }
 
-    updateSpeed(entity);
-    updatePosition(entity);
+    updateEntitySpeed(entity);
+    updateEntityPosition(entity);
+    updateEntityState(entity);
   },
 
   updateGame = function updateGame() {
@@ -509,7 +516,22 @@ var
 
     loadImages();
 
-    player = createEntity(160, 160, imgs[2]); // MAP_SIZE_X * TILESIZE_X) >> 1, there should always be some room in the center
+    //
+    // TODO pliz explain, not sure if that is where this comment belongs
+    //
+    // (MAP_SIZE_X * TILESIZE_X) >> 1,
+    // there should always be some room in the center
+    //
+    player = createEntity(160, 160, imgs[2], {
+      'idling' : {
+        'frames' : 6
+      },
+
+      'moving' : {
+        'frames'  : 4,
+        'y'       : 16
+      }
+    });
 
     setCommands();
 
