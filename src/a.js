@@ -11,6 +11,7 @@ var
   imgs      = [],
   applied   = {},
   commands  = {},
+  execute   = [],
 
   ANIMATION_TIME_UNIT = 90,
   MAP_SIZE_X          = 20,
@@ -21,6 +22,8 @@ var
   RIGHT               = 68, // d
   LEFT                = 65, // a
   SPACE               = 32,
+  FRICTION            = 0.8,
+  ZERO_LIMIT          = 0.2,
 
   ctx,
   bctx,
@@ -39,13 +42,9 @@ var
   createEntity = function createEntity(x, y, img) {
     return {
       'img' : img,
-      'x'   : x,
-      'y'   : y,
-      'md'  : 3,
-      'dx'  : 0,
-      'dy'  : 0,
-      'ddx' : 0,
-      'ddy' : 0
+      'pos' : [x, y],
+      'spd' : [0, 0],
+      'acc' : [0, 0]
     };
   },
 
@@ -276,19 +275,16 @@ var
     }
   },
 
-  isEntityMoving = function isEntityMoving(entity) {
-    if (entity.ddx > 0) {
-      return 1;
-    }
+  getMovingDirection = function getMovingDirection(entity, spd, res) {
+    spd = entity.spd;
+    res = [Math.sign(spd[0]), Math.sign(spd[1])];
 
-    if (entity.ddx < 0) {
-      return -1;
-    }
+    return res[0] === 0 && res[1] === 0 ? 0 : res;
   },
 
   drawEntity = function drawEntity(entity, frame, sy) {
     frame %= 4;
-    sy     = isEntityMoving(entity) ? 16 : 0;
+    sy     = entity.moving ? 16 : 0;
 
     bctx.drawImage(
       entity.img, //img
@@ -296,8 +292,8 @@ var
       sy, //sy
       16, //sw
       16, //sh
-      entity.x, //dx
-      entity.y, //dy
+      entity.pos[0], //dx
+      entity.pos[1], //dy
       16,
       16
     );
@@ -307,37 +303,60 @@ var
     updater = fn;
   },
 
-  getSpeed = function getSpeed(dx, ddx, md, friction) {
-    dx += ddx;
-    dx *= friction;
-    dx = Math.min(dx, md);
-    dx = Math.max(dx, -md);
+  getAxisSpeed = function getAxisSpeed(axisSpd, axisAcc) {
+    axisSpd += axisAcc;
+    axisSpd *= FRICTION;
+    axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
 
-    return dx;
+    return axisSpd;
   },
 
-  updateEntity = function updateEntity(entity, dx, dy, friction, x, y, tileX, tileY) {
-    friction = 0.8;
+  updateSpeed = function updateSpeed(entity, acc, spd) {
+    acc = entity.acc;
+    spd = entity.spd;
 
-    dx = getSpeed(entity.dx, entity.ddx, entity.md, friction);
-    dy = getSpeed(entity.dy, entity.ddy, entity.md, friction);
+    spd[0] = getAxisSpeed(spd[0], acc[0]);
+    spd[1] = getAxisSpeed(spd[1], acc[1]);
 
-    x = entity.x + dx;
-    y = entity.y + dy;
+    return spd;
+  },
 
-    tileX = Math.round(x / TILESIZE_X);
-    tileY = Math.round(y / TILESIZE_X);
+  updatePosition = function updatePosition(entity, spd, pos, oldX, oldY, tileX, tileY) {
+    pos  = entity.pos;
+    spd  = entity.spd;
+
+    if (!getMovingDirection(entity)) {
+      entity.moving = 0;
+      return;
+    }
+
+    entity.moving = 1;
+
+    oldX = pos[0];
+    oldY = pos[1];
+
+    pos[0] += spd[0];
+    pos[1] += spd[1];
+
+    tileX = Math.round(pos[0] / TILESIZE_X);
+    tileY = Math.round(pos[1] / TILESIZE_X);
 
     // TODO: this is the naive implementation
     if (!map2DArray[tileX][tileY]) {
-      x = entity.x;
-      y = entity.y;
+      pos[0] = oldX;
+      pos[1] = oldY;
+    }
+  },
+
+  updateEntity = function updateEntity(entity, command, apply) {
+    while (execute.length) {
+      command = execute.shift();
+      apply   = execute.shift();
+      command(apply);
     }
 
-    entity.x    = x;
-    entity.dx   = dx;
-    entity.y    = y;
-    entity.dy   = dy;
+    updateSpeed(entity);
+    updatePosition(entity);
   },
 
   updateGame = function updateGame() {
@@ -384,7 +403,7 @@ var
     return event.keyCode || event.which;
   },
 
-  runCommand = function runCommand(event, apply, code, command) {
+  setCommand = function setCommand(event, apply, code, command) {
     code    = getCode(event);
     command = applied[code]^apply && commands[code];
 
@@ -392,9 +411,10 @@ var
       return;
     }
 
+    execute.push(command, apply);
+
     applied[code] = apply;
 
-    command(apply);
     event.preventDefault();
   },
 
@@ -402,20 +422,20 @@ var
    * @param {Event} event
    */
   onkeyup = function onkeyup(event) {
-    runCommand(event);
+    setCommand(event);
   },
 
   /**
    * @param {Event} event
    */
   onkeydown = function onkeydown(event) {
-    runCommand(event, true);
+    setCommand(event, true);
   },
 
   /**
    * @param {Event} event
    */
-  onclick = function onclick(event) {
+  onclick = function onclick() {
     setScreen(1);
   },
 
@@ -438,32 +458,38 @@ var
     }
   },
 
-  teleport = function teleport(apply, moving) {
-    moving  = isEntityMoving(player);
-    apply   = moving && apply;
+  teleport = function teleport(apply, direction, pos) {
+    direction = getMovingDirection(player);
+    apply     = direction && apply;
 
     if (!apply) {
       return;
     }
 
-    player.x += moving * 40;
+    pos = player.pos;
+
+    pos[0] += direction[0] * 40;
+    pos[1] += direction[1] * 40;
   },
 
-  accelerate = function accelerate(ddx, ddy, apply) {
+  accelerate = function accelerate(entity, newAcc, apply, acc) {
+    acc     = entity.acc;
+    newAcc  = newAcc.slice();
+
     if (!apply) {
-      ddx *= -1;
-      ddy *= -1;
+      newAcc[0] *= -1;
+      newAcc[1] *= -1;
     }
 
-    player.ddx += ddx;
-    player.ddy += ddy;
+    acc[0] += newAcc[0];
+    acc[1] += newAcc[1];
   },
 
   setCommands = function setCommands() {
-    commands[UP]    = accelerate.bind(null, 0, -0.5);
-    commands[DOWN]  = accelerate.bind(null, 0,  0.5);
-    commands[LEFT]  = accelerate.bind(null, -0.5, 0);
-    commands[RIGHT] = accelerate.bind(null, 0.5,  0);
+    commands[UP]    = accelerate.bind(0, player, [0, -0.5]);
+    commands[DOWN]  = accelerate.bind(0, player, [0,  0.5]);
+    commands[LEFT]  = accelerate.bind(0, player, [-0.5, 0]);
+    commands[RIGHT] = accelerate.bind(0, player, [0.5,  0]);
     commands[SPACE] = teleport;
   },
 
@@ -482,11 +508,13 @@ var
     ];
 
     loadImages();
+
+    player = createEntity(160, 160, imgs[2]); // MAP_SIZE_X * TILESIZE_X) >> 1, there should always be some room in the center
+
     setCommands();
 
     abcImage      = imgs[0];
     tileset       = imgs[3];
-    player        = createEntity(160, 160, imgs[2]); // MAP_SIZE_X * TILESIZE_X) >> 1, there should always be some room in the center
     buffer.width  = WIDTH;
     buffer.height = HEIGHT;
     canvas.width  = 3 * WIDTH;
@@ -517,8 +545,9 @@ win.onload = init;
 // task.
 //
 win.test = {
-  'getId'     : getId,
-  'field'     : field,
-  'drawPath'  : drawPath,
-  'createRoom': createRoom
+  'getId'               : getId,
+  'field'               : field,
+  'drawPath'            : drawPath,
+  'createRoom'          : createRoom,
+  'getMovingDirection'  : getMovingDirection
 };
