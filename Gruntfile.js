@@ -139,7 +139,7 @@ var
       'strict' : {
         'options' : {
           'noempty' : true,
-          'unused'  : 'vars'
+          'unused'  : true
         },
 
         'files' : {
@@ -173,7 +173,7 @@ var
 
     'watch' : {
       'dev' : {
-        'files' : ['src/**/*'],
+        'files' : ['src/**/*', 'test/**/*'],
         'tasks' : ['build:dev']
       }
     },
