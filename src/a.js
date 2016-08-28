@@ -5,6 +5,7 @@ var
   HEIGHT    = 240,
   id        = 0,
   aFrames   = 0,
+  gFrames   = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
   updaters  = [],
@@ -12,8 +13,10 @@ var
   applied   = {},
   commands  = {},
   execute   = [],
+  entities  = [],
 
-  ANIMATION_TIME_UNIT = 90,
+  ANIMATION_TIME_UNIT = 80,
+  GAME_TIME_UNIT      = 20,
   MAP_SIZE_X          = 20,
   MAP_SIZE_Y          = 20,
   TILESIZE_X          = 16, // everything is square right now
@@ -28,11 +31,12 @@ var
   mctx,
   bctx,
   main,
+  gFrame,
   buffer,
   player,
   updater,
-  abcImage,
   tileset,
+  abcImage,
   map2DArray,
 
   getId = function getId() {
@@ -188,7 +192,7 @@ var
    * Just some color jittering (for now)
    * @param {Number} type e.g. JITTER
    */
-  glitch = function glitch(canvas, ctx, type, obj, data, i) {
+  glitch = function glitch(canvas, ctx, obj, data, i) {
     ctx  = canvas.getContext('2d');
     obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     data = obj.data;
@@ -292,20 +296,21 @@ var
     return res[0] === 0 && res[1] === 0 ? 0 : res;
   },
 
-  drawEntity = function drawEntity(entity, frame, cfg) {
-    cfg    = entity.cfg[entity.state];
-    frame %= cfg.frames;
+  drawEntity = function drawEntity(entity, frame, cfg, frameCfg) {
+    cfg       = entity.cfg;
+    frameCfg  = cfg[entity.state];
+    frame    %= frameCfg.frames;
 
     bctx.drawImage(
       entity.img, //img
-      frame * 16, //sx
-      cfg.y || 0, //sy
-      16, //sw
-      16, //sh
+      frame * cfg.size, //sx
+      frameCfg.y || 0, //sy
+      cfg.size, //sw
+      cfg.size, //sh
       entity.pos[0], //dx
       entity.pos[1], //dy
-      16,
-      16
+      cfg.size,
+      cfg.size
     );
   },
 
@@ -319,6 +324,16 @@ var
     axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
 
     return axisSpd;
+  },
+
+  setEntityState = function setEntityState(entity, state, counter) {
+    // ATM reset global frames, but should be entity specific.
+    if (state !== entity.state) {
+      aFrames = 0;
+    }
+
+    entity.state    = state;
+    entity.counter  = counter;
   },
 
   updateEntitySpeed = function updateEntitySpeed(entity, acc, spd) {
@@ -336,6 +351,7 @@ var
     spd  = entity.spd;
 
     if (!getMovingDirection(entity)) {
+      setEntityState(entity, 'idling');
       return;
     }
 
@@ -348,6 +364,8 @@ var
     tileX = Math.round(pos[0] / TILESIZE_X);
     tileY = Math.round(pos[1] / TILESIZE_X);
 
+    setEntityState(entity, 'moving');
+
     // TODO: this is the naive implementation
     if (!map2DArray[tileX][tileY]) {
       pos[0] = oldX;
@@ -355,33 +373,70 @@ var
     }
   },
 
-  updateEntityState = function updateEntityState(entity) {
-    if (getMovingDirection(entity)) {
-      entity.state = 'moving';
+  teleport = function teleport(apply, finished, direction, pos) {
+    direction = getMovingDirection(player);
+    apply     = direction && apply;
+
+    if (!apply) {
+      return;
+    }
+
+    pos = player.pos;
+
+    if (finished) {
+      pos[0] += direction[0] * 40;
+      pos[1] += direction[1] * 40;
     } else {
-      entity.state = 'idling';
+      setEntityState(player, 'tping', 12);
+    }
+  },
+
+  updateEntityCounter = function updateEntityCounter(entity) {
+    if (entity.state === 'tping') {
+      entity.counter--;
+
+      if (entity.counter === 0) {
+        teleport(1, 1);
+
+        setEntityState(entity, 'idling');
+      }
     }
   },
 
   updateEntity = function updateEntity(entity, command, apply) {
+    updateEntityCounter(entity);
+
     while (execute.length) {
       command = execute.shift();
       apply   = execute.shift();
       command(apply);
     }
 
+    if (entity.counter) {
+      return;
+    }
+
     updateEntitySpeed(entity);
     updateEntityPosition(entity);
-    updateEntityState(entity);
   },
 
-  updateGame = function updateGame() {
-    updateEntity(player);
-
+  updateGame = function updateGame(len) {
     renderMap(map2DArray);
 
-    drawEntity(player, aFrames);
-    // glitch();
+    if (gFrame !== gFrames) {
+      gFrame  = gFrames;
+      len     = entities.length;
+
+      while (len--) {
+        updateEntity(entities[len]);
+      }
+    }
+
+    len = entities.length;
+
+    while (len--) {
+      drawEntity(entities[len], aFrames);
+    }
   },
 
   updateIntro = function updateIntro() {
@@ -395,6 +450,7 @@ var
    */
   updateLoop = function updateLoop(timestamp) {
     aFrames = Math.floor(timestamp / ANIMATION_TIME_UNIT);
+    gFrames = Math.floor(timestamp / GAME_TIME_UNIT);
 
     bctx.fillStyle = '#000';
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -470,20 +526,6 @@ var
     }
   },
 
-  teleport = function teleport(apply, direction, pos) {
-    direction = getMovingDirection(player);
-    apply     = direction && apply;
-
-    if (!apply) {
-      return;
-    }
-
-    pos = player.pos;
-
-    pos[0] += direction[0] * 40;
-    pos[1] += direction[1] * 40;
-  },
-
   accelerate = function accelerate(entity, newAcc, apply, acc) {
     acc     = entity.acc;
     newAcc  = newAcc.slice();
@@ -516,12 +558,29 @@ var
    * @param {Image} img
    * @return {HTMLCanvasElement}
    */
-  createPlayerSprites = function createPlayerSprites(img, canvas, ctx) {
-    canvas  = createCanvas(1);
-    ctx     = canvas.getContext('2d');
+  createPlayerSprites = function createPlayerSprites(cfg, img, canvas, ctx, x, i, w, frames) {
+    canvas    = createCanvas(1);
+    ctx       = canvas.getContext('2d');
+    frames    = cfg.tping.frames;
 
     ctx.drawImage(img, 0, 0);
-    // glitch(canvas);
+
+    for (i = 0; i < frames; i++) {
+      x = cfg.size * i;
+      w = cfg.size * (frames - i) / frames;
+
+      ctx.drawImage(
+        img,
+        x, // sx
+        cfg.size, // sy
+        cfg.size, // sw
+        cfg.size, // sh
+        x + cfg.size / 2 - w / 2, // dx
+        img.height, // dy
+        w, // dw
+        cfg.size // dh
+      );
+    }
 
     return canvas;
   },
@@ -548,7 +607,9 @@ var
     // (MAP_SIZE_X * TILESIZE_X) >> 1,
     // there should always be some room in the center
     //
-    player = createEntity(160, 160, createPlayerSprites(imgs[2]), {
+    player = {
+      'size' : 16,
+
       'idling' : {
         'frames' : 6
       },
@@ -556,8 +617,16 @@ var
       'moving' : {
         'frames'  : 4,
         'y'       : 16
+      },
+
+      'tping' : {
+        'frames'  : 4,
+        'y'       : 32
       }
-    });
+    };
+
+    player = createEntity(160, 160, createPlayerSprites(player, imgs[2]), player);
+    entities.push(player);
 
     setCommands();
 
