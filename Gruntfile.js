@@ -228,6 +228,7 @@ var
     ],
 
     'asset' : [
+      'clean',
       'pngmin',
       'exec:zopflipng',
       'asset:stringify'
@@ -357,7 +358,7 @@ var
       grunt.log.writeln(chalk.green('# stringifying: ' + filepath));
 
       suffix  = '\'' + (i < len - 1 ? ',\n' : '');
-      result += format('// ' + filename);
+      result += format('// imgs[' + i + '] - ' + filename);
       result += format('\'data:image/png;base64,' + base64Encode(filepath) + suffix);
     }
 

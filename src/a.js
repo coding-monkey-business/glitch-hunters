@@ -9,7 +9,7 @@ var
   screen    = 0, // 0 =  title, 1 = game, etc
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
   updaters  = [],
-  imgs      = [],
+  images    = [],
   applied   = {},
   commands  = {},
   execute   = [],
@@ -44,10 +44,16 @@ var
     return ++id;
   },
 
-  createCanvas = function createCanvas(factor, canvas) {
+  createCanvas = function createCanvas(width, height, canvas) {
     canvas        = doc.createElement('canvas');
-    canvas.width  = factor * WIDTH;
-    canvas.height = factor * HEIGHT;
+    canvas.width  = width  || WIDTH;
+    canvas.height = height || HEIGHT;
+
+    canvas.getCtx = function getCtx(ctx) {
+      ctx = canvas.getContext('2d');
+      ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
+      return ctx;
+    };
 
     return canvas;
   },
@@ -194,7 +200,7 @@ var
    * @param {Number} type e.g. JITTER
    */
   glitch = function glitch(canvas, ctx, obj, data, i) {
-    ctx  = canvas.getContext('2d');
+    ctx  = canvas.getCtx();
     obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     data = obj.data;
     i    = data.length;
@@ -525,11 +531,11 @@ var
     return image;
   },
 
-  loadImages = function loadImages(len) {
+  setImages = function setImages(len) {
     len = win.img.length;
 
     while (len--) {
-      imgs.unshift(createImage(win.img[len]));
+      images.unshift(createImage(win.img[len]));
     }
   },
 
@@ -566,8 +572,8 @@ var
    * @return {HTMLCanvasElement}
    */
   createPlayerSprites = function createPlayerSprites(cfg, img, canvas, ctx, x, i, w, frames) {
-    canvas    = createCanvas(1);
-    ctx       = canvas.getContext('2d');
+    canvas    = createCanvas();
+    ctx       = canvas.getCtx();
     frames    = cfg.tping.frames;
 
     ctx.drawImage(img, 0, 0);
@@ -592,21 +598,27 @@ var
     return canvas;
   },
 
-  init = function init() {
-    main    = createCanvas(3);
-    mctx    = main.getContext('2d');
+  init = function init(cursor, cctx, cursorImg) {
+    setImages();
+
+    cursorImg = images[1];
+    cursor    = createCanvas(32, 32);
+    cctx      = cursor.getCtx();
+    cctx.drawImage(cursorImg, 0, 0, 32, 32);
+    document.body.style.cursor = 'url("' + cursor.toDataURL() + '"), auto';
+
+    main    = createCanvas(3 * WIDTH, 3 * HEIGHT);
+    mctx    = main.getCtx();
 
     doc.body.appendChild(main);
 
-    buffer  = createCanvas(1);
-    bctx    = buffer.getContext('2d');
+    buffer  = createCanvas();
+    bctx    = buffer.getCtx();
 
     updaters = [
       updateIntro,
       updateGame
     ];
-
-    loadImages();
 
     //
     // TODO pliz explain, not sure if that is where this comment belongs
@@ -632,13 +644,13 @@ var
       }
     };
 
-    player = createEntity(160, 160, createPlayerSprites(player, imgs[2]), player);
+    player = createEntity(160, 160, createPlayerSprites(player, images[3]), player);
     entities.push(player);
 
     setCommands();
 
-    abcImage      = imgs[0];
-    tileset       = imgs[3];
+    abcImage      = images[0];
+    tileset       = images[4];
 
     win.onclick   = onclick;
     win.onkeydown = onkeydown;
@@ -648,8 +660,6 @@ var
 
     setScreen(screen);
 
-    // just testing
-    mctx.mozImageSmoothingEnabled = mctx.imageSmoothingEnabled = false;
     startLoop();
   };
 
