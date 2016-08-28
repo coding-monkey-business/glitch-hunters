@@ -56,21 +56,21 @@ describe('map', function () {
   });
 });
 
-describe('.getMovingDirection()', function () {
+describe('.getAccDirection()', function () {
   it('should return correct values', function () {
 
     var
       createEntity = function createEntity(x, y) {
         return {
-          'spd' : [x, y]
+          'acc' : [x, y]
         };
       };
 
-    expect(test.getMovingDirection(createEntity(1, 2))).toEqual([1, 1]);
-    expect(test.getMovingDirection(createEntity(-1, 2))).toEqual([-1, 1]);
-    expect(test.getMovingDirection(createEntity(1, -200))).toEqual([1, -1]);
-    expect(test.getMovingDirection(createEntity(0, -200))).toEqual([0, -1]);
-    expect(test.getMovingDirection(createEntity(100, 0))).toEqual([1, 0]);
-    expect(test.getMovingDirection(createEntity(0, 0))).toEqual(0);
+    expect(test.getAccDirection(createEntity(1, 2))).toEqual([1, 1]);
+    expect(test.getAccDirection(createEntity(-1, 2))).toEqual([-1, 1]);
+    expect(test.getAccDirection(createEntity(1, -200))).toEqual([1, -1]);
+    expect(test.getAccDirection(createEntity(0, -200))).toEqual([0, -1]);
+    expect(test.getAccDirection(createEntity(100, 0))).toEqual([1, 0]);
+    expect(test.getAccDirection(createEntity(0, 0))).toEqual(0);
   });
 });

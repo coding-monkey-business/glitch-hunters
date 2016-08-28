@@ -296,9 +296,9 @@ var
     }
   },
 
-  getMovingDirection = function getMovingDirection(entity, spd, res) {
-    spd = entity.spd;
-    res = [Math.sign(spd[0]), Math.sign(spd[1])];
+  getAccDirection = function getAccDirection(entity, acc, res) {
+    acc = entity.acc;
+    res = [Math.sign(acc[0]), Math.sign(acc[1])];
 
     return res[0] === 0 && res[1] === 0 ? 0 : res;
   },
@@ -337,7 +337,7 @@ var
     return axisSpd;
   },
 
-  setEntityState = function setEntityState(entity, state, counter) {
+  setEntityState = function setEntityState(entity, state, counter, data) {
     // ATM reset global frames, but should be entity specific.
     if (state !== entity.state) {
       entity.frame = 0;
@@ -345,6 +345,7 @@ var
 
     entity.state    = state;
     entity.counter  = counter;
+    entity.data     = data;
   },
 
   updateEntitySpeed = function updateEntitySpeed(entity, acc, spd) {
@@ -361,7 +362,7 @@ var
     pos  = entity.pos;
     spd  = entity.spd;
 
-    if (!getMovingDirection(entity)) {
+    if (!getAccDirection(entity)) {
       setEntityState(entity, 'idling');
       return;
     }
@@ -385,7 +386,7 @@ var
   },
 
   teleport = function teleport(apply, finished, direction, pos) {
-    direction = getMovingDirection(player);
+    direction = direction || getAccDirection(player);
     apply     = direction && apply;
 
     if (!apply) {
@@ -398,7 +399,7 @@ var
       pos[0] += direction[0] * 40;
       pos[1] += direction[1] * 40;
     } else {
-      setEntityState(player, 'tping', 12);
+      setEntityState(player, 'tping', 12, direction);
     }
   },
 
@@ -407,7 +408,7 @@ var
       entity.counter--;
 
       if (entity.counter === 0) {
-        teleport(1, 1);
+        teleport(1, 1, entity.data);
 
         setEntityState(entity, 'idling');
       }
@@ -675,9 +676,9 @@ win.onload = init;
 // task.
 //
 win.test = {
-  'getId'               : getId,
-  'field'               : field,
-  'drawPath'            : drawPath,
-  'createRoom'          : createRoom,
-  'getMovingDirection'  : getMovingDirection
+  'getId'            : getId,
+  'field'            : field,
+  'drawPath'         : drawPath,
+  'createRoom'       : createRoom,
+  'getAccDirection'  : getAccDirection
 };
