@@ -1,4 +1,4 @@
-// Generated file (grunt compile:asset), no point of modifying it by hand.
+// Generated file (grunt asset), no point of modifying it by hand.
 
 window.img = [
   // zopfli_charset.png
