@@ -25,10 +25,10 @@ var
   FRICTION            = 0.8,
   ZERO_LIMIT          = 0.2,
 
-  ctx,
+  mctx,
   bctx,
+  main,
   buffer,
-  canvas,
   player,
   updater,
   abcImage,
@@ -188,8 +188,9 @@ var
    * Just some color jittering (for now)
    * @param {Number} type e.g. JITTER
    */
-  glitch = function glitch(type, obj, data, i) {
-    obj  = bctx.getImageData(0, 0, WIDTH, HEIGHT);
+  glitch = function glitch(canvas, ctx, type, obj, data, i) {
+    ctx  = canvas.getContext('2d');
+    obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     data = obj.data;
     i    = data.length;
 
@@ -206,7 +207,7 @@ var
       }
     }
 
-    bctx.putImageData(obj, 0, 0);
+    ctx.putImageData(obj, 0, 0);
   },
 
   /**
@@ -386,7 +387,7 @@ var
   updateIntro = function updateIntro() {
     starField();
     text(doc.title = '- GLITCHBUSTERS -', 90, 120, 2, aFrames);
-    glitch();
+    glitch(buffer);
   },
 
   /**
@@ -400,7 +401,7 @@ var
 
     updater();
 
-    ctx.drawImage(buffer, 0, 0, 3 * WIDTH, 3 * HEIGHT);
+    mctx.drawImage(buffer, 0, 0, 3 * WIDTH, 3 * HEIGHT);
     win.requestAnimationFrame(updateLoop);
   },
 
@@ -504,11 +505,32 @@ var
     commands[SPACE] = teleport;
   },
 
-  init = function init() {
-    canvas  = createCanvas(3);
+  /**
+   * Creates different animations based on the original
+   * player spritesheet.
+   *
+   * 1 - copy original sheet
+   * 2 - add extra states
+   * 3 - mirror sheet
+   *
+   * @param {Image} img
+   * @return {HTMLCanvasElement}
+   */
+  createPlayerSprites = function createPlayerSprites(img, canvas, ctx) {
+    canvas  = createCanvas(1);
     ctx     = canvas.getContext('2d');
 
-    doc.body.appendChild(canvas);
+    ctx.drawImage(img, 0, 0);
+    // glitch(canvas);
+
+    return canvas;
+  },
+
+  init = function init() {
+    main    = createCanvas(3);
+    mctx    = main.getContext('2d');
+
+    doc.body.appendChild(main);
 
     buffer  = createCanvas(1);
     bctx    = buffer.getContext('2d');
@@ -526,7 +548,7 @@ var
     // (MAP_SIZE_X * TILESIZE_X) >> 1,
     // there should always be some room in the center
     //
-    player = createEntity(160, 160, imgs[2], {
+    player = createEntity(160, 160, createPlayerSprites(imgs[2]), {
       'idling' : {
         'frames' : 6
       },
@@ -551,7 +573,7 @@ var
     setScreen(screen);
 
     // just testing
-    ctx.mozImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
+    mctx.mozImageSmoothingEnabled = mctx.imageSmoothingEnabled = false;
     startLoop();
   };
 
