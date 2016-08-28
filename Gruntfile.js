@@ -227,7 +227,7 @@ var
       'watch:dev'
     ],
 
-    'compile:asset' : [
+    'asset' : [
       'pngmin',
       'exec:zopflipng',
       'asset:stringify'
@@ -246,7 +246,6 @@ var
 
     'build' : [
       'clean',
-      'compile:asset',
       'compile:js',
       'minify',
       'inline'
@@ -322,7 +321,7 @@ var
   assetStringify = function assetStringify() {
     var
       i,
-      result      = '// Generated file (grunt compile:asset), no point of modifying it by hand.\n\nwindow.img = [\n',
+      result      = '// Generated file (grunt asset), no point of modifying it by hand.\n\nwindow.img = [\n',
       buildPath   = 'build',
       targetPath  = path.join('src', 'img.js'),
       list        = fs.readdirSync(buildPath),

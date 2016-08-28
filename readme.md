@@ -6,7 +6,8 @@
 ## setup
 ```bash
 npm install   # install dependencies
-./grunt       # or `grunt` to see if dev env works
+./grunt       # or `grunt` to see if dev env works / builds
+./grunt asset # regenerate img.js if new asset in img/
 ./server.js   # execute simple static server
 ```
 
