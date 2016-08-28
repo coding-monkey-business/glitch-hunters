@@ -31,6 +31,7 @@ var
   mctx,
   bctx,
   main,
+  aFrame,
   gFrame,
   buffer,
   player,
@@ -296,10 +297,10 @@ var
     return res[0] === 0 && res[1] === 0 ? 0 : res;
   },
 
-  drawEntity = function drawEntity(entity, frame, cfg, frameCfg) {
+  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg) {
     cfg       = entity.cfg;
     frameCfg  = cfg[entity.state];
-    frame    %= frameCfg.frames;
+    frame     = entity.frame % frameCfg.frames;
 
     bctx.drawImage(
       entity.img, //img
@@ -312,6 +313,10 @@ var
       cfg.size,
       cfg.size
     );
+
+    if (stepFrame) {
+      entity.frame++;
+    }
   },
 
   setUpdater = function setUpdater(fn) {
@@ -329,7 +334,7 @@ var
   setEntityState = function setEntityState(entity, state, counter) {
     // ATM reset global frames, but should be entity specific.
     if (state !== entity.state) {
-      aFrames = 0;
+      entity.frame = 0;
     }
 
     entity.state    = state;
@@ -420,7 +425,7 @@ var
     updateEntityPosition(entity);
   },
 
-  updateGame = function updateGame(len) {
+  updateGame = function updateGame(len, stepFrame) {
     renderMap(map2DArray);
 
     if (gFrame !== gFrames) {
@@ -432,10 +437,12 @@ var
       }
     }
 
-    len = entities.length;
+    stepFrame = aFrame !== aFrames;
+    aFrame    = aFrames;
+    len       = entities.length;
 
     while (len--) {
-      drawEntity(entities[len], aFrames);
+      drawEntity(entities[len], stepFrame);
     }
   },
 
