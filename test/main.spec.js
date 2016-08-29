@@ -29,8 +29,11 @@ describe('main', function () {
 
   describe('.getId', function () {
     it('should return newer ids on every call', function () {
-      expect(test.getId()).toBe(1);
-      expect(test.getId()).toBe(2);
+      var oldId;
+      expect(function () {
+        oldId = test.getId();
+      }).not.toThrow();
+      expect(test.getId()).toBeGreaterThan(oldId);
     });
   });
 

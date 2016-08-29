@@ -1,3 +1,4 @@
+/* globals aStar: false */
 var
   win       = window,
   doc       = document,
@@ -71,6 +72,7 @@ var
 
   createEntity = function createEntity(pos, img, cfg, spd, entity) {
     entity = {
+      'id'    : getId(),
       'img'   : img,
       'cfg'   : cfg,
       'pos'   : pos,
@@ -131,7 +133,11 @@ var
       while (i++ < w && (xi = x + i) < sizeX) {
         j = 0;
         while (j++ < h && y + j < sizeY) {
-          arr[xi][y + j] = arr[xi][y + j] || color;
+          try {
+            arr[xi][y + j] = arr[xi][y + j] || color;
+          } catch (e) {
+
+          }
         }
       }
 
@@ -198,7 +204,22 @@ var
       cfg.size
     );
 
-    bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
+    // bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
+
+    // TODO: remove route visualization
+    if (entity.route) {
+      bctx.fillStyle = '#f0f';
+      y = entity.route.length;
+      while (y--) {
+        bctx.fillRect(
+          entity.route[y][0] * TILESIZE_X + TILESIZE_X / 2 - 2,
+          entity.route[y][1] * TILESIZE_X + TILESIZE_X / 2 - 2,
+          4,
+          4
+        );
+      }
+    }
+
 
     if (stepFrame) {
       entity.frame++;
@@ -399,7 +420,25 @@ var
     entity.spd[axis] = axisSpd;
   },
 
-  updateEntitySpeed = function updateEntitySpeed(entity) {
+  updateEntitySpeed = function updateEntitySpeed(entity, route, x, y) {
+    if (entity.id !== player.id) {
+      route = aStar(
+        (x = entity.pos[0] / TILESIZE_X) | 0,
+        (y = entity.pos[1] / TILESIZE_X) | 0,
+        (player.pos[0] / TILESIZE_X) | 0,
+        (player.pos[1] / TILESIZE_X) | 0,
+        map2DArray,
+        {
+          'range': 1
+        }
+      );
+
+      // TODO: fix this
+      // entity.acc[0] -= (x - route[0][0]) / 10;
+      // entity.acc[1] -= (y - route[0][1]) / 10;
+      entity.route = route;
+    }
+
     updateEntitySpeedAxis(entity, 0);
     updateEntitySpeedAxis(entity, 1);
   },
@@ -594,6 +633,9 @@ var
       'friction' : 0.8,
 
       'idling' : {
+        'frames' : 4
+      },
+      'moving' : {
         'frames' : 4
       }
     };
@@ -802,6 +844,7 @@ if (DEBUG) {
 // Export every function here which should be tested by karma,
 //
 win.test = {
+  'aStar'            : aStar,
   'createRoom'       : createRoom,
   'drawPath'         : drawPath,
   'entities'         : entities,
