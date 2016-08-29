@@ -1,5 +1,5 @@
 # Stuff to implement
-- top walls should be rendered over the player
+- ~~top walls should be rendered over the player~~ (done)
 - player should fire projectiles into the cursor direction
 - there should be NPC mobs
 - 8-bit like music should be playing

@@ -161,10 +161,43 @@ var
     return arr;
   },
 
-  renderMap = function renderMap(arr, x, y, tilesizeX, tilesizeY) {
+  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg) {
+    cfg       = entity.cfg;
+    frameCfg  = cfg[entity.state];
+    frame     = entity.frame % frameCfg.frames;
+
+    bctx.drawImage(
+      entity.img, //img
+      frame * cfg.size, //sx
+      frameCfg.y || 0, //sy
+      cfg.size, //sw
+      cfg.size, //sh
+      // entity center is at the bottom center of their respective sprite
+      entity.pos[0] - (cfg.size>>1), //dx
+      entity.pos[1] - (cfg.size), //dy
+      cfg.size,
+      cfg.size
+    );
+
+    // bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
+
+    if (stepFrame) {
+      entity.frame++;
+    }
+  },
+
+  zCompare = function zCompare(a, b) {
+    return a.pos[1] - b.pos[1];
+  },
+
+  renderMap = function renderMap(arr, entityList, stepFrame, x, y, tilesizeX, tilesizeY, entityIndex) {
+    entityList.sort(zCompare);
+    entityIndex = 0;
+
     tilesizeX = tilesizeY = 16;
-    for (x = 0; x < arr.length; x++) {
-      for (y = 0; y < arr[x].length; y++) {
+
+    for (y = 0; y < arr[0].length; y++) {
+      for (x = 0; x < arr.length; x++) {
         if (arr[x][y] !== undefined) {
           bctx.drawImage(
             tileset, //img
@@ -178,7 +211,7 @@ var
             tilesizeY //dh
           );
         } else {
-          //wall
+          // wall
           bctx.drawImage(
             tileset, //img
             32, //sx
@@ -191,10 +224,16 @@ var
             32 //dh
           );
         }
+
+        if (entityIndex < entityList.length) {
+          if (Math.floor(entityList[entityIndex].pos[1] / tilesizeY) === (y) && Math.round(entityList[entityIndex].pos[0] / tilesizeX) === (x)) {
+            drawEntity(entityList[entityIndex], stepFrame);
+            entityIndex++;
+          }
+        }
       }
     }
   },
-
   /**
    * Just some color jittering (for now)
    * @param {Number} type e.g. JITTER
@@ -303,28 +342,6 @@ var
     return res[0] === 0 && res[1] === 0 ? 0 : res;
   },
 
-  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg) {
-    cfg       = entity.cfg;
-    frameCfg  = cfg[entity.state];
-    frame     = entity.frame % frameCfg.frames;
-
-    bctx.drawImage(
-      entity.img, //img
-      frame * cfg.size, //sx
-      frameCfg.y || 0, //sy
-      cfg.size, //sw
-      cfg.size, //sh
-      entity.pos[0], //dx
-      entity.pos[1], //dy
-      cfg.size,
-      cfg.size
-    );
-
-    if (stepFrame) {
-      entity.frame++;
-    }
-  },
-
   setUpdater = function setUpdater(fn) {
     updater = fn;
   },
@@ -373,8 +390,8 @@ var
     pos[0] += spd[0];
     pos[1] += spd[1];
 
-    tileX = Math.round(pos[0] / TILESIZE_X);
-    tileY = Math.round(pos[1] / TILESIZE_X);
+    tileX = Math.floor(pos[0] / TILESIZE_X);
+    tileY = Math.floor(pos[1] / TILESIZE_X);
 
     setEntityState(entity, 'moving');
 
@@ -433,8 +450,6 @@ var
   },
 
   updateGame = function updateGame(len, stepFrame) {
-    renderMap(map2DArray);
-
     if (gFrame !== gFrames) {
       gFrame  = gFrames;
       len     = entities.length;
@@ -448,9 +463,7 @@ var
     aFrame    = aFrames;
     len       = entities.length;
 
-    while (len--) {
-      drawEntity(entities[len], stepFrame);
-    }
+    renderMap(map2DArray, entities, stepFrame);
   },
 
   updateIntro = function updateIntro() {
