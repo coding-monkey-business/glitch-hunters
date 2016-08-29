@@ -15,6 +15,7 @@ var
   execute   = [],
   entities  = [],
 
+  APPLY_TYPES         = ['keydown', 'mousedown'],
   ANIMATION_TIME_UNIT = 80,
   GAME_TIME_UNIT      = 20,
   MAP_SIZE_X          = 20,
@@ -27,6 +28,8 @@ var
   SPACE               = 32,
   FRICTION            = 0.8,
   ZERO_LIMIT          = 0.2,
+  SHOOT               = 1,
+  STAGE_SCALE         = 3,
 
   mctx,
   bctx,
@@ -417,7 +420,7 @@ var
     }
   },
 
-  teleport = function teleport(apply, finished, direction, pos) {
+  teleport = function teleport(apply, event, finished, direction, pos) {
     direction = direction || getAccDirection(player);
     apply     = direction && apply;
 
@@ -440,20 +443,19 @@ var
       entity.counter--;
 
       if (entity.counter === 0) {
-        teleport(1, 1, entity.data);
+        teleport(1, 0, 1, entity.data);
 
         setEntityState(entity, 'idling');
       }
     }
   },
 
-  updateEntity = function updateEntity(entity, command, apply) {
+  updateEntity = function updateEntity(entity, command) {
     updateEntityCounter(entity);
 
     while (execute.length) {
       command = execute.shift();
-      apply   = execute.shift();
-      command(apply);
+      command(execute.shift(), execute.shift());
     }
 
     if (entity.counter) {
@@ -499,7 +501,7 @@ var
 
     updater();
 
-    mctx.drawImage(buffer, 0, 0, 3 * WIDTH, 3 * HEIGHT);
+    mctx.drawImage(buffer, 0, 0, STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
     win.requestAnimationFrame(updateLoop);
   },
 
@@ -507,17 +509,12 @@ var
     updateLoop();
   },
 
-  setScreen = function setScreen(newScreen) {
-    screen = newScreen;
-
-    setUpdater(updaters[screen]);
-  },
-
   getCode = function getCode(event) {
-    return event.keyCode || event.which;
+    return event.clientX ? SHOOT : event.keyCode || event.which;
   },
 
   setCommand = function setCommand(event, apply, code, command) {
+    apply   = APPLY_TYPES.indexOf(event.type) !== -1;
     code    = getCode(event);
     command = applied[code]^apply && commands[code];
 
@@ -525,32 +522,11 @@ var
       return;
     }
 
-    execute.push(command, apply);
+    execute.push(command, apply, event);
 
     applied[code] = apply;
 
     event.preventDefault();
-  },
-
-  /**
-   * @param {Event} event
-   */
-  onkeyup = function onkeyup(event) {
-    setCommand(event);
-  },
-
-  /**
-   * @param {Event} event
-   */
-  onkeydown = function onkeydown(event) {
-    setCommand(event, true);
-  },
-
-  /**
-   * @param {Event} event
-   */
-  onclick = function onclick() {
-    setScreen(1);
   },
 
   createImage = function createImage(src, image) {
@@ -581,12 +557,25 @@ var
     acc[1] += newAcc[1];
   },
 
+  getMouseCoords = function getMouseCoords(event) {
+    return [
+      Math.floor((event.clientX - main.offsetLeft)  / STAGE_SCALE),
+      Math.floor((event.clientY - main.offsetTop)   / STAGE_SCALE)
+    ];
+  },
+
+  shoot = function shoot(entity, apply, event, coords) {
+    entity = apply = 0;
+    coords = getMouseCoords(event);
+  },
+
   setCommands = function setCommands() {
     commands[UP]    = accelerate.bind(0, player, [0, -0.5]);
     commands[DOWN]  = accelerate.bind(0, player, [0,  0.5]);
     commands[LEFT]  = accelerate.bind(0, player, [-0.5, 0]);
     commands[RIGHT] = accelerate.bind(0, player, [0.5,  0]);
     commands[SPACE] = teleport;
+    commands[SHOOT] = shoot.bind(0, player);
   },
 
   /**
@@ -627,6 +616,23 @@ var
     return canvas;
   },
 
+  setScreen = function setScreen(newScreen) {
+    screen = newScreen;
+
+    if (screen) {
+      setCommands();
+    }
+
+    setUpdater(updaters[screen]);
+  },
+
+  /**
+   * @param {Event} event
+   */
+  onclick = function onclick() {
+    setScreen(1);
+  },
+
   init = function init(cursor, cctx, cursorImg) {
     setImages();
 
@@ -634,9 +640,9 @@ var
     cursor    = createCanvas(32, 32);
     cctx      = cursor.getCtx();
     cctx.drawImage(cursorImg, 0, 0, 32, 32);
-    document.body.style.cursor = 'url("' + cursor.toDataURL() + '"), auto';
+    document.body.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto';
 
-    main    = createCanvas(3 * WIDTH, 3 * HEIGHT);
+    main    = createCanvas(STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
     mctx    = main.getCtx();
 
     doc.body.appendChild(main);
@@ -676,14 +682,10 @@ var
     player = createEntity(160, 160, createPlayerSprites(player, images[3]), player);
     entities.push(player);
 
-    setCommands();
-
-    abcImage      = images[0];
-    tileset       = images[4];
-
-    win.onclick   = onclick;
-    win.onkeydown = onkeydown;
-    win.onkeyup   = onkeyup;
+    abcImage        = images[0];
+    tileset         = images[4];
+    win.onclick     = onclick;
+    main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = setCommand;
 
     map2DArray = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
 
