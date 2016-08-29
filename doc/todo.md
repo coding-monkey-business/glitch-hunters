@@ -7,7 +7,7 @@
 - healthbar should be displayed
 - tp should have a cooldown
 - tp should stay inside bounds
-- sprites should be mirrored and applied by the cursor direction
+- sprites should be mirrored and applied by the cursor direction (halfway done)
 
 # Stuff to figure out
 - glitch power up possibilities

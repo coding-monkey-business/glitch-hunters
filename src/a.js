@@ -64,7 +64,8 @@ var
       'cfg' : cfg,
       'pos' : [x, y],
       'spd' : [0, 0],
-      'acc' : [0, 0]
+      'acc' : [0, 0],
+      'del' : [0, 0]
     };
   },
 
@@ -166,20 +167,30 @@ var
     frameCfg  = cfg[entity.state];
     frame     = entity.frame % frameCfg.frames;
 
+
+    bctx.save();
+    // TODO: this is quite ugly & doesn't use the cursor  ... more a proof of concept, i'll fix that tomorrow.
+    if (entity.del[0] < 0) {
+      // entity center is at the bottom center of their respective sprite
+      bctx.transform(-1, 0, 0, 1, entity.pos[0] + (cfg.size>>1), entity.pos[1] - (cfg.size))
+    } else {
+      bctx.transform(1, 0, 0, 1, entity.pos[0] - (cfg.size>>1), entity.pos[1] - (cfg.size))
+    }
+
     bctx.drawImage(
       entity.img, //img
       frame * cfg.size, //sx
       frameCfg.y || 0, //sy
       cfg.size, //sw
       cfg.size, //sh
-      // entity center is at the bottom center of their respective sprite
-      entity.pos[0] - (cfg.size>>1), //dx
-      entity.pos[1] - (cfg.size), //dy
+      0, //dx
+      0, //dy
       cfg.size,
       cfg.size
     );
 
-    // bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
+    bctx.restore();
+    bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
 
     if (stepFrame) {
       entity.frame++;
@@ -375,9 +386,10 @@ var
     return spd;
   },
 
-  updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldX, oldY, tileX, tileY) {
+  updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldX, oldY, tileX, tileY, lastDelta) {
     pos  = entity.pos;
     spd  = entity.spd;
+    lastDelta = entity.del;
 
     if (!getAccDirection(entity)) {
       setEntityState(entity, 'idling');
@@ -389,6 +401,9 @@ var
 
     pos[0] += spd[0];
     pos[1] += spd[1];
+
+    lastDelta[0] = spd[0] || lastDelta[0];
+    lastDelta[1] = spd[1] || lastDelta[1];
 
     tileX = Math.floor(pos[0] / TILESIZE_X);
     tileY = Math.floor(pos[1] / TILESIZE_X);
