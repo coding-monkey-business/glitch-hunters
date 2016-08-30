@@ -172,9 +172,9 @@ var
     // TODO: this is quite ugly & doesn't use the cursor  ... more a proof of concept, i'll fix that tomorrow.
     if (entity.del[0] < 0) {
       // entity center is at the bottom center of their respective sprite
-      bctx.transform(-1, 0, 0, 1, entity.pos[0] + (cfg.size>>1), entity.pos[1] - (cfg.size))
+      bctx.transform(-1, 0, 0, 1, entity.pos[0] + (cfg.size>>1), entity.pos[1] - (cfg.size));
     } else {
-      bctx.transform(1, 0, 0, 1, entity.pos[0] - (cfg.size>>1), entity.pos[1] - (cfg.size))
+      bctx.transform(1, 0, 0, 1, entity.pos[0] - (cfg.size>>1), entity.pos[1] - (cfg.size));
     }
 
     bctx.drawImage(
