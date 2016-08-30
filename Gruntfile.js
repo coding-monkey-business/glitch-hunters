@@ -139,7 +139,7 @@ var
       'strict' : {
         'options' : {
           'noempty' : true,
-          'unused'  : 'strict'
+          'unused'  : true
         },
 
         'files' : {
