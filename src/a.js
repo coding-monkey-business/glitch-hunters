@@ -12,7 +12,6 @@ var
   images    = [],
   applied   = {},
   commands  = {},
-  execute   = [],
   entities  = [],
 
   APPLY_TYPES         = ['keydown', 'mousedown'],
@@ -26,7 +25,6 @@ var
   RIGHT               = 68, // d
   LEFT                = 65, // a
   SPACE               = 32,
-  FRICTION            = 0.8,
   ZERO_LIMIT          = 0.2,
   SHOOT               = 1,
   STAGE_SCALE         = 3,
@@ -65,6 +63,7 @@ var
     return {
       'img' : img,
       'cfg' : cfg,
+      'cmd' : [],
       'pos' : [x, y],
       'spd' : [0, 0],
       'acc' : [0, 0],
@@ -360,14 +359,6 @@ var
     updater = fn;
   },
 
-  getAxisSpeed = function getAxisSpeed(axisSpd, axisAcc) {
-    axisSpd += axisAcc;
-    axisSpd *= FRICTION;
-    axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
-
-    return axisSpd;
-  },
-
   setEntityState = function setEntityState(entity, state, counter, data) {
     // ATM reset global frames, but should be entity specific.
     if (state !== entity.state) {
@@ -379,14 +370,18 @@ var
     entity.data     = data;
   },
 
-  updateEntitySpeed = function updateEntitySpeed(entity, acc, spd) {
-    acc = entity.acc;
-    spd = entity.spd;
+  updateEntitySpeedAxis = function updateEntitySpeedAxis(entity, axis, axisSpd) {
+    axisSpd  = entity.spd[axis];
+    axisSpd += entity.acc[axis];
+    axisSpd *= entity.cfg.friction;
+    axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
 
-    spd[0] = getAxisSpeed(spd[0], acc[0]);
-    spd[1] = getAxisSpeed(spd[1], acc[1]);
+    entity.spd[axis] = axisSpd;
+  },
 
-    return spd;
+  updateEntitySpeed = function updateEntitySpeed(entity) {
+    updateEntitySpeedAxis(entity, 0);
+    updateEntitySpeedAxis(entity, 1);
   },
 
   updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldX, oldY, tileX, tileY, lastDelta) {
@@ -450,12 +445,14 @@ var
     }
   },
 
-  updateEntity = function updateEntity(entity, command) {
+  updateEntity = function updateEntity(entity, command, entityCommands) {
     updateEntityCounter(entity);
 
-    while (execute.length) {
-      command = execute.shift();
-      command(execute.shift(), execute.shift());
+    entityCommands = entity.cmd;
+
+    while (entityCommands.length) {
+      command = entityCommands.shift();
+      command(entityCommands.shift(), entityCommands.shift());
     }
 
     if (entity.counter) {
@@ -522,7 +519,7 @@ var
       return;
     }
 
-    execute.push(command, apply, event);
+    player.cmd.push(command, apply, event);
 
     applied[code] = apply;
 
@@ -663,6 +660,8 @@ var
     //
     player = {
       'size' : 16,
+
+      'friction' : 0.8,
 
       'idling' : {
         'frames' : 6
