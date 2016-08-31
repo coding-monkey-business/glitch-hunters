@@ -123,8 +123,10 @@ var
       'options': {
         'globals'     : {
           'describe'  : true,
+          'fdescribe' : true,
           'beforeEach': true,
           'it'        : true,
+          'fit'       : true,
           'expect'    : true,
           'jasmine'   : true,
           'window'    : true,

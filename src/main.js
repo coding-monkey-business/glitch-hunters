@@ -802,9 +802,10 @@ if (DEBUG) {
 // Export every function here which should be tested by karma,
 //
 win.test = {
-  'getId'            : getId,
-  'field'            : field,
-  'drawPath'         : drawPath,
   'createRoom'       : createRoom,
-  'getAccDirection'  : getAccDirection
+  'drawPath'         : drawPath,
+  'entities'         : entities,
+  'field'            : field,
+  'getAccDirection'  : getAccDirection,
+  'getId'            : getId
 };
