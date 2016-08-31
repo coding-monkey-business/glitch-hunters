@@ -16,9 +16,8 @@ module.exports = function (config) {
 
     'files': [
       'node_modules/phantomjs-polyfill/bind-polyfill.js',
-      'src/img.js',
-      'src/main.js',
-      'test/main.spec.js'
+      'src/*.js',
+      'test/*.spec.js'
     ],
 
     'mochaReporter': {
