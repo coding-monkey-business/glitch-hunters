@@ -4,8 +4,8 @@ var
   WIDTH     = 320,
   HEIGHT    = 240,
   id        = 0,
+  frames    = 0,
   aFrames   = 0,
-  gFrames   = 0,
   screen    = 0, // 0 =  title, 1 = game, etc
   alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
   updaters  = [],
@@ -16,7 +16,7 @@ var
 
   APPLY_TYPES         = ['keydown', 'mousedown'],
   ANIMATION_TIME_UNIT = 80,
-  GAME_TIME_UNIT      = 20,
+  TIME_UNIT           = 20,
   MAP_SIZE_X          = 20,
   MAP_SIZE_Y          = 20,
   TILESIZE_X          = 16, // everything is square right now
@@ -32,8 +32,8 @@ var
   mctx,
   bctx,
   main,
+  frame,
   aFrame,
-  gFrame,
   buffer,
   player,
   updater,
@@ -59,16 +59,30 @@ var
     return canvas;
   },
 
-  createEntity = function createEntity(x, y, img, cfg) {
-    return {
-      'img' : img,
-      'cfg' : cfg,
-      'cmd' : [],
-      'pos' : [x, y],
-      'spd' : [0, 0],
-      'acc' : [0, 0],
-      'del' : [0, 0]
+  setEntityState = function setEntityState(entity, state, counter, data) {
+    if (state !== entity.state) {
+      entity.frame = 0;
+    }
+
+    entity.state    = state;
+    entity.counter  = counter;
+    entity.data     = data;
+  },
+
+  createEntity = function createEntity(pos, img, cfg, spd, entity) {
+    entity = {
+      'img'   : img,
+      'cfg'   : cfg,
+      'pos'   : pos,
+      'cmd'   : [],
+      'spd'   : spd || [0, 0],
+      'acc'   : [0, 0]
     };
+
+    setEntityState(entity, 'idling');
+    entities.push(entity);
+
+    return entity;
   },
 
   /**
@@ -164,34 +178,26 @@ var
     return arr;
   },
 
-  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg) {
+  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg, img, y) {
+    img       = entity.img;
     cfg       = entity.cfg;
     frameCfg  = cfg[entity.state];
     frame     = entity.frame % frameCfg.frames;
-
-
-    bctx.save();
-    // TODO: this is quite ugly & doesn't use the cursor  ... more a proof of concept, i'll fix that tomorrow.
-    if (entity.del[0] < 0) {
-      // entity center is at the bottom center of their respective sprite
-      bctx.transform(-1, 0, 0, 1, entity.pos[0] + (cfg.size>>1), entity.pos[1] - (cfg.size));
-    } else {
-      bctx.transform(1, 0, 0, 1, entity.pos[0] - (cfg.size>>1), entity.pos[1] - (cfg.size));
-    }
+    y         = frameCfg.y || 0;
+    y        += entity.mirrored ? img.height / 2 : 0;
 
     bctx.drawImage(
-      entity.img, //img
+      img,
       frame * cfg.size, //sx
-      frameCfg.y || 0, //sy
+      y, //sy
       cfg.size, //sw
       cfg.size, //sh
-      0, //dx
-      0, //dy
+      entity.pos[0] - (cfg.size>>1), //dx
+      entity.pos[1] - (cfg.size), //dy
       cfg.size,
       cfg.size
     );
 
-    bctx.restore();
     bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
 
     if (stepFrame) {
@@ -199,54 +205,79 @@ var
     }
   },
 
-  zCompare = function zCompare(a, b) {
-    return a.pos[1] - b.pos[1];
+  drawWall = function drawWall(x, y, height) {
+    //
+    // Meh, maybe this is not right here, but ATM it does what I need
+    //
+    if (map2DArray[x][y]) {
+      return;
+    }
+
+    height = height || 32;
+
+    bctx.drawImage(
+      tileset, //img
+      32, //sx
+      9, //sy
+      TILESIZE_X, //sw
+      height, //sh
+      x * TILESIZE_X, //dx
+      y * TILESIZE_X - 7, //dy
+      TILESIZE_X, //dw
+      height //dh
+    );
   },
 
-  renderMap = function renderMap(arr, entityList, stepFrame, x, y, tilesizeX, tilesizeY, entityIndex) {
-    entityList.sort(zCompare);
-    entityIndex = 0;
+  drawField = function drawField(x, y) {
+    bctx.drawImage(
+      tileset, //img
+      ((x + y) % 2) * TILESIZE_X, //sx
+      TILESIZE_X, //sy
+      TILESIZE_X, //sw
+      TILESIZE_X, //sh
+      x * TILESIZE_X, //dx
+      y * TILESIZE_X, //dy
+      TILESIZE_X, //dw
+      TILESIZE_X //dh
+    );
+  },
 
-    tilesizeX = tilesizeY = 16;
+  getEntityTilesIndex = function getEntityTilesIndex(entity) {
+    return [
+      Math.round(entity.pos[0] / TILESIZE_X),
+      Math.floor(entity.pos[1] / TILESIZE_X)
+    ];
+  },
 
-    for (y = 0; y < arr[0].length; y++) {
-      for (x = 0; x < arr.length; x++) {
-        if (arr[x][y] !== undefined) {
-          bctx.drawImage(
-            tileset, //img
-            ((x + y) % 2) * tilesizeX, //sx
-            tilesizeY, //sy
-            tilesizeX, //sw
-            tilesizeY, //sh
-            x * tilesizeX, //dx
-            y * tilesizeY, //dy
-            tilesizeX, //dw
-            tilesizeY //dh
-          );
+  zCompare = function zCompare(a, b) {
+    return b.pos[1] - a.pos[1];
+  },
+
+  drawMap = function drawMap(isAnimationFrame, x, y, len, entityTilesIndex) {
+    entities.sort(zCompare);
+
+    for (y = 0; y < map2DArray[0].length; y++) {
+      for (x = 0; x < map2DArray.length; x++) {
+        if (map2DArray[x][y]) {
+          drawField(x, y);
         } else {
-          // wall
-          bctx.drawImage(
-            tileset, //img
-            32, //sx
-            9, //sy
-            tilesizeX, //sw
-            32, //sh
-            x * tilesizeX, //dx
-            y * tilesizeY - 7, //dy
-            tilesizeX, //dw
-            32 //dh
-          );
-        }
-
-        if (entityIndex < entityList.length) {
-          if (Math.floor(entityList[entityIndex].pos[1] / tilesizeY) === (y) && Math.round(entityList[entityIndex].pos[0] / tilesizeX) === (x)) {
-            drawEntity(entityList[entityIndex], stepFrame);
-            entityIndex++;
-          }
+          drawWall(x, y);
         }
       }
     }
+
+    len = entities.length;
+
+    while (len--) {
+      drawEntity(entities[len], isAnimationFrame);
+
+      entityTilesIndex = getEntityTilesIndex(entities[len]);
+
+      drawWall(entityTilesIndex[0],     entityTilesIndex[1] + 1, 10);
+      drawWall(entityTilesIndex[0] - 1, entityTilesIndex[1] + 1, 10);
+    }
   },
+
   /**
    * Just some color jittering (for now)
    * @param {Number} type e.g. JITTER
@@ -359,17 +390,6 @@ var
     updater = fn;
   },
 
-  setEntityState = function setEntityState(entity, state, counter, data) {
-    // ATM reset global frames, but should be entity specific.
-    if (state !== entity.state) {
-      entity.frame = 0;
-    }
-
-    entity.state    = state;
-    entity.counter  = counter;
-    entity.data     = data;
-  },
-
   updateEntitySpeedAxis = function updateEntitySpeedAxis(entity, axis, axisSpd) {
     axisSpd  = entity.spd[axis];
     axisSpd += entity.acc[axis];
@@ -384,10 +404,9 @@ var
     updateEntitySpeedAxis(entity, 1);
   },
 
-  updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldX, oldY, tileX, tileY, lastDelta) {
+  updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldX, oldY, tileX, tileY) {
     pos  = entity.pos;
     spd  = entity.spd;
-    lastDelta = entity.del;
 
     if (!getAccDirection(entity)) {
       setEntityState(entity, 'idling');
@@ -399,9 +418,6 @@ var
 
     pos[0] += spd[0];
     pos[1] += spd[1];
-
-    lastDelta[0] = spd[0] || lastDelta[0];
-    lastDelta[1] = spd[1] || lastDelta[1];
 
     tileX = Math.floor(pos[0] / TILESIZE_X);
     tileY = Math.floor(pos[1] / TILESIZE_X);
@@ -463,21 +479,14 @@ var
     updateEntityPosition(entity);
   },
 
-  updateGame = function updateGame(len, stepFrame) {
-    if (gFrame !== gFrames) {
-      gFrame  = gFrames;
-      len     = entities.length;
+  updateGame = function updateGame(isAnimationFrame, len) {
+    len = entities.length;
 
-      while (len--) {
-        updateEntity(entities[len]);
-      }
+    while (len--) {
+      updateEntity(entities[len]);
     }
 
-    stepFrame = aFrame !== aFrames;
-    aFrame    = aFrames;
-    len       = entities.length;
-
-    renderMap(map2DArray, entities, stepFrame);
+    drawMap(isAnimationFrame);
   },
 
   updateIntro = function updateIntro() {
@@ -489,16 +498,25 @@ var
   /**
    * rendering loop
    */
-  updateLoop = function updateLoop(timestamp) {
+  updateLoop = function updateLoop(timestamp, isFrame, isAnimationFrame) {
+    frames  = Math.floor(timestamp / TIME_UNIT);
     aFrames = Math.floor(timestamp / ANIMATION_TIME_UNIT);
-    gFrames = Math.floor(timestamp / GAME_TIME_UNIT);
 
-    bctx.fillStyle = '#000';
-    bctx.fillRect(0, 0, WIDTH, HEIGHT);
+    isFrame           = frame   !== frames;
+    isAnimationFrame  = aFrame  !== aFrames;
 
-    updater();
+    if (isFrame) {
+      frame   = frames;
+      aFrame  = aFrames;
 
-    mctx.drawImage(buffer, 0, 0, STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
+      bctx.fillStyle = '#000';
+      bctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      updater(isAnimationFrame);
+
+      mctx.drawImage(buffer, 0, 0, STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
+    }
+
     win.requestAnimationFrame(updateLoop);
   },
 
@@ -507,7 +525,7 @@ var
   },
 
   getCode = function getCode(event) {
-    return event.clientX ? SHOOT : event.keyCode || event.which;
+    return event.pageX ? SHOOT : event.keyCode || event.which;
   },
 
   setCommand = function setCommand(event, apply, code, command) {
@@ -545,7 +563,9 @@ var
     acc     = entity.acc;
     newAcc  = newAcc.slice();
 
-    if (!apply) {
+    if (apply) {
+      entity.mirrored = newAcc[0] === 0 ? entity.mirrored : newAcc[0] < 0;
+    } else {
       newAcc[0] *= -1;
       newAcc[1] *= -1;
     }
@@ -556,14 +576,29 @@ var
 
   getMouseCoords = function getMouseCoords(event) {
     return [
-      Math.floor((event.clientX - main.offsetLeft)  / STAGE_SCALE),
-      Math.floor((event.clientY - main.offsetTop)   / STAGE_SCALE)
+      Math.floor((event.pageX - main.offsetLeft)  / STAGE_SCALE),
+      Math.floor((event.pageY - main.offsetTop)   / STAGE_SCALE)
     ];
   },
 
-  shoot = function shoot(entity, apply, event, coords) {
-    entity = apply = 0;
+  shoot = function shoot(entity, apply, event, coords, cfg) {
+    if (!apply) {
+      return;
+    }
+
     coords = getMouseCoords(event);
+
+    cfg = {
+      'size' : 16,
+
+      'friction' : 0.8,
+
+      'idling' : {
+        'frames' : 4
+      }
+    };
+
+    createEntity(coords, images[2], cfg);
   },
 
   setCommands = function setCommands() {
@@ -586,13 +621,15 @@ var
    * @param {Image} img
    * @return {HTMLCanvasElement}
    */
-  createPlayerSprites = function createPlayerSprites(cfg, img, canvas, ctx, x, i, w, frames) {
-    canvas    = createCanvas();
+  createPlayerSprites = function createPlayerSprites(cfg, img, canvas, ctx, x, i, w, h, frames) {
+    h         = img.height + cfg.size;
+    canvas    = createCanvas(img.width, 2 * h);
     ctx       = canvas.getCtx();
     frames    = cfg.tping.frames;
 
     ctx.drawImage(img, 0, 0);
 
+    // Create the TP animation.
     for (i = 0; i < frames; i++) {
       x = cfg.size * i;
       w = cfg.size * (frames - i) / frames;
@@ -607,6 +644,25 @@ var
         img.height, // dy
         w, // dw
         cfg.size // dh
+      );
+    }
+
+    // Redraw mirrored sprites.
+    ctx.scale(-1,1);
+
+    for (i = 0; i < 6; i++) {
+      x = cfg.size * i;
+
+      ctx.drawImage(
+        canvas,
+        x,
+        0,
+        cfg.size,
+        h,
+        -x - cfg.size,
+        h,
+        cfg.size,
+        h
       );
     }
 
@@ -631,14 +687,18 @@ var
   },
 
   init = function init(cursor, cctx, cursorImg) {
+    // Set images created by img.js
     setImages();
 
+    // Setup cursor.
     cursorImg = images[1];
     cursor    = createCanvas(32, 32);
     cctx      = cursor.getCtx();
+
     cctx.drawImage(cursorImg, 0, 0, 32, 32);
     document.body.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto';
 
+    // Setup main canvas.
     main    = createCanvas(STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
     mctx    = main.getCtx();
 
@@ -647,17 +707,13 @@ var
     buffer  = createCanvas();
     bctx    = buffer.getCtx();
 
+    // Define possible updaters.
     updaters = [
       updateIntro,
       updateGame
     ];
 
-    //
-    // TODO pliz explain, not sure if that is where this comment belongs
-    //
-    // (MAP_SIZE_X * TILESIZE_X) >> 1,
-    // there should always be some room in the center
-    //
+    // Some config for the player.
     player = {
       'size' : 16,
 
@@ -678,8 +734,11 @@ var
       }
     };
 
-    player = createEntity(160, 160, createPlayerSprites(player, images[3]), player);
-    entities.push(player);
+    //
+    // (MAP_SIZE_X * TILESIZE_X) >> 1 ===> [160, 160]
+    // there should always be some room in the center
+    //
+    player = createEntity([160, 160], createPlayerSprites(player, images[3]), player);
 
     abcImage        = images[0];
     tileset         = images[4];
