@@ -27,7 +27,21 @@ var
     },
 
     'replace' : {
-      'removetest': {
+      'html': {
+        'options': {
+          'patterns': [{
+            'match'       : /<script[^]*<\/script>/,
+            'replacement' : '<script src="all.js" type="text/javascript"></script>'
+          }]
+        },
+
+        'files': [{
+          'src'   : ['src/index.html'],
+          'dest'  : 'build/index.html'
+        }]
+      },
+
+      'js': {
         'options': {
           'patterns': [{
             'match'       : /\/\/\ GRUNT\ WILL\ REMOVE[^]*/,
@@ -36,8 +50,8 @@ var
         },
 
         'files': [{
-          'src'   : ['src/a.js'],
-          'dest'  : 'build/a.js'
+          'src'   : ['src/main.js'],
+          'dest'  : 'build/main.js'
         }]
       }
     },
@@ -61,8 +75,7 @@ var
 
       'build': {
         'files': {
-          'build/a.js'    : ['build/a.js'],
-          'build/img.js'  : ['src/img.js']
+          'build/all.js'  : ['build/img.js', 'build/main.js']
         }
       }
     },
@@ -76,8 +89,8 @@ var
       'build': {
         'files': [
           {
-            'src'   : 'src/a.css',
-            'dest'  : 'build/a.css'
+            'src'   : 'src/main.css',
+            'dest'  : 'build/main.css'
           }
         ]
       }
@@ -93,7 +106,7 @@ var
         'files': [
           {
             'expand'  : true,
-            'cwd'     : 'src',
+            'cwd'     : 'build',
             'src'     : ['*.html'],
             'dest'    : 'build'
           }
@@ -235,21 +248,30 @@ var
     ],
 
     'compile:js' : [
-      'replace',
+      'replace:js',
       'copy'
     ],
 
-    'minify' : [
+    'minify:js' : [
       'uglify',
-      'htmlmin',
       'cssmin'
+    ],
+
+    'compile:html' : [
+      'replace:html',
+      'inline'
+    ],
+
+    'minify:html' : [
+      'htmlmin'
     ],
 
     'build' : [
       'clean',
       'compile:js',
-      'minify',
-      'inline'
+      'minify:js',
+      'compile:html',
+      'minify:html'
     ],
 
     'info' : [
