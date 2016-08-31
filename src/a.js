@@ -704,6 +704,8 @@ if (DEBUG) {
     origOnload = win.onload,
 
     debugInit = function debugInit() {
+      origOnload();
+
       var
         origOnkeyDown = win.onkeydown,
 
@@ -725,10 +727,7 @@ if (DEBUG) {
           origOnkeyDown(event);
         };
 
-
       win.onkeydown = debugOnkeydown;
-
-      origOnload();
     };
 
   win.onload = debugInit;
