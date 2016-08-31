@@ -581,7 +581,7 @@ var
     ];
   },
 
-  shoot = function shoot(entity, apply, event, coords, cfg) {
+  shoot = function shoot(apply, event, coords, cfg) {
     if (!apply) {
       return;
     }
@@ -607,7 +607,7 @@ var
     commands[LEFT]  = accelerate.bind(0, player, [-0.5, 0]);
     commands[RIGHT] = accelerate.bind(0, player, [0.5,  0]);
     commands[SPACE] = teleport;
-    commands[SHOOT] = shoot.bind(0, player);
+    commands[SHOOT] = shoot;
   },
 
   /**

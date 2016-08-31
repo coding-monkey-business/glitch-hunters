@@ -148,13 +148,21 @@ var
 
       'default' : ALL_JS,
 
-      //
-      // ATM this is not needed, as uglify wraps and removes unused stuff.
-      //
-      'strict' : {
+      'unused' : {
         'options' : {
           'noempty' : true,
           'unused'  : true
+        },
+
+        'files' : {
+          'default' : ALL_JS
+        }
+      },
+
+      'strict' : {
+        'options' : {
+          'noempty' : true,
+          'unused'  : 'strict'
         },
 
         'files' : {
@@ -223,7 +231,7 @@ var
 
   TASKS = {
     'test' : [
-      'jshint',
+      'jshint:unused',
       'jscs',
       'karma'
     ],
