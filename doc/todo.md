@@ -1,6 +1,7 @@
 # Stuff to implement
 + ~~top walls should be rendered over the player~~ (done)
-+ sprites should be mirrored and applied by the cursor direction
++ player sprite should be mirrored
+- player direction should be given by the cursor direction
 - player should fire projectiles into the cursor direction
 - there should be NPC mobs
 - 8-bit like music should be playing
