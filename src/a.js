@@ -697,6 +697,42 @@ win.onload = init;
 //
 // GRUNT WILL REMOVE FROM HERE, DO NOT REMOVE THIS!
 //
+var DEBUG = true;
+
+if (DEBUG) {
+  var
+    origOnload = win.onload,
+
+    debugInit = function debugInit() {
+      var
+        origOnkeyDown = win.onkeydown,
+
+        debugOnkeydown = function debugOnkeydown(event) {
+          var
+            code = getCode(event);
+
+          //
+          // By pushing the `esc` key, you can land in sort of debug
+          // mode for the whole updateLoop. The execution will step
+          // by pressing the `esc` again.
+          //
+          if (code === 27) {
+            win.requestAnimationFrame = function () {};
+
+            updateLoop();
+          }
+
+          origOnkeyDown(event);
+        };
+
+
+      win.onkeydown = debugOnkeydown;
+
+      origOnload();
+    };
+
+  win.onload = debugInit;
+}
 // Any kind of debug logic can be placed here.
 //
 // Export every function here which should be tested by karma,
