@@ -383,7 +383,7 @@ var
     acc = entity.acc;
     res = [Math.sign(acc[0]), Math.sign(acc[1])];
 
-    return res[0] === 0 && res[1] === 0 ? 0 : res;
+    return !res[0] && !res[1] ? 0 : res;
   },
 
   setUpdater = function setUpdater(fn) {
@@ -453,7 +453,7 @@ var
     if (entity.state === 'tping') {
       entity.counter--;
 
-      if (entity.counter === 0) {
+      if (!entity.counter) {
         teleport(1, 0, 1, entity.data);
 
         setEntityState(entity, 'idling');
@@ -564,7 +564,7 @@ var
     newAcc  = newAcc.slice();
 
     if (apply) {
-      entity.mirrored = newAcc[0] === 0 ? entity.mirrored : newAcc[0] < 0;
+      entity.mirrored = !newAcc[0] ? entity.mirrored : newAcc[0] < 0;
     } else {
       newAcc[0] *= -1;
       newAcc[1] *= -1;
