@@ -697,6 +697,11 @@ win.onload = init;
 //
 // GRUNT WILL REMOVE FROM HERE, DO NOT REMOVE THIS!
 //
+// Any kind of debug logic can be placed here.
+//
+// On build after this block everything will be removed
+// automatically by `replace` grunt task.
+//
 var DEBUG = true;
 
 if (DEBUG) {
@@ -732,11 +737,9 @@ if (DEBUG) {
 
   win.onload = debugInit;
 }
-// Any kind of debug logic can be placed here.
+
 //
 // Export every function here which should be tested by karma,
-// on build this block will be removed automatically by `replace`
-// task.
 //
 win.test = {
   'getId'            : getId,
