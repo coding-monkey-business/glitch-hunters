@@ -2,6 +2,7 @@
 
 BASEDIR=$(dirname "$0")
 cd "$BASEDIR/.."
+ignore_sleep=$1
 
 if [ -n "$(git status --porcelain)" ]; then
   echo "There are changes in your working tree, STOPPING.";
@@ -13,6 +14,15 @@ fi
 
 log=$(git log --oneline)
 
+function append_csv()
+{
+  if [ ! -z "$5" ]; then
+    printf "%-7s | %-8s | %-60s | %s\n" "$1" "$2" "$3" "$4"
+  fi
+
+  printf "%-7s | %-8s | %-60s | %s\n" "$1" "$2" "$3" "$4" >> doc/stats.csv
+}
+
 function grunt_size_in_git_commit()
 {
   echo "DIRTY - git is dirty, DON'T STOP ME NOW!"
@@ -23,19 +33,26 @@ function grunt_size_in_git_commit()
   gruntline=$(./grunt build:advzip | tail -n 3 | head -n 1)
   size=$(echo $gruntline | sed "s/[^0-9]*//")
   size=$(echo $size | sed "s/[^(]*(\([0-9]*\).*/\1/")
-  out=$(echo $gruntline | cut -c1-50)
+  size=$(echo $size | cut -c1-8)
+  out=$(echo $gruntline | cut -c1-60)
+  message=$(echo $2 | cut -c1-60)
+  commit=$1
 
-  echo "$1; $size; $2; $out"
-  echo "$1; $size; $2; $out;" >> doc/stats.csv
+  append_csv "$commit" "$size" "$message" "$out" true
+
   git reset -q HEAD src Gruntfile.js
   git checkout src Gruntfile.js
   git clean -qf src
 
   echo "CLEAN - git is clean again for 1 sec, CTRL-C me now to stop w/ clean repo state."
-  sleep 1
+
+  # If ignore_sleep, then we wait.
+  if [ -z "$ignore_sleep" ]; then
+    sleep 1
+  fi
 }
 
-echo "COMMIT; BYTESIZE; OUTPUT;" >> doc/stats.csv
+append_csv "COMMIT" "BYTESIZE" "COMMIT" "MESSAGE" "OUTPUT"
 
 while read -r first line; do
   grunt_size_in_git_commit "$first" "$line"
