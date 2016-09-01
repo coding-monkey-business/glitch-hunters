@@ -1,4 +1,7 @@
 COMMIT; BYTESIZE; OUTPUT;
+6775149; 4104; moves statistics / generator into doc; # dist/index.html.zip <=== 4.01 KB (4104 B);
+12ec90b; 4104; Merge branch 'size-stats'; # dist/index.html.zip <=== 4.01 KB (4104 B);
+1f7cf72; 4104; adds filesize/commit statistics; # dist/index.html.zip <=== 4.01 KB (4104 B);
 708f565; 4104; adds jshint:strict as an option; # dist/index.html.zip <=== 4.01 KB (4104 B);
 3701369; 4107; doc: todo update; # dist/index.html.zip <=== 4.01 KB (4107 B);
 4c7c45e; 4107; minor optimizations; # dist/index.html.zip <=== 4.01 KB (4107 B);
