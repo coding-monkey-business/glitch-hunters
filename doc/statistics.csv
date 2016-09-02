@@ -1,4 +1,8 @@
 COMMIT  |     SIZE |     DIFF | MESSAGE                                                      | OUTPUT
+d420802 |     4752 |        0 | debug: binds "v" to toggle debug mode                        | # dist/index.html.zip <=== 4.64 KB (4752 B)
+412bf0e |     4752 |      552 | implemented glitch movement improved DEBUG removal           | # dist/index.html.zip <=== 4.64 KB (4752 B)
+ec8fda7 |     4200 |       96 | added A*                                                     | # dist/index.html.zip <=== 4.1 KB (4200 B)
+c491a69 |     4104 |        0 | regenerate statistics.csv - right aligned                    | # dist/index.html.zip <=== 4.01 KB (4104 B)
 5eff0e5 |     4104 |        0 | doc: right-align statistics.csv                              | # dist/index.html.zip <=== 4.01 KB (4104 B)
 7102b50 |     4104 |        0 | added a tree                                                 | # dist/index.html.zip <=== 4.01 KB (4104 B)
 0f79a27 |     4104 |        0 | refereshes statistics.csv                                    | # dist/index.html.zip <=== 4.01 KB (4104 B)
