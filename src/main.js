@@ -1,4 +1,4 @@
-/* globals aStar: false, distance:false, DEBUG: false */
+/* globals aStar: false, distance:false, toggleDebug:false, DEBUG: false */
 var
   win       = window,
   doc       = document,
@@ -45,6 +45,7 @@ var
   getId = function getId() {
     return ++id;
   },
+
   normalize = function normalize(v, vlength) {
     vlength = distance(0, 0, v[0], v[1]);
 
@@ -53,6 +54,7 @@ var
       v[1] / vlength
     ];
   },
+
   createCanvas = function createCanvas(width, height, canvas) {
     canvas        = doc.createElement('canvas');
     canvas.width  = width  || WIDTH;
@@ -120,6 +122,7 @@ var
     }
 
   },
+
   /**
    * Creates rooms and connects them with paths
    * @param {Array.<Array>} arr [description]
@@ -171,6 +174,7 @@ var
       }
     }
   },
+
   /**
    * [mapGen description]
    * @param {Number} sizeX [description]
@@ -824,10 +828,17 @@ if (DEBUG) {
   var
     origOnload = win.onload,
 
+    ESC = 27,
+    C   = 67,
+    V   = 86,
+    X   = 88,
+
     debugInit = function debugInit() {
       origOnload();
 
       var
+        origRequestAnimationFrame = win.requestAnimationFrame,
+
         origOnkeyDown = win.onkeydown,
 
         debugOnkeydown = function debugOnkeydown(event) {
@@ -839,10 +850,25 @@ if (DEBUG) {
           // mode for the whole updateLoop. The execution will step
           // by pressing the `esc` again.
           //
-          if (code === 27) {
+          if (code === ESC || code === C) {
             win.requestAnimationFrame = function () {};
 
             updateLoop();
+          }
+
+          //
+          // Continue execution by pressing X
+          //
+          if (code === X) {
+            win.requestAnimationFrame = origRequestAnimationFrame;
+            win.requestAnimationFrame(updateLoop);
+          }
+
+          //
+          // Toggle debug with V
+          //
+          if (code === V) {
+            toggleDebug();
           }
 
           origOnkeyDown(event);
@@ -857,11 +883,8 @@ if (DEBUG) {
 //
 // GRUNT WILL REMOVE FROM HERE, DO NOT REMOVE THIS!
 //
-// Any kind of debug logic can be placed here.
-//
-// On build after this block everything will be removed
-// automatically by `replace` grunt task.
-//
+// On build the previous comment and everything after
+// will be removed automatically by `replace` grunt task.
 //
 // Export every function here which should be tested by karma,
 //

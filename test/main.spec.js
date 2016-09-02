@@ -1,3 +1,6 @@
+//
+// phantomjs does not have Math.sign ... yay
+//
 Math.sign = function (a) {
   if (!a) {
     return 0;

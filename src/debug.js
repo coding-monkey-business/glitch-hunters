@@ -1,2 +1,7 @@
-/* exported DEBUG */
-var DEBUG = true;
+/* exported DEBUG, toggleDebug */
+var
+  DEBUG = true,
+
+  toggleDebug = function toggleDebug() {
+    DEBUG = !DEBUG;
+  };
