@@ -1,4 +1,4 @@
-/* globals aStar: false */
+/* globals aStar: false, distance:false, DEBUG: false */
 var
   win       = window,
   doc       = document,
@@ -45,7 +45,14 @@ var
   getId = function getId() {
     return ++id;
   },
+  normalize = function normalize(v, vlength) {
+    vlength = distance(0, 0, v[0], v[1]);
 
+    return [
+      v[0] / vlength,
+      v[1] / vlength
+    ];
+  },
   createCanvas = function createCanvas(width, height, canvas) {
     canvas        = doc.createElement('canvas');
     canvas.width  = width  || WIDTH;
@@ -206,20 +213,30 @@ var
 
     // bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
 
-    // TODO: remove route visualization
-    if (entity.route) {
-      bctx.fillStyle = '#f0f';
-      y = entity.route.length;
-      while (y--) {
-        bctx.fillRect(
-          entity.route[y][0] * TILESIZE_X + TILESIZE_X / 2 - 2,
-          entity.route[y][1] * TILESIZE_X + TILESIZE_X / 2 - 2,
-          4,
-          4
-        );
+    if (DEBUG) {
+      if (entity.route) {
+        bctx.fillStyle = '#f0f';
+        y = entity.route.length;
+        while (y--) {
+          bctx.fillRect(
+            entity.route[y][0] * TILESIZE_X + TILESIZE_X / 2 - 2,
+            entity.route[y][1] * TILESIZE_X + TILESIZE_X / 2 - 2,
+            4,
+            4
+          );
+        }
       }
+      bctx.beginPath();
+      bctx.moveTo(
+        entity.pos[0],
+        entity.pos[1]
+      );
+      bctx.lineTo(
+        entity.pos[0] + entity.acc[0] * 10,
+        entity.pos[1] + entity.acc[1] * 10
+      );
+      bctx.stroke();
     }
-
 
     if (stepFrame) {
       entity.frame++;
@@ -413,18 +430,18 @@ var
 
   updateEntitySpeedAxis = function updateEntitySpeedAxis(entity, axis, axisSpd) {
     axisSpd  = entity.spd[axis];
-    axisSpd += entity.acc[axis];
+    axisSpd += Math.max(Math.min(2, entity.acc[axis]), -2);
     axisSpd *= entity.cfg.friction;
     axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
 
     entity.spd[axis] = axisSpd;
   },
 
-  updateEntitySpeed = function updateEntitySpeed(entity, route, x, y) {
+  updateEntitySpeed = function updateEntitySpeed(entity, route) {
     if (entity.id !== player.id) {
       route = aStar(
-        (x = entity.pos[0] / TILESIZE_X) | 0,
-        (y = entity.pos[1] / TILESIZE_X) | 0,
+        (entity.pos[0] / TILESIZE_X) | 0,
+        (entity.pos[1] / TILESIZE_X) | 0,
         (player.pos[0] / TILESIZE_X) | 0,
         (player.pos[1] / TILESIZE_X) | 0,
         map2DArray,
@@ -433,10 +450,14 @@ var
         }
       );
 
-      // TODO: fix this
-      // entity.acc[0] -= (x - route[0][0]) / 10;
-      // entity.acc[1] -= (y - route[0][1]) / 10;
-      entity.route = route;
+      if (route && route[0]) {
+        entity.acc[0] += ((route[0][0] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[0]);
+        entity.acc[1] += ((route[0][1] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[1]);
+
+        entity.acc = normalize(entity.acc);
+
+        entity.route = route;
+      }
     }
 
     updateEntitySpeedAxis(entity, 0);
@@ -467,6 +488,9 @@ var
     if (!map2DArray[tileX][tileY]) {
       pos[0] = oldX;
       pos[1] = oldY;
+
+      spd[0] /= -2;
+      spd[1] /= -2;
     }
   },
 
@@ -796,16 +820,6 @@ var
 
 win.onload = init;
 
-//
-// GRUNT WILL REMOVE FROM HERE, DO NOT REMOVE THIS!
-//
-// Any kind of debug logic can be placed here.
-//
-// On build after this block everything will be removed
-// automatically by `replace` grunt task.
-//
-var DEBUG = true;
-
 if (DEBUG) {
   var
     origOnload = win.onload,
@@ -840,6 +854,14 @@ if (DEBUG) {
   win.onload = debugInit;
 }
 
+//
+// GRUNT WILL REMOVE FROM HERE, DO NOT REMOVE THIS!
+//
+// Any kind of debug logic can be placed here.
+//
+// On build after this block everything will be removed
+// automatically by `replace` grunt task.
+//
 //
 // Export every function here which should be tested by karma,
 //

@@ -41,7 +41,7 @@ var
    */
   heuristicCostEstimate = function heuristicCostEstimate(startX, startY, goalX, goalY) {
     var dist = distance(startX, startY, goalX, goalY) /* * start.val*/ ; // TODO: maybe add some other magic value
-    // I might need to add an additional factor.
+
     return dist;
   },
   /**
@@ -93,18 +93,18 @@ var
    */
   aStar = function aStar(startX, startY, goalX, goalY, grid, opt_data) {
     var closedset = {}, // The set of nodes already evaluated.
-      openset = {}, // The set of tentative nodes to be evaluated, initially containing the start node (see below)
-      openlist = [
+      openset     = {}, // The set of tentative nodes to be evaluated, initially containing the start node (see below)
+      openlist    = [
         [startX, startY]
       ], // this is somewhat hacky ...<
-      cameFrom = {}, // The map of navigated nodes.
-      gScore = {},
-      fScore = {},
+      cameFrom    = {}, // The map of navigated nodes.
+      gScore      = {},
+      fScore      = {},
+      maxRange    = (opt_data && opt_data.range) ? opt_data.range : false,
       current,
       neighbor,
       i,
       neighborNodes,
-      maxRange = (opt_data && opt_data.range) ? opt_data.range : false,
       tentativeGScore;
 
     openset[startX] = {};

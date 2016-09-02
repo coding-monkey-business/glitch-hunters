@@ -60,7 +60,7 @@ var
       'img' : {
         'expand'  : true,
         'cwd'     : 'src',
-        'src'     : 'img.js',
+        'src'     : ['img.js', 'a-star.js'],
         'dest'    : 'build/'
       }
     },
@@ -70,12 +70,18 @@ var
         'enclose' : {},
         'mangle' : {
           'toplevel' : true
+        },
+        'compress': {
+          'global_defs': {
+            'DEBUG' : false
+          },
+          'dead_code' : true
         }
       },
 
       'build': {
         'files': {
-          'build/all.js'  : ['build/img.js', 'build/main.js']
+          'build/all.js'  : ['build/img.js', 'build/a-star.js', 'build/main.js']
         }
       }
     },
