@@ -9,7 +9,7 @@ force=$1
 
 function prepend_csv()
 {
-  line=$(printf "%-7s | %-8s | %-8s | %-60s | %s" "$1" "$2" "$3" "$4" "$5")
+  line=$(printf "%-7s | %+8s | %+8s | %-60s | %s" "$1" "$2" "$3" "$4" "$5")
 
   if [ ! -z "$6" ]; then
     echo $line
