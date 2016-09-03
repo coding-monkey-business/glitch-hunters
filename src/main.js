@@ -15,6 +15,8 @@ var
   commands  = {},
   entities  = [],
 
+  mouseCoords   = [],
+
   APPLY_TYPES         = ['keydown', 'mousedown'],
   ANIMATION_TIME_UNIT = 80,
   TIME_UNIT           = 20,
@@ -44,6 +46,13 @@ var
 
   getId = function getId() {
     return ++id;
+  },
+
+  getMouseCoords = function getMouseCoords() {
+    return [
+      mouseCoords[0],
+      mouseCoords[1]
+    ];
   },
 
   normalize = function normalize(v, vlength) {
@@ -85,15 +94,32 @@ var
       'img'   : img,
       'cfg'   : cfg,
       'pos'   : pos,
-      'cmd'   : [],
-      'spd'   : spd || [0, 0],
-      'acc'   : [0, 0]
+      'spd'   : [0, 0],
+      'acc'   : [0, 0],
+      'cmd'   : []
     };
 
     setEntityState(entity, 'idling');
     entities.push(entity);
 
     return entity;
+  },
+
+  createMonster = function createMonster(pos, monster) {
+    monster = createEntity(pos, images[2], {
+      'size' : 16,
+
+      'friction' : 0.8,
+
+      'idling' : {
+        'frames' : 4
+      },
+      'moving' : {
+        'frames' : 4
+      }
+    });
+
+    monster.target = player;
   },
 
   /**
@@ -195,6 +221,34 @@ var
     return arr;
   },
 
+  drawEntityDebugInfo = function drawEntityDebugInfo(entity, y) {
+    bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
+
+    if (entity.route) {
+      bctx.fillStyle = '#f0f';
+      y = entity.route.length;
+      while (y--) {
+        bctx.fillRect(
+          entity.route[y][0] * TILESIZE_X + TILESIZE_X / 2 - 2,
+          entity.route[y][1] * TILESIZE_X + TILESIZE_X / 2 - 2,
+          4,
+          4
+        );
+      }
+    }
+
+    bctx.beginPath();
+    bctx.moveTo(
+      entity.pos[0],
+      entity.pos[1]
+    );
+    bctx.lineTo(
+      entity.pos[0] + entity.acc[0] * 10,
+      entity.pos[1] + entity.acc[1] * 10
+    );
+    bctx.stroke();
+  },
+
   drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg, img, y) {
     img       = entity.img;
     cfg       = entity.cfg;
@@ -215,31 +269,8 @@ var
       cfg.size
     );
 
-    // bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
-
     if (DEBUG) {
-      if (entity.route) {
-        bctx.fillStyle = '#f0f';
-        y = entity.route.length;
-        while (y--) {
-          bctx.fillRect(
-            entity.route[y][0] * TILESIZE_X + TILESIZE_X / 2 - 2,
-            entity.route[y][1] * TILESIZE_X + TILESIZE_X / 2 - 2,
-            4,
-            4
-          );
-        }
-      }
-      bctx.beginPath();
-      bctx.moveTo(
-        entity.pos[0],
-        entity.pos[1]
-      );
-      bctx.lineTo(
-        entity.pos[0] + entity.acc[0] * 10,
-        entity.pos[1] + entity.acc[1] * 10
-      );
-      bctx.stroke();
+      drawEntityDebugInfo(entity, y);
     }
 
     if (stepFrame) {
@@ -432,22 +463,15 @@ var
     updater = fn;
   },
 
-  updateEntitySpeedAxis = function updateEntitySpeedAxis(entity, axis, axisSpd) {
-    axisSpd  = entity.spd[axis];
-    axisSpd += Math.max(Math.min(2, entity.acc[axis]), -2);
-    axisSpd *= entity.cfg.friction;
-    axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
+  updateEntityDecision = function updateEntityDecision(entity, route, target) {
+    target = entity.target;
 
-    entity.spd[axis] = axisSpd;
-  },
-
-  updateEntitySpeed = function updateEntitySpeed(entity, route) {
-    if (entity.id !== player.id) {
+    if (target) {
       route = aStar(
         (entity.pos[0] / TILESIZE_X) | 0,
         (entity.pos[1] / TILESIZE_X) | 0,
-        (player.pos[0] / TILESIZE_X) | 0,
-        (player.pos[1] / TILESIZE_X) | 0,
+        (target.pos[0] / TILESIZE_X) | 0,
+        (target.pos[1] / TILESIZE_X) | 0,
         map2DArray,
         {
           'range': 1
@@ -460,10 +484,23 @@ var
 
         entity.acc = normalize(entity.acc);
 
-        entity.route = route;
+        if (DEBUG) {
+          entity.route = route;
+        }
       }
     }
+  },
 
+  updateEntitySpeedAxis = function updateEntitySpeedAxis(entity, axis, axisSpd) {
+    axisSpd  = entity.spd[axis];
+    axisSpd += Math.max(Math.min(2, entity.acc[axis]), -2);
+    axisSpd *= entity.cfg.friction;
+    axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
+
+    entity.spd[axis] = axisSpd;
+  },
+
+  updateEntitySpeed = function updateEntitySpeed(entity) {
     updateEntitySpeedAxis(entity, 0);
     updateEntitySpeedAxis(entity, 1);
   },
@@ -542,6 +579,7 @@ var
       return;
     }
 
+    updateEntityDecision(entity);
     updateEntitySpeed(entity);
     updateEntityPosition(entity);
   },
@@ -641,34 +679,12 @@ var
     acc[1] += newAcc[1];
   },
 
-  getMouseCoords = function getMouseCoords(event) {
-    return [
-      Math.floor((event.pageX - main.offsetLeft)  / STAGE_SCALE),
-      Math.floor((event.pageY - main.offsetTop)   / STAGE_SCALE)
-    ];
-  },
-
-  shoot = function shoot(apply, event, coords, cfg) {
+  shoot = function shoot(apply) {
     if (!apply) {
       return;
     }
 
-    coords = getMouseCoords(event);
-
-    cfg = {
-      'size' : 16,
-
-      'friction' : 0.8,
-
-      'idling' : {
-        'frames' : 4
-      },
-      'moving' : {
-        'frames' : 4
-      }
-    };
-
-    createEntity(coords, images[2], cfg);
+    createMonster(getMouseCoords());
   },
 
   setCommands = function setCommands() {
@@ -752,6 +768,11 @@ var
   /**
    * @param {Event} event
    */
+  onmousemove = function onmousemove(event) {
+    mouseCoords[0] = Math.floor((event.pageX - main.offsetLeft)  / STAGE_SCALE);
+    mouseCoords[1] = Math.floor((event.pageY - main.offsetTop)   / STAGE_SCALE);
+  },
+
   onclick = function onclick() {
     setScreen(1);
   },
@@ -813,6 +834,7 @@ var
     abcImage        = images[0];
     tileset         = images[4];
     win.onclick     = onclick;
+    win.onmousemove = onmousemove;
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = setCommand;
 
     map2DArray = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
@@ -829,6 +851,7 @@ if (DEBUG) {
     origOnload = win.onload,
 
     ESC = 27,
+    B   = 66,
     C   = 67,
     V   = 86,
     X   = 88,
@@ -844,6 +867,19 @@ if (DEBUG) {
         debugOnkeydown = function debugOnkeydown(event) {
           var
             code = getCode(event);
+
+          origOnkeyDown(event);
+
+          //
+          // Toggle debug with V
+          //
+          if (code === V) {
+            toggleDebug();
+          }
+
+          if (!DEBUG) {
+            return;
+          }
 
           //
           // By pushing the `esc` key, you can land in sort of debug
@@ -864,14 +900,9 @@ if (DEBUG) {
             win.requestAnimationFrame(updateLoop);
           }
 
-          //
-          // Toggle debug with V
-          //
-          if (code === V) {
-            toggleDebug();
+          if (code === B) {
+            createMonster(getMouseCoords());
           }
-
-          origOnkeyDown(event);
         };
 
       win.onkeydown = debugOnkeydown;
