@@ -48,10 +48,17 @@ var
     return ++id;
   },
 
-  getMouseCoords = function getMouseCoords() {
+  mul = function mul(v, s) {
     return [
-      mouseCoords[0],
-      mouseCoords[1]
+      v[0] * s,
+      v[1] * s
+    ];
+  },
+
+  sub = function sub(v1, v2) {
+    return [
+      v1[0] - v2[0],
+      v1[1] - v2[1]
     ];
   },
 
@@ -88,10 +95,10 @@ var
     entity.cntFn  = cntFn;
   },
 
-  createEntityConfig = function createEntityConfig(states, size, state, cfg, i) {
+  createEntityConfig = function createEntityConfig(states, friction, size, state, cfg, i) {
     cfg = {
-      'size'      : size || 16,
-      'friction'  : 0.8
+      'size'      : size      || 16,
+      'friction'  : friction  || 0.8
     };
 
     i       = 0;
@@ -114,13 +121,13 @@ var
     return cfg;
   },
 
-  createEntity = function createEntity(pos, img, cfg, entity) {
+  createEntity = function createEntity(pos, img, cfg, spd, entity) {
     entity = {
       'id'    : getId(),
       'img'   : img,
       'cfg'   : cfg,
-      'pos'   : pos,
-      'spd'   : [0, 0],
+      'pos'   : pos.slice(),
+      'spd'   : spd || [0, 0],
       'acc'   : [0, 0],
       'cmd'   : []
     };
@@ -132,9 +139,8 @@ var
   },
 
   createMonster = function createMonster(pos, monster) {
-    monster               = createEntity(pos, images[2], createEntityConfig());
-    monster.cfg.friction  = 0.5;
-    monster.target        = player;
+    monster         = createEntity(pos, images[3], createEntityConfig(0, 0.5));
+    monster.target  = player;
   },
 
   /**
@@ -508,8 +514,12 @@ var
 
   updateEntitySpeedAxis = function updateEntitySpeedAxis(entity, axis, axisSpd) {
     axisSpd  = entity.spd[axis];
-    axisSpd += Math.max(Math.min(2, entity.acc[axis]), -2);
+    axisSpd += entity.acc[axis];
     axisSpd *= entity.cfg.friction;
+
+    //
+    // Round it to zero if its close enough.
+    //
     axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
 
     entity.spd[axis] = axisSpd;
@@ -526,7 +536,6 @@ var
 
     if (!getAccDirection(entity)) {
       setEntityState(entity, 'idling');
-      return;
     }
 
     oldX = pos[0];
@@ -694,12 +703,13 @@ var
     acc[1] += newAcc[1];
   },
 
-  shoot = function shoot(apply, img) {
+  shoot = function shoot(apply, bullet, spd) {
     if (!apply) {
       return;
     }
 
-    img = 0;
+    spd    = mul(normalize(sub(mouseCoords, player.pos)), 3);
+    bullet = createEntity(player.pos, images[0], createEntityConfig([['idling', 1]], 0.99), spd);
   },
 
   setCommands = function setCommands() {
@@ -797,7 +807,7 @@ var
     setImages();
 
     // Setup cursor.
-    cursorImg = images[1];
+    cursorImg = images[2];
     cursor    = createCanvas(32, 32);
     cctx      = cursor.getCtx();
 
@@ -834,10 +844,10 @@ var
       ['tping']
     ]);
 
-    player = createEntity([160, 160], createPlayerSprites(player, images[3]), player);
+    player = createEntity([160, 160], createPlayerSprites(player, images[4]), player);
 
-    abcImage        = images[0];
-    tileset         = images[4];
+    abcImage        = images[1];
+    tileset         = images[5];
     win.onclick     = onclick;
     win.onmousemove = onmousemove;
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = setCommand;
@@ -913,7 +923,7 @@ if (DEBUG) {
           // Add a monster under the cursor.
           //
           if (code === X) {
-            createMonster(getMouseCoords());
+            createMonster(mouseCoords);
           }
         };
 

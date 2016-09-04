@@ -125,6 +125,18 @@ describe('main', function () {
       expect(this.cfg.friction).toBe(0.8);
     });
 
+    describe('with one count for idling frames', function () {
+      beforeEach(function () {
+        this.cfg = test.createEntityConfig([
+          ['idling', 1]
+        ]);
+      });
+
+      it('should set frames for idling to 1', function () {
+        expect(this.cfg.idling.frames).toBe(1);
+      });
+    });
+
     describe('with player config', function () {
       beforeEach(function () {
         this.cfg = test.createEntityConfig([
@@ -144,15 +156,19 @@ describe('main', function () {
       });
     });
 
-    describe('with size parameter', function () {
+    describe('with friction and size parameter', function () {
       beforeEach(function () {
         this.cfg = test.createEntityConfig([
           ['moving'],
           ['tping']
-        ], 22);
+        ], 10, 22);
       });
 
-      it('should have the given size property', function () {
+      it('should have the friction property set', function () {
+        expect(this.cfg.friction).toBe(10);
+      });
+
+      it('should have the given size property set', function () {
         expect(this.cfg.size).toBe(22);
       });
 
