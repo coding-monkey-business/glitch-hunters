@@ -30,7 +30,7 @@ describe('a-star', function () {
     expect(test.aStar).toBeDefined();
 
     expect(function () {
-      result = test.aStar(0, 1, 5, 3, grid);
+      result = test.aStar([0, 1], [5, 3], grid);
     }).not.toThrow();
 
     expect(result).toEqual([
@@ -45,7 +45,7 @@ describe('a-star', function () {
   describe('with a dispositioning-mistake', function () {
     it('should not freeze the game', function () {
       expect(function () {
-        test.aStar(5, 0, 5, 3, grid);
+        test.aStar([5, 0], [5, 3], grid);
         expect(test.errors.indexOf('ERROR_aStar')).not.toBe(-1);
         expect(test.errors.indexOf('ERROR_getNeighborNodes')).not.toBe(-1);
         expect(test.errors.length).toBe(2);

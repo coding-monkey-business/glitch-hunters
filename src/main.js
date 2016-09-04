@@ -1,4 +1,6 @@
-/* globals aStar: false, distance:false, setDebug:false, DEBUG: false */
+/* globals aStar */
+/* globals DEBUG, setDebug */
+/* globals add, mul, norm, set, sub, div */
 var
   win       = window,
   doc       = document,
@@ -46,29 +48,6 @@ var
 
   getId = function getId() {
     return ++id;
-  },
-
-  mul = function mul(v, s) {
-    return [
-      v[0] * s,
-      v[1] * s
-    ];
-  },
-
-  sub = function sub(v1, v2) {
-    return [
-      v1[0] - v2[0],
-      v1[1] - v2[1]
-    ];
-  },
-
-  normalize = function normalize(v, vlength) {
-    vlength = distance(0, 0, v[0], v[1]);
-
-    return [
-      v[0] / vlength,
-      v[1] / vlength
-    ];
   },
 
   createCanvas = function createCanvas(width, height, canvas) {
@@ -129,6 +108,7 @@ var
       'pos'   : pos.slice(),
       'spd'   : spd || [0, 0],
       'acc'   : [0, 0],
+      'dir'   : [0, 0],
       'cmd'   : []
     };
 
@@ -259,10 +239,12 @@ var
     }
 
     bctx.beginPath();
+
     bctx.moveTo(
       entity.pos[0],
       entity.pos[1]
     );
+
     bctx.lineTo(
       entity.pos[0] + entity.acc[0] * 10,
       entity.pos[1] + entity.acc[1] * 10
@@ -336,10 +318,10 @@ var
     );
   },
 
-  getEntityTilesIndex = function getEntityTilesIndex(entity) {
+  getTilesIndex = function getTilesIndex(pos) {
     return [
-      Math.round(entity.pos[0] / TILESIZE_X),
-      Math.floor(entity.pos[1] / TILESIZE_X)
+      Math.floor(pos[0] / TILESIZE_X),
+      Math.floor(pos[1] / TILESIZE_X)
     ];
   },
 
@@ -365,10 +347,11 @@ var
     while (len--) {
       drawEntity(entities[len], isAnimationFrame);
 
-      entityTilesIndex = getEntityTilesIndex(entities[len]);
+      entityTilesIndex = getTilesIndex(entities[len].pos);
 
-      drawWall(entityTilesIndex[0],     entityTilesIndex[1] + 1, 10);
-      drawWall(entityTilesIndex[0] - 1, entityTilesIndex[1] + 1, 10);
+      drawWall(entityTilesIndex[0],     entityTilesIndex[1] + 1, 16);
+      drawWall(entityTilesIndex[0] - 1, entityTilesIndex[1] + 1, 16);
+      drawWall(entityTilesIndex[0] + 1, entityTilesIndex[1] + 1, 16);
     }
   },
 
@@ -437,7 +420,7 @@ var
       }
 
       bctx.fillRect(
-        WIDTH / 2  + f[0] * z * WIDTH,
+        WIDTH  / 2 + f[0] * z * WIDTH,
         HEIGHT / 2 + f[1] * z * HEIGHT,
         z,
         f[2] -= (z * (i%3 + 1) * 0.01)
@@ -489,10 +472,8 @@ var
 
     if (target) {
       route = aStar(
-        (entity.pos[0] / TILESIZE_X) | 0,
-        (entity.pos[1] / TILESIZE_X) | 0,
-        (target.pos[0] / TILESIZE_X) | 0,
-        (target.pos[1] / TILESIZE_X) | 0,
+        getTilesIndex(entity.pos),
+        getTilesIndex(target.pos),
         map2DArray,
         {
           'range': 1
@@ -503,7 +484,7 @@ var
         entity.acc[0] += ((route[0][0] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[0]);
         entity.acc[1] += ((route[0][1] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[1]);
 
-        entity.acc = normalize(entity.acc);
+        norm(entity.acc);
 
         if (DEBUG) {
           entity.route = route;
@@ -530,32 +511,24 @@ var
     updateEntitySpeedAxis(entity, 1);
   },
 
-  updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldX, oldY, tileX, tileY) {
+  updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldPos, oldTilesIndex, tilesIndex, isHorizontalCollision) {
     pos  = entity.pos;
     spd  = entity.spd;
 
-    if (!getAccDirection(entity)) {
-      setEntityState(entity, 'idling');
-    }
+    setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
 
-    oldX = pos[0];
-    oldY = pos[1];
+    oldPos        = pos.slice();
+    oldTilesIndex = getTilesIndex(pos);
 
-    pos[0] += spd[0];
-    pos[1] += spd[1];
+    add(pos, spd);
+    tilesIndex = getTilesIndex(pos);
 
-    tileX = Math.floor(pos[0] / TILESIZE_X);
-    tileY = Math.floor(pos[1] / TILESIZE_X);
+    if (!map2DArray[tilesIndex[0]][tilesIndex[1]]) {
+      set(pos, oldPos);
 
-    setEntityState(entity, 'moving');
+      isHorizontalCollision = tilesIndex[0] !== oldTilesIndex[0];
 
-    // TODO: this is the naive implementation
-    if (!map2DArray[tileX][tileY]) {
-      pos[0] = oldX;
-      pos[1] = oldY;
-
-      spd[0] /= -2;
-      spd[1] /= -2;
+      div(spd, isHorizontalCollision ? -2 : 2, isHorizontalCollision ? 2 : -2);
     }
   },
 
@@ -589,6 +562,15 @@ var
     }
   },
 
+  updateEntityState = function updateEntityState(entity) {
+    if (entity !== player) {
+      return;
+    }
+
+    norm(sub(set(player.dir, mouseCoords), player.pos));
+    entity.mirrored = !player.dir[0] ? entity.mirrored : player.dir[0] < 0;
+  },
+
   updateEntity = function updateEntity(entity, command, entityCommands) {
     updateEntityCounter(entity);
 
@@ -603,6 +585,7 @@ var
       return;
     }
 
+    updateEntityState(entity);
     updateEntityDecision(entity);
     updateEntitySpeed(entity);
     updateEntityPosition(entity);
@@ -692,15 +675,11 @@ var
     acc     = entity.acc;
     newAcc  = newAcc.slice();
 
-    if (apply) {
-      entity.mirrored = !newAcc[0] ? entity.mirrored : newAcc[0] < 0;
-    } else {
-      newAcc[0] *= -1;
-      newAcc[1] *= -1;
+    if (!apply) {
+      mul(newAcc, -1);
     }
 
-    acc[0] += newAcc[0];
-    acc[1] += newAcc[1];
+    add(acc, newAcc);
   },
 
   shoot = function shoot(apply, bullet, spd) {
@@ -708,8 +687,8 @@ var
       return;
     }
 
-    spd    = mul(normalize(sub(mouseCoords, player.pos)), 3);
-    bullet = createEntity(player.pos, images[0], createEntityConfig([['idling', 1]], 0.99), spd);
+    spd     = mul(player.dir.slice(), 3);
+    bullet  = createEntity(player.pos, images[0], createEntityConfig([['idling', 1]], 0.99), spd);
   },
 
   setCommands = function setCommands() {
