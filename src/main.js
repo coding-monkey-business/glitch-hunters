@@ -886,7 +886,7 @@ if (DEBUG) {
           // mode for the whole updateLoop. The execution will step
           // by pressing the `esc` again.
           //
-          if (code === ESC || code === C) {
+          if (code === ESC || code === B) {
             win.requestAnimationFrame = function () {};
 
             updateLoop();
@@ -895,12 +895,12 @@ if (DEBUG) {
           //
           // Continue execution by pressing X
           //
-          if (code === X) {
+          if (code === C) {
             win.requestAnimationFrame = origRequestAnimationFrame;
             win.requestAnimationFrame(updateLoop);
           }
 
-          if (code === B) {
+          if (code === X) {
             createMonster(getMouseCoords());
           }
         };
