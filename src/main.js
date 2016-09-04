@@ -1,4 +1,4 @@
-/* globals aStar: false, distance:false, toggleDebug:false, DEBUG: false */
+/* globals aStar: false, distance:false, setDebug:false, DEBUG: false */
 var
   win       = window,
   doc       = document,
@@ -78,17 +78,43 @@ var
     return canvas;
   },
 
-  setEntityState = function setEntityState(entity, state, counter, data) {
+  setEntityState = function setEntityState(entity, state, cnt, cntFn) {
     if (state !== entity.state) {
       entity.frame = 0;
     }
 
-    entity.state    = state;
-    entity.counter  = counter;
-    entity.data     = data;
+    entity.state  = state;
+    entity.cnt    = cnt;
+    entity.cntFn  = cntFn;
   },
 
-  createEntity = function createEntity(pos, img, cfg, spd, entity) {
+  createEntityConfig = function createEntityConfig(states, size, state, cfg, i) {
+    cfg = {
+      'size'      : size || 16,
+      'friction'  : 0.8
+    };
+
+    i       = 0;
+    states  = states || [];
+    state   = states[0];
+
+    if (!state || state[0] !== 'idling') {
+      states.unshift(['idling', 4]);
+    }
+
+    while (i < states.length) {
+      cfg[states[i][0]] = {
+        'frames'  : states[i][1] || 4,
+        'y'       : i * cfg.size
+      };
+
+      i++;
+    }
+
+    return cfg;
+  },
+
+  createEntity = function createEntity(pos, img, cfg, entity) {
     entity = {
       'id'    : getId(),
       'img'   : img,
@@ -106,20 +132,9 @@ var
   },
 
   createMonster = function createMonster(pos, monster) {
-    monster = createEntity(pos, images[2], {
-      'size' : 16,
-
-      'friction' : 0.5,
-
-      'idling' : {
-        'frames' : 4
-      },
-      'moving' : {
-        'frames' : 4
-      }
-    });
-
-    monster.target = player;
+    monster               = createEntity(pos, images[2], createEntityConfig());
+    monster.cfg.friction  = 0.5;
+    monster.target        = player;
   },
 
   /**
@@ -252,9 +267,9 @@ var
   drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg, img, y) {
     img       = entity.img;
     cfg       = entity.cfg;
-    frameCfg  = cfg[entity.state];
+    frameCfg  = cfg[entity.state] || cfg.idling;
     frame     = entity.frame % frameCfg.frames;
-    y         = frameCfg.y || 0;
+    y         = frameCfg.y;
     y        += entity.mirrored ? img.height / 2 : 0;
 
     bctx.drawImage(
@@ -549,16 +564,16 @@ var
       pos[0] += direction[0] * 40;
       pos[1] += direction[1] * 40;
     } else {
-      setEntityState(player, 'tping', 12, direction);
+      setEntityState(player, 'tping', 12, teleport.bind(0, 1, 0, 1, direction));
     }
   },
 
   updateEntityCounter = function updateEntityCounter(entity) {
     if (entity.state === 'tping') {
-      entity.counter--;
+      entity.cnt--;
 
-      if (!entity.counter) {
-        teleport(1, 0, 1, entity.data);
+      if (!entity.cnt) {
+        entity.cntFn.apply(0, entity.cntPar);
 
         setEntityState(entity, 'idling');
       }
@@ -575,7 +590,7 @@ var
       command(entityCommands.shift(), entityCommands.shift());
     }
 
-    if (entity.counter) {
+    if (entity.cnt) {
       return;
     }
 
@@ -679,12 +694,12 @@ var
     acc[1] += newAcc[1];
   },
 
-  shoot = function shoot(apply) {
+  shoot = function shoot(apply, img) {
     if (!apply) {
       return;
     }
 
-    createMonster(getMouseCoords());
+    img = 0;
   },
 
   setCommands = function setCommands() {
@@ -789,7 +804,9 @@ var
     cctx.drawImage(cursorImg, 0, 0, 32, 32);
     document.body.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto';
 
+    //
     // Setup main canvas.
+    //
     main    = createCanvas(STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
     mctx    = main.getCtx();
 
@@ -798,37 +815,25 @@ var
     buffer  = createCanvas();
     bctx    = buffer.getCtx();
 
+    //
     // Define possible updaters.
+    //
     updaters = [
       updateIntro,
       updateGame
     ];
 
-    // Some config for the player.
-    player = {
-      'size' : 16,
-
-      'friction' : 0.8,
-
-      'idling' : {
-        'frames' : 6
-      },
-
-      'moving' : {
-        'frames'  : 4,
-        'y'       : 16
-      },
-
-      'tping' : {
-        'frames'  : 4,
-        'y'       : 32
-      }
-    };
 
     //
     // (MAP_SIZE_X * TILESIZE_X) >> 1 ===> [160, 160]
     // there should always be some room in the center
     //
+    player = createEntityConfig([
+      ['idling', 6],
+      ['moving'],
+      ['tping']
+    ]);
+
     player = createEntity([160, 160], createPlayerSprites(player, images[3]), player);
 
     abcImage        = images[0];
@@ -874,7 +879,7 @@ if (DEBUG) {
           // Toggle debug with V
           //
           if (code === V) {
-            toggleDebug();
+            setDebug();
           }
 
           if (!DEBUG) {
@@ -887,19 +892,26 @@ if (DEBUG) {
           // by pressing the `esc` again.
           //
           if (code === ESC || code === B) {
+            setDebug('break', true);
+
             win.requestAnimationFrame = function () {};
 
             updateLoop();
           }
 
           //
-          // Continue execution by pressing X
+          // Continue execution by pressing C
           //
           if (code === C) {
+            setDebug('break', false);
+
             win.requestAnimationFrame = origRequestAnimationFrame;
             win.requestAnimationFrame(updateLoop);
           }
 
+          //
+          // Add a monster under the cursor.
+          //
           if (code === X) {
             createMonster(getMouseCoords());
           }
@@ -920,11 +932,12 @@ if (DEBUG) {
 // Export every function here which should be tested by karma,
 //
 win.test = {
-  'aStar'            : aStar,
-  'createRoom'       : createRoom,
-  'drawPath'         : drawPath,
-  'entities'         : entities,
-  'field'            : field,
-  'getAccDirection'  : getAccDirection,
-  'getId'            : getId
+  'aStar'               : aStar,
+  'createRoom'          : createRoom,
+  'createEntityConfig'  : createEntityConfig,
+  'drawPath'            : drawPath,
+  'entities'            : entities,
+  'field'               : field,
+  'getAccDirection'     : getAccDirection,
+  'getId'               : getId
 };

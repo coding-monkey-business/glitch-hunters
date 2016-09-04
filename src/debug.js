@@ -1,6 +1,6 @@
-/* exported DEBUG, toggleDebug, log */
+/* exported DEBUG, setDebug, log */
 var
-  DEBUG = true,
+  DEBUG,
 
   logged = {},
 
@@ -31,13 +31,28 @@ var
     help.innerHTML = HTML;
   },
 
+  initDebug = function initDebug() {
+    DEBUG = {
+      'break' : false
+    };
+  },
+
   toggleDebug = function toggleDebug() {
     DEBUG = !DEBUG;
 
     if (DEBUG) {
+      initDebug();
       setHelpHTML();
     } else {
       setHelpHTML('');
+    }
+  },
+
+  setDebug = function setDebug(key, value) {
+    if (key === undefined || value === undefined) {
+      toggleDebug();
+    } else {
+      DEBUG[key] = value;
     }
   },
 
@@ -52,6 +67,8 @@ var
   },
 
   init = function init() {
+    initDebug();
+
     help.style = '' +
       'list-style-type  : none;'      +
       'text-align       : left;'      +

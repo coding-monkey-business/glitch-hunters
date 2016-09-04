@@ -104,4 +104,63 @@ describe('main', function () {
       expect(test.entities.length).toBe(1);
     });
   });
+
+  describe('.createEntityConfig()', function () {
+    beforeEach(function () {
+      this.cfg = test.createEntityConfig();
+    });
+
+    it('should set idling as default', function () {
+      expect(this.cfg.idling).toEqual({
+        'frames'  : 4,
+        'y'       : 0
+      });
+    });
+
+    it('should have size property', function () {
+      expect(this.cfg.size).toBe(16);
+    });
+
+    it('should have friction property', function () {
+      expect(this.cfg.friction).toBe(0.8);
+    });
+
+    describe('with player config', function () {
+      beforeEach(function () {
+        this.cfg = test.createEntityConfig([
+          ['idling', 6],
+          ['moving'],
+          ['tping']
+        ]);
+      });
+
+      it('should override default idling frames', function () {
+        expect(this.cfg.idling.frames).toBe(6);
+      });
+
+      it('should set y coords according to size', function () {
+        expect(this.cfg.moving.y).toBe(16);
+        expect(this.cfg.tping.y).toBe(32);
+      });
+    });
+
+    describe('with size parameter', function () {
+      beforeEach(function () {
+        this.cfg = test.createEntityConfig([
+          ['moving'],
+          ['tping']
+        ], 22);
+      });
+
+      it('should have the given size property', function () {
+        expect(this.cfg.size).toBe(22);
+      });
+
+      it('should set y coords according to the given size', function () {
+        expect(this.cfg.idling.y).toBe(0);
+        expect(this.cfg.moving.y).toBe(22);
+        expect(this.cfg.tping.y).toBe(44);
+      });
+    });
+  });
 });

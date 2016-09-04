@@ -243,7 +243,6 @@ var
     ],
 
     'test:dev' : [
-      'jshint:default',
       'karma'
     ],
 
@@ -252,7 +251,6 @@ var
     ],
 
     'dev' : [
-      'build:dev',
       'watch:dev'
     ],
 
