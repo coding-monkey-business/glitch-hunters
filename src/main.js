@@ -514,10 +514,7 @@ var
     pos  = entity.pos;
     spd  = entity.spd;
 
-    if (!getAccDirection(entity)) {
-      setEntityState(entity, 'idling');
-    }
-    setEntityState(entity, 'moving');
+    setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
 
     oldPos        = pos.slice();
     oldTilesIndex = getTilesIndex(pos);
