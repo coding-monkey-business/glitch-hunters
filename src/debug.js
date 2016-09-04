@@ -6,18 +6,18 @@ var
 
   help = document.createElement('ul'),
 
-  toggleDebug = function toggleDebug() {
-    DEBUG = !DEBUG;
-  },
-
   createHelpItem = function createHelpItem(item) {
     return '<li>' + item + '</li>';
   },
 
-  setHelpHTML = function setHelpHTML() {
+  setHelpHTML = function setHelpHTML(HTML) {
     var
-      message,
-      HTML;
+      message;
+
+    if (HTML !== undefined) {
+      help.innerHTML = HTML;
+      return;
+    }
 
     HTML  = createHelpItem('x - monster');
     HTML += createHelpItem('c - continue');
@@ -29,6 +29,16 @@ var
     }
 
     help.innerHTML = HTML;
+  },
+
+  toggleDebug = function toggleDebug() {
+    DEBUG = !DEBUG;
+
+    if (DEBUG) {
+      setHelpHTML();
+    } else {
+      setHelpHTML('');
+    }
   },
 
   log = function log(message) {
