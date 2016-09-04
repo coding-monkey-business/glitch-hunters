@@ -30,7 +30,7 @@ var
   RIGHT               = 68, // d
   LEFT                = 65, // a
   SPACE               = 32,
-  ZERO_LIMIT          = 0.2,
+  ZERO_LIMIT          = 0.05,
   SHOOT               = 1,
   STAGE_SCALE         = 3,
 
