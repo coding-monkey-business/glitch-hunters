@@ -109,7 +109,7 @@ var
     monster = createEntity(pos, images[2], {
       'size' : 16,
 
-      'friction' : 0.8,
+      'friction' : 0.5,
 
       'idling' : {
         'frames' : 4

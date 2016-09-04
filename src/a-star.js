@@ -1,15 +1,15 @@
-/* jshint unused: false */
+/* exported aStar, distance */
+/* globals DEBUG: false, log: false */
 var
-
-/**
- * Distance between two 2d-points.
- *
- * @param {number} x1 X-coord of first point.
- * @param {number} y1 Y-coord of first point.
- * @param {number} x2 X-coord of second point.
- * @param {number} y2 Y-coord of second point.
- * @return {number} Distance between (x1,y1) and (x2,y2).
- */
+  /**
+   * Distance between two 2d-points.
+   *
+   * @param {number} x1 X-coord of first point.
+   * @param {number} y1 Y-coord of first point.
+   * @param {number} x2 X-coord of second point.
+   * @param {number} y2 Y-coord of second point.
+   * @return {number} Distance between (x1,y1) and (x2,y2).
+   */
   distance = function distance(x1, y1, x2, y2) {
     return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
   },
@@ -65,8 +65,11 @@ var
     var result = [],
       x,
       y;
-    if (!grid[node[0]] || !grid[node[0]][node[1]]) {
-      throw new TypeError();
+
+    if (DEBUG) {
+      if (!grid[node[0]] || !grid[node[0]][node[1]]) {
+        log('ERROR_getNeighborNodes');
+      }
     }
 
     for (x = node[0] - 1; x <= node[0] + 1; x++) {
@@ -86,10 +89,13 @@ var
     return result;
   },
   /**
-   * @param {Array.<Number>} start
-   * @param {Array.<Number>} goal
+   * @param {Number} startX
+   * @param {Number} startY
+   * @param {Number} goalX
+   * @param {Number} goalY
    * @param {Array.<Array.<Number>} grid TODO FIX THIS
    * @param {Object=} opt_data
+   * @return {Array.<Array.<Number>>} path from start to goal
    */
   aStar = function aStar(startX, startY, goalX, goalY, grid, opt_data) {
     var closedset = {}, // The set of nodes already evaluated.
@@ -162,5 +168,10 @@ var
         }
       }
     }
-    throw new Error('Failure.');
+
+    if (DEBUG) {
+      log('ERROR_aStar');
+    }
+
+    return [];
   };
