@@ -108,6 +108,7 @@ var
       'pos'   : pos.slice(),
       'spd'   : spd || [0, 0],
       'acc'   : [0, 0],
+      'dir'   : [0, 0],
       'cmd'   : []
     };
 
@@ -561,6 +562,15 @@ var
     }
   },
 
+  updateEntityState = function updateEntityState(entity) {
+    if (entity !== player) {
+      return;
+    }
+
+    norm(sub(set(player.dir, mouseCoords), player.pos));
+    entity.mirrored = !player.dir[0] ? entity.mirrored : player.dir[0] < 0;
+  },
+
   updateEntity = function updateEntity(entity, command, entityCommands) {
     updateEntityCounter(entity);
 
@@ -575,6 +585,7 @@ var
       return;
     }
 
+    updateEntityState(entity);
     updateEntityDecision(entity);
     updateEntitySpeed(entity);
     updateEntityPosition(entity);
@@ -664,9 +675,7 @@ var
     acc     = entity.acc;
     newAcc  = newAcc.slice();
 
-    if (apply) {
-      entity.mirrored = !newAcc[0] ? entity.mirrored : newAcc[0] < 0;
-    } else {
+    if (!apply) {
       mul(newAcc, -1);
     }
 
@@ -678,7 +687,7 @@ var
       return;
     }
 
-    spd     = mul(norm(sub(mouseCoords.slice(), player.pos)), 3);
+    spd     = mul(player.dir.slice(), 3);
     bullet  = createEntity(player.pos, images[0], createEntityConfig([['idling', 1]], 0.99), spd);
   },
 
