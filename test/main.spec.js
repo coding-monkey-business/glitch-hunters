@@ -161,7 +161,10 @@ describe('main', function () {
         this.cfg = test.createEntityConfig([
           ['moving'],
           ['tping']
-        ], 10, 22);
+        ], {
+          'friction'  : 10,
+          'size'      : 22
+        });
       });
 
       it('should have the friction property set', function () {

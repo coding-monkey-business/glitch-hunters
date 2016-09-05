@@ -74,11 +74,10 @@ var
     entity.cntFn  = cntFn;
   },
 
-  createEntityConfig = function createEntityConfig(states, friction, size, state, cfg, i) {
-    cfg = {
-      'size'      : size      || 16,
-      'friction'  : friction  || 0.8
-    };
+  createEntityConfig = function createEntityConfig(states, cfg, state, i) {
+    cfg           = cfg           || {};
+    cfg.size      = cfg.size      || 16;
+    cfg.friction  = cfg.friction  || 0.8;
 
     i       = 0;
     states  = states || [];
@@ -118,8 +117,12 @@ var
     return entity;
   },
 
-  createMonster = function createMonster(pos, monster) {
-    monster         = createEntity(pos, images[3], createEntityConfig(0, 0.5));
+  createMonster = function createMonster(pos, cfg, monster) {
+    cfg = createEntityConfig(0, {
+      'friction' : 0.5
+    });
+
+    monster         = createEntity(pos, images[3], cfg);
     monster.target  = player;
   },
 
@@ -682,13 +685,17 @@ var
     add(acc, newAcc);
   },
 
-  shoot = function shoot(apply, bullet, spd) {
+  shoot = function shoot(apply, bullet, cfg, spd) {
     if (!apply) {
       return;
     }
 
+    cfg = createEntityConfig([['idling', 1]], {
+      'friction' : 0.99
+    });
+
     spd     = mul(player.dir.slice(), 3);
-    bullet  = createEntity(player.pos, images[0], createEntityConfig([['idling', 1]], 0.99), spd);
+    bullet  = createEntity(player.pos, images[0], cfg, spd);
   },
 
   setCommands = function setCommands() {
