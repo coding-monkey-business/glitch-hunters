@@ -1,4 +1,8 @@
 COMMIT  |     SIZE |     DIFF | MESSAGE                                                      | OUTPUT
+2b63e92 |     5218 |       89 | render: implements rotation based on entity.dir and entity.r | # dist/index.html.zip <=== 5.1 KB (5218 B)
+57f7008 |     5129 |      184 | bullet: adds breaking (exploding) effect                     | # dist/index.html.zip <=== 5.01 KB (5129 B)
+2c2c15c |     4945 |       -5 | main: improves createEntity extra params handling            | # dist/index.html.zip <=== 4.83 KB (4945 B)
+307402d |     4950 |        0 | doc: statistics.csv                                          | # dist/index.html.zip <=== 4.83 KB (4950 B)
 503813e |     4950 |      111 | build: adds vec.js to bundle                                 | # dist/index.html.zip <=== 4.83 KB (4950 B)
 d4698ee |     4839 |        0 | settings: tweeks ZERO_LIMIT for more fluid movement          | # dist/index.html.zip <=== 4.73 KB (4839 B)
 cf6876a |     4839 |        0 | doc: regenerate statistics.csv                               | # dist/index.html.zip <=== 4.73 KB (4839 B)
