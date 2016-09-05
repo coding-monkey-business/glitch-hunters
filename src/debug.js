@@ -11,6 +11,7 @@ var
   logged = {},
 
   help = document.createElement('ul'),
+  debugMap = document.createElement('canvas'),
 
   createHelpItem = function createHelpItem(item) {
     return '<li>' + item + '</li>';
@@ -29,6 +30,7 @@ var
     HTML += createHelpItem('c - continue');
     HTML += createHelpItem('v - debug');
     HTML += createHelpItem('b - break');
+    HTML += createHelpItem('m - show map');
 
     for (message in logged) {
       HTML += createHelpItem(message);
@@ -119,6 +121,7 @@ var
     setHelpHTML();
 
     document.body.appendChild(help);
+    document.body.appendChild(debugMap);
   };
 
 init();

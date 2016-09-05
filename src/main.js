@@ -55,6 +55,8 @@ var
   SHOOT               = 1,
   STAGE_SCALE         = 3,
 
+  offsetX             = 0,
+  offsetY             = 0,
   mctx,
   bctx,
   main,
@@ -182,11 +184,11 @@ var
     }
 
     for (;ax !== bx && ax < arr.length - 1; ax+= xIncrement) {
-      arr[ax][ay] = arr[ax][ay] || 3;
+      arr[ax][ay] = arr[ax][ay] || 2;
     }
 
     for (;ay !== by && ay < arr[ax].length - 1; ay+= yIncrement) {
-      arr[ax][ay] = arr[ax][ay] || 3;
+      arr[ax][ay] = arr[ax][ay] || 2;
     }
 
   },
@@ -205,38 +207,60 @@ var
     if (w * h > 3) { // single tile wide rooms are stupid
       i = 0;
       // find top left corner of new room
-      x = Math.min(Math.max(xc - (w >> 1), 0), sizeX - 1);
-      y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - 1);
+      x = Math.min(Math.max(xc - (w >> 1), 0), sizeX - w);
+      y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - h);
 
-      while (i++ < w && (xi = x + i) < sizeX) {
+      while (i++ < w && (xi = x + i) < sizeX - 1) {
         j = 0;
-        while (j++ < h && y + j < sizeY) {
+        while (j++ < h && y + j < sizeY - 1) {
           try {
-            arr[xi][y + j] = arr[xi][y + j] || color;
-          } catch (e) {
+            if (arr[xi + 1] && (
+              !arr[xi + 1][y + j + 1] &&
+              !arr[xi + 0][y + j + 1] &&
+              !arr[xi + 1][y + j + 0] /*&&
 
+              !arr[xi + 2][y + j + 2]*/
+            )) {
+              arr[xi][y + j] = arr[xi][y + j] || color;
+            }
+          } catch (e) {
+            console.error(e)
           }
         }
       }
 
+
+      if (w > 2 && h > 2) {
+      	arr[x + (w >> 1)][y + (h >> 1)] = undefined;
+      }
+
       // spawn more rooms
-      if (iteration < 3) {
+      if (iteration) {
+        // i = Math.max(Math.min(iteration, 1), 3);
         i = 4;
         while (i--) {
-          // TODO: fiddle aMath.round with those values
+          // TODO: fiddle around with those values
+          // xi = (iteration * Math.max(Math.random(), 0.5) * w) | 0;
+          // yj = (iteration * Math.max(Math.random(), 0.5) * h) | 0;
+          xi = iteration * Math.max(2 * Math.random(), 0.5);
+          yj = iteration * Math.max(2 * Math.random(), 0.5);
           createRoom(
             arr,
-            m = (xc + w * (+(Math.random() > 0.5) || -1)), // (+(Math.random() > 0.5) || -1) -> 1 || -1
-            n = (yc + h * (+(Math.random() > 0.5) || -1)),
-            xi = (3 - iteration * (Math.random() * w) | 0),
-            yj = (3 - iteration * (Math.random() * h) | 0),
-            Math.random() * 3 | 0,
-            iteration + 1,
+            m = (xc + xi * ((+(Math.random() > 0.5) || -1) * 1.5) | 0), // (+(Math.random() > 0.5) || -1) -> 1 || -1
+            n = (yc + yj * ((+(Math.random() > 0.5) || -1) * 1.5) | 0),
+            xi,
+            yj,
+            1,
+            iteration - 1,
             sizeX,
             sizeY
           );
-          if (xi * yj > 3) {
-            drawPath(arr, xc, yc, m, n);
+          if (xi * yj > 1) {
+            try {
+              drawPath(arr, xc, yc, m + (xi >> 1), n + (yj >> 1));
+            } catch (e) {
+              console.warn(e);
+            }
           }
         }
       }
@@ -258,8 +282,8 @@ var
       arr[x].length = sizeY;
     }
 
-    // create center room
-    createRoom(arr, sizeX >> 1, sizeY >> 1, 4, 4, 1, 0, sizeX, sizeY);
+    //create center room
+    createRoom(arr, sizeX >> 1, sizeY >> 1, 4, 4, 1, 3, sizeX, sizeY);
     return arr;
   },
 
@@ -335,7 +359,7 @@ var
     entity.frame += stepFrame ? 1 : 0;
   },
 
-  drawWall = function drawWall(x, y, height) {
+  drawWall = function drawWall(x, y, height, opt_ctx) {
     //
     // Meh, maybe this is not right here, but ATM it does what I need
     //
@@ -345,7 +369,7 @@ var
 
     height = height || 32;
 
-    bctx.drawImage(
+    (opt_ctx || bctx).drawImage(
       tileset, //img
       32, //sx
       9, //sy
@@ -358,10 +382,10 @@ var
     );
   },
 
-  drawField = function drawField(x, y) {
-    bctx.drawImage(
+  drawField = function drawField(x, y, tileType, opt_ctx) {
+    (opt_ctx || bctx).drawImage(
       tileset, //img
-      ((x + y) % 2) * TILESIZE_X, //sx
+      (tileType % 2) * TILESIZE_X, //sx
       TILESIZE_X, //sy
       TILESIZE_X, //sw
       TILESIZE_X, //sh
@@ -389,7 +413,7 @@ var
     for (y = 0; y < map2DArray[0].length; y++) {
       for (x = 0; x < map2DArray.length; x++) {
         if (map2DArray[x][y]) {
-          drawField(x, y);
+          drawField(x, y, map2DArray[x][y]);
         } else {
           drawWall(x, y);
         }
@@ -414,8 +438,9 @@ var
    * @param {Number} type e.g. JITTER
    */
   glitch = function glitch(canvas, ctx, obj, data, i) {
+  	return;
     ctx  = canvas.getCtx();
-    obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    // obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     data = obj.data;
     i    = data.length;
 
@@ -432,7 +457,7 @@ var
       }
     }
 
-    ctx.putImageData(obj, 0, 0);
+    // ctx.putImageData(obj, 0, 0);
   },
 
   /**
@@ -707,8 +732,16 @@ var
       frame   = frames;
       aFrame  = aFrames;
 
+      if (screen === 1) {
+	      offsetX = (-player.pos[0] | 0) + (320>>1);
+	      offsetY = (-player.pos[1] | 0) + (240>>1);
+      }
+
+
+      bctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
       bctx.fillStyle = '#000';
       bctx.fillRect(0, 0, WIDTH, HEIGHT);
+
 
       updater(isAnimationFrame);
 
@@ -929,6 +962,23 @@ var
     setScreen(screen);
 
     startLoop();
+  },
+  drawDebugMap = function drawDebugMap (ctx, x, y) {
+    debugMap.height = map2DArray[0].length * TILESIZE_X;
+    debugMap.width = map2DArray.length * TILESIZE_X;
+
+    ctx = debugMap.getContext('2d');
+
+    for (y = 0; y < map2DArray[0].length; y++) {
+      for (x = 0; x < map2DArray.length; x++) {
+        if (map2DArray[x][y]) {
+          drawField(x, y, map2DArray[x][y], ctx);
+          ctx.fillText(map2DArray[x][y], x * TILESIZE_X, y * TILESIZE_X + TILESIZE_X/2);
+        } else {
+          drawWall(x, y, 32, ctx);
+        }
+      }
+    }
   };
 
 win.onload = init;
@@ -940,6 +990,7 @@ if (DEBUG) {
     ESC = 27,
     B   = 66,
     C   = 67,
+    M   = 77,
     V   = 86,
     X   = 88,
 
@@ -996,6 +1047,10 @@ if (DEBUG) {
           //
           if (code === X) {
             createMonster(mouseCoords);
+          }
+
+          if (code === M) {
+            drawDebugMap();
           }
         };
 
