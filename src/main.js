@@ -50,6 +50,10 @@ var
     return ++id;
   },
 
+  removeEntity = function removeEntity(entity) {
+    entities.splice(entities.indexOf(entity), 1);
+  },
+
   createCanvas = function createCanvas(width, height, canvas) {
     canvas        = doc.createElement('canvas');
     canvas.width  = width  || WIDTH;
@@ -514,9 +518,10 @@ var
     updateEntitySpeedAxis(entity, 1);
   },
 
-  updateEntityPosition = function updateEntityPosition(entity, spd, pos, oldPos, oldTilesIndex, tilesIndex, isHorizontalCollision) {
-    pos  = entity.pos;
-    spd  = entity.spd;
+  updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, oldPos, oldTilesIndex, tilesIndex, isHorizontalCollision) {
+    pos   = entity.pos;
+    spd   = entity.spd;
+    cfg   = entity.cfg;
 
     setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
 
@@ -529,9 +534,13 @@ var
     if (!map2DArray[tilesIndex[0]][tilesIndex[1]]) {
       set(pos, oldPos);
 
-      isHorizontalCollision = tilesIndex[0] !== oldTilesIndex[0];
+      if (cfg.fragile) {
+        setEntityState(entity, 'breaking', 12, removeEntity.bind(0, entity));
+      } else {
+        isHorizontalCollision = tilesIndex[0] !== oldTilesIndex[0];
+        div(spd, isHorizontalCollision ? -2 : 2, isHorizontalCollision ? 2 : -2);
+      }
 
-      div(spd, isHorizontalCollision ? -2 : 2, isHorizontalCollision ? 2 : -2);
     }
   },
 
@@ -554,7 +563,7 @@ var
   },
 
   updateEntityCounter = function updateEntityCounter(entity) {
-    if (entity.state === 'tping') {
+    if (entity.cnt) {
       entity.cnt--;
 
       if (!entity.cnt) {
@@ -690,8 +699,9 @@ var
       return;
     }
 
-    cfg = createEntityConfig([['idling', 1]], {
-      'friction' : 0.99
+    cfg = createEntityConfig([['breaking']], {
+      'friction' : 0.99,
+      'fragile'  : 1
     });
 
     spd     = mul(player.dir.slice(), 3);
