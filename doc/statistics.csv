@@ -1,4 +1,7 @@
 COMMIT  |     SIZE |     DIFF | MESSAGE                                                      | OUTPUT
+503813e |     4950 |      111 | build: adds vec.js to bundle                                 | # dist/index.html.zip <=== 4.83 KB (4950 B)
+d4698ee |     4839 |        0 | settings: tweeks ZERO_LIMIT for more fluid movement          | # dist/index.html.zip <=== 4.73 KB (4839 B)
+cf6876a |     4839 |        0 | doc: regenerate statistics.csv                               | # dist/index.html.zip <=== 4.73 KB (4839 B)
 75ba2fe |     4839 |        0 | Merge branch 'shoot'                                         | # dist/index.html.zip <=== 4.73 KB (4839 B)
 056c63e |     4839 |       27 | direction: player faces mouse position (x-axis based)        | # dist/index.html.zip <=== 4.73 KB (4839 B)
 30c5cfb |     4812 |        1 | states/rendering: fixes issue where player thought he was mo | # dist/index.html.zip <=== 4.7 KB (4812 B)
