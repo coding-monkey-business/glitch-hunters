@@ -127,7 +127,7 @@ describe('main', function () {
 
     describe('with one count for idling frames', function () {
       beforeEach(function () {
-        this.cfg = test.createEntityConfig([
+        this.cfg = test.createEntityConfig(0, [
           ['idling', 1]
         ]);
       });
@@ -139,7 +139,7 @@ describe('main', function () {
 
     describe('with player config', function () {
       beforeEach(function () {
-        this.cfg = test.createEntityConfig([
+        this.cfg = test.createEntityConfig(0, [
           ['idling', 6],
           ['moving'],
           ['tping']
@@ -158,7 +158,7 @@ describe('main', function () {
 
     describe('with friction and size parameter', function () {
       beforeEach(function () {
-        this.cfg = test.createEntityConfig([
+        this.cfg = test.createEntityConfig(0, [
           ['moving'],
           ['tping']
         ], {

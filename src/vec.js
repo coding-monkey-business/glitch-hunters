@@ -1,4 +1,4 @@
-/* exported add, dist, eql, mul, norm, set, sub */
+/* exported add, rad, dist, eql, mul, norm, set, sub */
 var
   VEC_ZERO = [0, 0],
 
@@ -9,6 +9,10 @@ var
    */
   dist = function dist(v1, v2) {
     return Math.sqrt(Math.pow(v1[0] - v2[0], 2) + Math.pow(v1[1] - v2[1], 2));
+  },
+
+  rad = function rad(v) {
+    return (v[0] < 0 ? -Math.PI : 0) + Math.atan(v[1] / v[0]);
   },
 
   set = function set(v1, v2) {

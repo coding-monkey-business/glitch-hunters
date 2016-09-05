@@ -16,7 +16,11 @@ module.exports = function (config) {
 
     'files': [
       'node_modules/phantomjs-polyfill/bind-polyfill.js',
-      'src/*.js',
+      'src/vec.js',
+      'src/debug.js',
+      'src/img.js',
+      'src/a-star.js',
+      'src/main.js',
       'test/*.spec.js'
     ],
 

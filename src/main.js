@@ -1,6 +1,6 @@
 /* globals aStar */
 /* globals DEBUG, setDebug */
-/* globals add, mul, norm, set, sub, div */
+/* globals add, rad, mul, norm, set, sub, div */
 var
   win       = window,
   doc       = document,
@@ -41,6 +41,9 @@ var
   aFrame,
   buffer,
   player,
+  playerCfg,
+  bulletCfg,
+  monsterCfg,
   updater,
   tileset,
   abcImage,
@@ -78,10 +81,18 @@ var
     entity.cntFn  = cntFn;
   },
 
-  createEntityConfig = function createEntityConfig(states, cfg, state, i) {
+  createEntityConfig = function createEntityConfig(img, states, cfg, state, i) {
     cfg           = cfg           || {};
     cfg.size      = cfg.size      || 16;
     cfg.friction  = cfg.friction  || 0.8;
+    cfg.img       = img;
+
+    cfg.cnv   = createCanvas(cfg.size, cfg.size);
+    cfg.cnvX  = cfg.cnv.width  / -2;
+    cfg.cnvY  = cfg.cnv.height / -2;
+    cfg.ctx   = cfg.cnv.getCtx();
+
+    cfg.ctx.translate(-cfg.cnvX, -cfg.cnvY);
 
     i       = 0;
     states  = states || [];
@@ -103,15 +114,14 @@ var
     return cfg;
   },
 
-  createEntity = function createEntity(pos, img, cfg, spd, entity) {
+  createEntity = function createEntity(pos, cfg, spd, entity) {
     entity = {
       'id'    : getId(),
-      'img'   : img,
-      'cfg'   : cfg,
+      'cfg'   : cfg, // `cfg` can be a shared reference across entities
       'pos'   : pos.slice(),
       'spd'   : spd || [0, 0],
+      'dir'   : [1, 0],
       'acc'   : [0, 0],
-      'dir'   : [0, 0],
       'cmd'   : []
     };
 
@@ -121,12 +131,8 @@ var
     return entity;
   },
 
-  createMonster = function createMonster(pos, cfg, monster) {
-    cfg = createEntityConfig(0, {
-      'friction' : 0.5
-    });
-
-    monster         = createEntity(pos, images[3], cfg);
+  createMonster = function createMonster(pos, monster) {
+    monster         = createEntity(pos, monsterCfg);
     monster.target  = player;
   },
 
@@ -229,16 +235,16 @@ var
     return arr;
   },
 
-  drawEntityDebugInfo = function drawEntityDebugInfo(entity, y) {
+  drawEntityDebugInfo = function drawEntityDebugInfo(entity, len) {
     bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
 
     if (entity.route) {
       bctx.fillStyle = '#f0f';
-      y = entity.route.length;
-      while (y--) {
+      len = entity.route.length;
+      while (len--) {
         bctx.fillRect(
-          entity.route[y][0] * TILESIZE_X + TILESIZE_X / 2 - 2,
-          entity.route[y][1] * TILESIZE_X + TILESIZE_X / 2 - 2,
+          entity.route[len][0] * TILESIZE_X + TILESIZE_X / 2 - 2,
+          entity.route[len][1] * TILESIZE_X + TILESIZE_X / 2 - 2,
           4,
           4
         );
@@ -259,33 +265,46 @@ var
     bctx.stroke();
   },
 
-  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg, img, y) {
-    img       = entity.img;
+  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg)  {
     cfg       = entity.cfg;
     frameCfg  = cfg[entity.state] || cfg.idling;
     frame     = entity.frame % frameCfg.frames;
-    y         = frameCfg.y;
-    y        += entity.mirrored ? img.height / 2 : 0;
 
-    bctx.drawImage(
-      img,
-      frame * cfg.size, //sx
-      y, //sy
-      cfg.size, //sw
-      cfg.size, //sh
-      entity.pos[0] - (cfg.size>>1), //dx
-      entity.pos[1] - (cfg.size), //dy
+    cfg.ctx.clearRect(cfg.cnvX, cfg.cnvY, cfg.cnv.width, cfg.cnv.height);
+
+    cfg.ctx.save();
+
+    if (cfg.rotating) {
+      cfg.ctx.rotate(rad(entity.dir));
+    } else {
+      cfg.ctx.scale(entity.dir[0] < 0 ? -1 : 1, 1);
+    }
+
+    cfg.ctx.drawImage(
+      cfg.img,
+      frame * cfg.size,
+      frameCfg.y,
+      cfg.size,
+      cfg.size,
+      cfg.cnvX,
+      cfg.cnvY,
       cfg.size,
       cfg.size
     );
 
+    cfg.ctx.restore();
+
+    bctx.drawImage(
+      cfg.cnv,
+      entity.pos[0] - cfg.size / 2, //dx
+      entity.pos[1] - cfg.size //dy
+    );
+
     if (DEBUG) {
-      drawEntityDebugInfo(entity, y);
+      drawEntityDebugInfo(entity);
     }
 
-    if (stepFrame) {
-      entity.frame++;
-    }
+    entity.frame += stepFrame ? 1 : 0;
   },
 
   drawWall = function drawWall(x, y, height) {
@@ -513,15 +532,13 @@ var
     entity.spd[axis] = axisSpd;
   },
 
-  updateEntitySpeed = function updateEntitySpeed(entity) {
-    updateEntitySpeedAxis(entity, 0);
-    updateEntitySpeedAxis(entity, 1);
-  },
-
   updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, oldPos, oldTilesIndex, tilesIndex, isHorizontalCollision) {
     pos   = entity.pos;
     spd   = entity.spd;
     cfg   = entity.cfg;
+
+    updateEntitySpeedAxis(entity, 0);
+    updateEntitySpeedAxis(entity, 1);
 
     setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
 
@@ -541,6 +558,12 @@ var
         div(spd, isHorizontalCollision ? -2 : 2, isHorizontalCollision ? 2 : -2);
       }
 
+    }
+
+    if (entity === player) {
+      norm(sub(set(player.dir, mouseCoords), player.pos));
+    } else {
+      norm(set(entity.dir, entity.spd));
     }
   },
 
@@ -574,15 +597,6 @@ var
     }
   },
 
-  updateEntityState = function updateEntityState(entity) {
-    if (entity !== player) {
-      return;
-    }
-
-    norm(sub(set(player.dir, mouseCoords), player.pos));
-    entity.mirrored = !player.dir[0] ? entity.mirrored : player.dir[0] < 0;
-  },
-
   updateEntity = function updateEntity(entity, command, entityCommands) {
     updateEntityCounter(entity);
 
@@ -597,9 +611,7 @@ var
       return;
     }
 
-    updateEntityState(entity);
     updateEntityDecision(entity);
-    updateEntitySpeed(entity);
     updateEntityPosition(entity);
   },
 
@@ -675,14 +687,6 @@ var
     return image;
   },
 
-  setImages = function setImages(len) {
-    len = win.img.length;
-
-    while (len--) {
-      images.unshift(createImage(win.img[len]));
-    }
-  },
-
   accelerate = function accelerate(entity, newAcc, apply, acc) {
     acc     = entity.acc;
     newAcc  = newAcc.slice();
@@ -694,18 +698,12 @@ var
     add(acc, newAcc);
   },
 
-  shoot = function shoot(apply, bullet, cfg, spd) {
+  shoot = function shoot(apply) {
     if (!apply) {
       return;
     }
 
-    cfg = createEntityConfig([['breaking']], {
-      'friction' : 0.99,
-      'fragile'  : 1
-    });
-
-    spd     = mul(player.dir.slice(), 3);
-    bullet  = createEntity(player.pos, images[0], cfg, spd);
+    createEntity(player.pos, bulletCfg, mul(player.dir.slice(), 3));
   },
 
   setCommands = function setCommands() {
@@ -723,12 +721,12 @@ var
    *
    * 1 - copy original sheet
    * 2 - add extra states
-   * 3 - mirror sheet
    *
    * @param {Image} img
    * @return {HTMLCanvasElement}
    */
   createPlayerSprites = function createPlayerSprites(cfg, img, canvas, ctx, x, i, w, h, frames) {
+    img       = cfg.img;
     h         = img.height + cfg.size;
     canvas    = createCanvas(img.width, 2 * h);
     ctx       = canvas.getCtx();
@@ -751,25 +749,6 @@ var
         img.height, // dy
         w, // dw
         cfg.size // dh
-      );
-    }
-
-    // Redraw mirrored sprites.
-    ctx.scale(-1,1);
-
-    for (i = 0; i < 6; i++) {
-      x = cfg.size * i;
-
-      ctx.drawImage(
-        canvas,
-        x,
-        0,
-        cfg.size,
-        h,
-        -x - cfg.size,
-        h,
-        cfg.size,
-        h
       );
     }
 
@@ -798,9 +777,13 @@ var
     setScreen(1);
   },
 
-  init = function init(cursor, cctx, cursorImg) {
+  init = function init(cursor, cctx, cursorImg, len) {
     // Set images created by img.js
-    setImages();
+    len = win.img.length;
+
+    while (len--) {
+      images.unshift(createImage(win.img[len]));
+    }
 
     // Setup cursor.
     cursorImg = images[2];
@@ -830,17 +813,39 @@ var
     ];
 
 
+    monsterCfg = createEntityConfig(
+      images[3],
+      0,
+      {
+        'friction' : 0.5
+      }
+    );
+
+    bulletCfg = createEntityConfig(
+      images[0],
+      [['breaking']],
+      {
+        'friction' : 0.99,
+        'rotating' : 1,
+        'fragile'  : 1
+      }
+    );
+
     //
     // (MAP_SIZE_X * TILESIZE_X) >> 1 ===> [160, 160]
     // there should always be some room in the center
     //
-    player = createEntityConfig([
-      ['idling', 6],
-      ['moving'],
-      ['tping']
-    ]);
+    playerCfg = createEntityConfig(
+      images[4],
+      [
+        ['idling', 6],
+        ['moving'],
+        ['tping']
+      ]
+    );
 
-    player = createEntity([160, 160], createPlayerSprites(player, images[4]), player);
+    playerCfg.img = createPlayerSprites(playerCfg);
+    player        = createEntity([160, 160], playerCfg);
 
     abcImage        = images[1];
     tileset         = images[5];
@@ -938,6 +943,7 @@ if (DEBUG) {
 // Export every function here which should be tested by karma,
 //
 win.test = {
+  'rad'                 : rad,
   'aStar'               : aStar,
   'createRoom'          : createRoom,
   'createEntityConfig'  : createEntityConfig,
