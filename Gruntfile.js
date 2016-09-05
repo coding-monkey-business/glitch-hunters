@@ -60,7 +60,7 @@ var
       'img' : {
         'expand'  : true,
         'cwd'     : 'src',
-        'src'     : ['img.js', 'a-star.js'],
+        'src'     : ['img.js', 'vec.js', 'a-star.js'],
         'dest'    : 'build/'
       }
     },
@@ -81,7 +81,7 @@ var
 
       'build': {
         'files': {
-          'build/all.js'  : ['build/img.js', 'build/a-star.js', 'build/main.js']
+          'build/all.js'  : ['build/img.js', 'build/vec.js', 'build/a-star.js', 'build/main.js']
         }
       }
     },
