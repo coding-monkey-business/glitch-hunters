@@ -944,6 +944,7 @@ if (DEBUG) {
 //
 win.test = {
   'rad'                 : rad,
+  'norm'                : norm,
   'aStar'               : aStar,
   'createRoom'          : createRoom,
   'createEntityConfig'  : createEntityConfig,

@@ -57,7 +57,9 @@ var
   norm = function norm(v, vlength) {
     vlength = dist(VEC_ZERO, v);
 
-    div(v, vlength);
+    if (vlength) {
+      div(v, vlength);
+    }
 
     return v;
   };
