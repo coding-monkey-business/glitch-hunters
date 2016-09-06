@@ -47,8 +47,8 @@ var
   APPLY_TYPES         = ['keydown', 'mousedown'],
   ANIMATION_TIME_UNIT = 80,
   TIME_UNIT           = 20,
-  MAP_SIZE_X          = 20,
-  MAP_SIZE_Y          = 20,
+  MAP_SIZE_X          = 30,
+  MAP_SIZE_Y          = 30,
   TILESIZE_X          = 16, // everything is square right now
   SPACE               = 32,
   ZERO_LIMIT          = 0.05,
@@ -733,8 +733,8 @@ var
       aFrame  = aFrames;
 
       if (screen === 1) {
-	      offsetX = (-player.pos[0] | 0) + (320>>1);
-	      offsetY = (-player.pos[1] | 0) + (240>>1);
+        offsetX = (-player.pos[0] | 0) + (320>>1);
+        offsetY = (-player.pos[1] | 0) + (240>>1);
       }
 
 
