@@ -428,7 +428,7 @@ var
     }
 
     return a;
-  })([], 100),
+  })([], 200),
 
   /**
    * renders the title starfield effect
@@ -446,8 +446,8 @@ var
       }
 
       bctx.fillRect(
-        WIDTH  / 2 + f[0] * z * WIDTH,
-        HEIGHT / 2 + f[1] * z * HEIGHT,
+        WIDTH  / 1.2 + f[0] * z * WIDTH,
+        HEIGHT / 2.5 + f[1] * z * HEIGHT,
         z,
         f[2] -= (z * (i%3 + 1) * 0.01)
       );
@@ -627,7 +627,14 @@ var
 
   updateIntro = function updateIntro() {
     starField();
-    text(doc.title = '- GLITCHBUSTERS -', 90, 120, 2, aFrames);
+    bctx.save();
+    bctx.setTransform(4, 0, 0, 4, 0, 0);
+    bctx.drawImage(images[6], 0, 18);
+    bctx.drawImage(images[7], 30, 0);
+    bctx.setTransform(3, 0, 0, 3, 0, 0);
+    bctx.drawImage(images[8], 4, 4);
+    bctx.restore();
+    text('START GAME', 14, 100, 2, aFrames);
     glitch(buffer);
   },
 
