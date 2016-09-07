@@ -1,6 +1,15 @@
-/* globals aStar */
-/* globals DEBUG, setDebug */
-/* globals add, rad, mul, norm, set, sub, div */
+/* globals
+  DEBUG,
+  aStar,
+  add,
+  mul,
+  norm,
+  rad,
+  set,
+  setDebug,
+  sub
+*/
+
 var
   win       = window,
   doc       = document,
@@ -532,7 +541,7 @@ var
     entity.spd[axis] = axisSpd;
   },
 
-  updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, oldPos, oldTilesIndex, tilesIndex, isHorizontalCollision) {
+  updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, tilesIndex) {
     pos   = entity.pos;
     spd   = entity.spd;
     cfg   = entity.cfg;
@@ -542,22 +551,33 @@ var
 
     setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
 
-    oldPos        = pos.slice();
-    oldTilesIndex = getTilesIndex(pos);
-
     add(pos, spd);
     tilesIndex = getTilesIndex(pos);
 
     if (!map2DArray[tilesIndex[0]][tilesIndex[1]]) {
-      set(pos, oldPos);
-
       if (cfg.fragile) {
         setEntityState(entity, 'breaking', 12, removeEntity.bind(0, entity));
-      } else {
-        isHorizontalCollision = tilesIndex[0] !== oldTilesIndex[0];
-        div(spd, isHorizontalCollision ? -2 : 2, isHorizontalCollision ? 2 : -2);
+        return;
       }
 
+      pos[0] -= spd[0];
+
+      tilesIndex = getTilesIndex(pos);
+
+      if (map2DArray[tilesIndex[0]][tilesIndex[1]]) {
+        return;
+      }
+
+      pos[0] += spd[0];
+      pos[1] -= spd[1];
+
+      tilesIndex = getTilesIndex(pos);
+
+      if (map2DArray[tilesIndex[0]][tilesIndex[1]]) {
+        return;
+      }
+
+      pos[0] -= spd[0];
     }
 
     if (entity === player) {

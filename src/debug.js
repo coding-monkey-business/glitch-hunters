@@ -1,4 +1,10 @@
-/* exported DEBUG, setDebug, log, stringify */
+/* exported
+  DEBUG,
+  log,
+  setDebug,
+  stringify
+*/
+
 var
   DEBUG,
 
@@ -68,19 +74,34 @@ var
 
   stringify = function stringify(obj) {
     var
-      seen = [];
+      string      = '',
+      seenVals    = [],
+      cyclicKeys  = [];
 
-    return JSON.stringify(obj, function (key, val) {
+    string += JSON.stringify(obj, function (key, val) {
       if (val !== null && typeof val === 'object') {
-        if (seen.indexOf(val) >= 0) {
+        if (seenVals.indexOf(val) !== -1) {
+          if (cyclicKeys.indexOf(key) === -1) {
+            cyclicKeys.push(key);
+          }
+
           return;
         }
 
-        seen.push(val);
+        seenVals.push(val);
       }
 
       return val;
     }, 2);
+
+
+    if (cyclicKeys.length) {
+      string += '\nCyclic keys: ' + JSON.stringify(cyclicKeys) + '.';
+    } else {
+      string += '\nThere were no cyclic keys.';
+    }
+
+    return string;
   },
 
   init = function init() {

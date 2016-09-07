@@ -1,8 +1,21 @@
-/* globals createEntityConfig, entities, getAccDirection, getId, field, drawPath */
-//
-// phantomjs does not have Math.sign ... yay
-//
-Math.sign = function (a) {
+/* globals
+  createEntity,
+  createEntityConfig,
+  drawPath,
+  entities,
+  field,
+  getAccDirection,
+  getId,
+  getTilesIndex,
+  map2DArray : true,
+  set,
+  updateEntityPosition
+*/
+
+/**
+ * phantomjs does not have Math.sign ... yay
+ */
+Math.sign = function sign(a) {
   if (!a) {
     return 0;
   }
@@ -236,6 +249,31 @@ describe('main', function () {
         expect(this.cfg.idling.y).toBe(0);
         expect(this.cfg.moving.y).toBe(22);
         expect(this.cfg.tping.y).toBe(44);
+      });
+    });
+  });
+
+  describe('.updateEntityPosition()', function () {
+    describe('with an entity trying to step into a tile from bottom left', function () {
+      beforeEach(function () {
+        this.entity = createEntity([20, 20], createEntityConfig());
+
+        map2DArray = [
+          [1, 1, 1],
+          [0, 1, 1],
+          [0, 1, 1]
+        ];
+
+        set(this.entity.acc, [15, -10]);
+      });
+
+      it('should slide along the wall (not land in a collided part of the map)', function () {
+        updateEntityPosition(this.entity);
+
+        var
+          tilesIndex = getTilesIndex(this.entity.pos);
+
+        expect(map2DArray[tilesIndex[0]][tilesIndex[1]]).toBeTruthy();
       });
     });
   });

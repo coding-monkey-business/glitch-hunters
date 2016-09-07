@@ -5,7 +5,7 @@
 + player should fire projectiles into the cursor direction
 + projectiles should be rotated properly
 + projectiles should have blowing up animation
-- player should slide along the wall on tilted movement
++ player should slide along the wall on tilted movement
 - colliding positions should be calculated correctly
 - there should be NPC mobs
 - 8-bit like music should be playing

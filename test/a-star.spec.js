@@ -1,4 +1,6 @@
-/* globals aStar */
+/* globals
+  aStar
+*/
 
 describe('a-star', function () {
   var

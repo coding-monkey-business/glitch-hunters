@@ -1,6 +1,14 @@
-/* exported aStar */
-/* globals dist, eql */
-/* globals DEBUG, log */
+/* exported
+  aStar
+*/
+
+/* globals
+  dist,
+  eql,
+  DEBUG,
+  log
+*/
+
 var
   /**
    * @param {Array<Object>} nodeList a list with the nodes that should be checked

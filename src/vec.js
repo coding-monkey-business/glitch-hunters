@@ -1,4 +1,14 @@
-/* exported add, rad, dist, eql, mul, norm, set, sub */
+/* exported
+  add,
+  dist,
+  eql,
+  mul,
+  norm,
+  rad,
+  set,
+  sub
+*/
+
 var
   VEC_ZERO = [0, 0],
 

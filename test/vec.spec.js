@@ -1,4 +1,7 @@
-/* globals rad, norm */
+/* globals
+  norm,
+  rad
+*/
 
 describe('vec', function () {
   describe('.rad()', function () {
