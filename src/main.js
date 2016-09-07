@@ -940,17 +940,3 @@ if (DEBUG) {
 // On build the previous comment and everything after
 // will be removed automatically by `replace` grunt task.
 //
-// Export every function here which should be tested by karma,
-//
-win.test = {
-  'rad'                 : rad,
-  'norm'                : norm,
-  'aStar'               : aStar,
-  'createRoom'          : createRoom,
-  'createEntityConfig'  : createEntityConfig,
-  'drawPath'            : drawPath,
-  'entities'            : entities,
-  'field'               : field,
-  'getAccDirection'     : getAccDirection,
-  'getId'               : getId
-};

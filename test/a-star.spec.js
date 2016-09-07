@@ -1,10 +1,16 @@
+/* globals aStar */
+
 describe('a-star', function () {
   var
-    grid,
     test,
+    grid,
     n = null;
 
   beforeEach(function () {
+    test = this;
+
+    this.errors = [];
+
     window.console.error = function (m) {
       test.errors.push(m);
     };
@@ -19,18 +25,15 @@ describe('a-star', function () {
       [n, n, n, 1, 1, 1, 1, n],
       [n, 3, 3, 3, 3, 3, 3, n]
     ];
-
-    test = window.test;
-    test.errors = [];
   });
 
   it('life ... should find a way', function () {
     var result;
 
-    expect(test.aStar).toBeDefined();
+    expect(aStar).toBeDefined();
 
     expect(function () {
-      result = test.aStar([0, 1], [5, 3], grid);
+      result = aStar([0, 1], [5, 3], grid);
     }).not.toThrow();
 
     expect(result).toEqual([
@@ -45,11 +48,12 @@ describe('a-star', function () {
   describe('with a dispositioning-mistake', function () {
     it('should not freeze the game', function () {
       expect(function () {
-        test.aStar([5, 0], [5, 3], grid);
-        expect(test.errors.indexOf('ERROR_aStar')).not.toBe(-1);
-        expect(test.errors.indexOf('ERROR_getNeighborNodes')).not.toBe(-1);
-        expect(test.errors.length).toBe(2);
+        aStar([5, 0], [5, 3], grid);
       }).not.toThrow();
+
+      expect(this.errors.indexOf('ERROR_aStar')).not.toBe(-1);
+      expect(this.errors.indexOf('ERROR_getNeighborNodes')).not.toBe(-1);
+      expect(this.errors.length).toBe(2);
     });
   });
 });

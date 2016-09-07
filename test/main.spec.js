@@ -1,3 +1,4 @@
+/* globals createEntityConfig, entities, getAccDirection, getId, field, drawPath */
 //
 // phantomjs does not have Math.sign ... yay
 //
@@ -10,8 +11,7 @@ Math.sign = function (a) {
 };
 
 var
-  loaded,
-  test = window.test;
+  loaded;
 
 describe('main', function () {
   beforeEach(function (done) {
@@ -34,16 +34,16 @@ describe('main', function () {
     it('should return newer ids on every call', function () {
       var oldId;
       expect(function () {
-        oldId = test.getId();
+        oldId = getId();
       }).not.toThrow();
-      expect(test.getId()).toBeGreaterThan(oldId);
+      expect(getId()).toBeGreaterThan(oldId);
     });
   });
 
   describe('title: field', function () {
     it('should be an array', function () {
-      expect(test.field).toEqual(jasmine.any(Array));
-      expect(test.field[0]).toEqual([
+      expect(field).toEqual(jasmine.any(Array));
+      expect(field[0]).toEqual([
         jasmine.any(Number),
         jasmine.any(Number),
         jasmine.any(Number)
@@ -66,7 +66,7 @@ describe('main', function () {
 
     it('drawPath should connect 2 points', function () {
       expect(function () {
-        test.drawPath(arr, 0, 0, 3, 3);
+        drawPath(arr, 0, 0, 3, 3);
       }).not.toThrow();
       expect(arr).toEqual(jasmine.arrayContaining([
         jasmine.arrayContaining([3, u, u, u]),
@@ -90,24 +90,24 @@ describe('main', function () {
           };
         };
 
-      expect(test.getAccDirection(createEntity(1, 2))).toEqual([1, 1]);
-      expect(test.getAccDirection(createEntity(-1, 2))).toEqual([-1, 1]);
-      expect(test.getAccDirection(createEntity(1, -200))).toEqual([1, -1]);
-      expect(test.getAccDirection(createEntity(0, -200))).toEqual([0, -1]);
-      expect(test.getAccDirection(createEntity(100, 0))).toEqual([1, 0]);
-      expect(test.getAccDirection(createEntity(0, 0))).toEqual(0);
+      expect(getAccDirection(createEntity(1, 2))).toEqual([1, 1]);
+      expect(getAccDirection(createEntity(-1, 2))).toEqual([-1, 1]);
+      expect(getAccDirection(createEntity(1, -200))).toEqual([1, -1]);
+      expect(getAccDirection(createEntity(0, -200))).toEqual([0, -1]);
+      expect(getAccDirection(createEntity(100, 0))).toEqual([1, 0]);
+      expect(getAccDirection(createEntity(0, 0))).toEqual(0);
     });
   });
 
   describe('.entities', function () {
     it('should have the player', function () {
-      expect(test.entities.length).toBe(1);
+      expect(entities.length).toBe(1);
     });
   });
 
   describe('.createEntityConfig()', function () {
     beforeEach(function () {
-      this.cfg = test.createEntityConfig();
+      this.cfg = createEntityConfig();
     });
 
     it('should set idling as default', function () {
@@ -127,7 +127,7 @@ describe('main', function () {
 
     describe('with one count for idling frames', function () {
       beforeEach(function () {
-        this.cfg = test.createEntityConfig(0, [
+        this.cfg = createEntityConfig(0, [
           ['idling', 1]
         ]);
       });
@@ -139,7 +139,7 @@ describe('main', function () {
 
     describe('with player config', function () {
       beforeEach(function () {
-        this.cfg = test.createEntityConfig(0, [
+        this.cfg = createEntityConfig(0, [
           ['idling', 6],
           ['moving'],
           ['tping']
@@ -158,7 +158,7 @@ describe('main', function () {
 
     describe('with friction and size parameter', function () {
       beforeEach(function () {
-        this.cfg = test.createEntityConfig(0, [
+        this.cfg = createEntityConfig(0, [
           ['moving'],
           ['tping']
         ], {
