@@ -11,10 +11,67 @@ Math.sign = function (a) {
 };
 
 var
-  loaded;
+  loaded,
+  origCreateElement = document.createElement;
 
 describe('main', function () {
   beforeEach(function (done) {
+    var
+      fakeImageObject = {
+        'data' : {
+          'length' : 0
+        }
+      },
+
+      fakeContext = {
+        'setTransform' : function setTransform() {
+        },
+
+        'restore' : function restore() {
+        },
+
+        'getImageData' : function getImageData() {
+          return fakeImageObject;
+        },
+
+        'putImageData' : function putImageData() {
+        },
+
+        'save' : function save() {
+        },
+
+        'fillRect' : function fillRect() {
+        },
+
+        'translate' : function translate() {
+        },
+
+        'drawImage' : function drawImage() {
+        }
+      },
+
+      fakeCanvas = {
+        'toDataURL' : function toDataURL() {
+          // Fake returning any of the images.
+          return window.img[0];
+        },
+
+        'getContext' : function getContext() {
+          return fakeContext;
+        }
+      };
+
+    document.body.appendChild = function appendChild() {
+    };
+
+    document.createElement = function createElement() {
+      if (arguments[0] === 'canvas') {
+        return fakeCanvas;
+      }
+
+      return origCreateElement.apply(document, arguments);
+    };
+
     if (loaded) {
       done();
       return;

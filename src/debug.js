@@ -1,4 +1,4 @@
-/* exported DEBUG, setDebug, log */
+/* exported DEBUG, setDebug, log, stringify */
 var
   DEBUG,
 
@@ -64,6 +64,23 @@ var
 
     logged[message]++;
     setHelpHTML();
+  },
+
+  stringify = function stringify(obj) {
+    var
+      seen = [];
+
+    return JSON.stringify(obj, function (key, val) {
+      if (val !== null && typeof val === 'object') {
+        if (seen.indexOf(val) >= 0) {
+          return;
+        }
+
+        seen.push(val);
+      }
+
+      return val;
+    }, 2);
   },
 
   init = function init() {
