@@ -1,4 +1,11 @@
 COMMIT  |     SIZE |     DIFF | MESSAGE                                                      | OUTPUT
+be7a878 |     6327 |       -4 | player: implements sliding-movement along the wall           | # dist/index.html.zip <=== 6.18 KB (6327 B)
+741146e |     6331 |        0 | test: adds fakes for canvas / context to be able to test stu | # dist/index.html.zip <=== 6.18 KB (6331 B)
+2faf246 |     6331 |     1111 | fancier title screen                                         | # dist/index.html.zip <=== 6.18 KB (6331 B)
+164dadb |     5220 |        0 | test: removes unnecessary window.test definition             | # dist/index.html.zip <=== 5.1 KB (5220 B)
+643425c |     5220 |        2 | vec: fixes .norm() for zero vectors                          | # dist/index.html.zip <=== 5.1 KB (5220 B)
+f2d922b |     5218 |        0 | doc: updates todo                                            | # dist/index.html.zip <=== 5.1 KB (5218 B)
+a7dfdb6 |     5218 |        0 | doc: statistics.csv                                          | # dist/index.html.zip <=== 5.1 KB (5218 B)
 2b63e92 |     5218 |       89 | render: implements rotation based on entity.dir and entity.r | # dist/index.html.zip <=== 5.1 KB (5218 B)
 57f7008 |     5129 |      184 | bullet: adds breaking (exploding) effect                     | # dist/index.html.zip <=== 5.01 KB (5129 B)
 2c2c15c |     4945 |       -5 | main: improves createEntity extra params handling            | # dist/index.html.zip <=== 4.83 KB (4945 B)
