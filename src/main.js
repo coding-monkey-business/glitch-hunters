@@ -47,8 +47,8 @@ var
   APPLY_TYPES         = ['keydown', 'mousedown'],
   ANIMATION_TIME_UNIT = 80,
   TIME_UNIT           = 20,
-  MAP_SIZE_X          = 30,
-  MAP_SIZE_Y          = 30,
+  MAP_SIZE_X          = 32,
+  MAP_SIZE_Y          = 22,
   TILESIZE_X          = 16, // everything is square right now
   SPACE               = 32,
   ZERO_LIMIT          = 0.05,
@@ -224,14 +224,14 @@ var
               arr[xi][y + j] = arr[xi][y + j] || color;
             }
           } catch (e) {
-            console.error(e)
+            console.error(e);
           }
         }
       }
 
 
       if (w > 2 && h > 2) {
-      	arr[x + (w >> 1)][y + (h >> 1)] = undefined;
+        arr[x + (w >> 1)][y + (h >> 1)] = undefined;
       }
 
       // spawn more rooms
@@ -438,9 +438,8 @@ var
    * @param {Number} type e.g. JITTER
    */
   glitch = function glitch(canvas, ctx, obj, data, i) {
-  	return;
     ctx  = canvas.getCtx();
-    // obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     data = obj.data;
     i    = data.length;
 
@@ -457,7 +456,7 @@ var
       }
     }
 
-    // ctx.putImageData(obj, 0, 0);
+    ctx.putImageData(obj, 0, 0);
   },
 
   /**
@@ -732,9 +731,21 @@ var
       frame   = frames;
       aFrame  = aFrames;
 
-      if (screen === 1) {
-        offsetX = (-player.pos[0] | 0) + (320>>1);
-        offsetY = (-player.pos[1] | 0) + (240>>1);
+      if (screen === 1) { // map should move/keep the player centered
+        offsetX = Math.max(
+          Math.min(
+            0,
+            (-player.pos[0] | 0) +  (WIDTH >> 1)
+          ),
+          WIDTH - (MAP_SIZE_X * TILESIZE_X)
+        );
+        offsetY = Math.max(
+          Math.min(
+            0,
+            (-player.pos[1] | 0) + (HEIGHT >> 1)
+          ),
+          HEIGHT - (MAP_SIZE_Y * TILESIZE_X)
+        );
       }
 
 
@@ -867,8 +878,8 @@ var
    * @param {Event} event
    */
   onmousemove = function onmousemove(event) {
-    mouseCoords[0] = Math.floor((event.pageX - main.offsetLeft ) / STAGE_SCALE);
-    mouseCoords[1] = Math.floor((event.pageY - main.offsetTop  ) / STAGE_SCALE);
+    mouseCoords[0] = Math.floor((event.pageX - main.offsetLeft)  / STAGE_SCALE) - offsetX;
+    mouseCoords[1] = Math.floor((event.pageY - main.offsetTop)   / STAGE_SCALE) - offsetY;
   },
 
   onclick = function onclick() {
@@ -947,7 +958,7 @@ var
     );
 
     playerCfg.img = createPlayerSprites(playerCfg);
-    player        = createEntity([160, 160], playerCfg);
+    player        = createEntity([MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2], playerCfg);
     player.movs   = [];
     player.mov    = [0, 0];
 
