@@ -186,24 +186,25 @@ describe('main', function () {
     var arr = [],
       u;
     beforeEach(function () {
-      arr.length = 4;
+      arr.length = 5;
 
-      var x = 4;
+      var x = 5;
       while (x--) {
         arr[x] = [];
-        arr[x].length = 4;
+        arr[x].length = 5;
       }
     });
 
     it('drawPath should connect 2 points', function () {
       expect(function () {
-        drawPath(arr, 0, 0, 3, 3);
+        drawPath(arr, 1, 1, 3, 3);
       }).not.toThrow();
       expect(arr).toEqual(jasmine.arrayContaining([
-        jasmine.arrayContaining([3, u, u, u]),
-        jasmine.arrayContaining([3, u, u, u]),
-        jasmine.arrayContaining([3, u, u, u]),
-        jasmine.arrayContaining([3, 3, 3, u])
+        jasmine.arrayContaining([u, u, u, u, u]),
+        jasmine.arrayContaining([u, 2, u, u, u]),
+        jasmine.arrayContaining([u, 2, u, u, u]),
+        jasmine.arrayContaining([u, 2, u, u, u]),
+        jasmine.arrayContaining([u, 2, 2, 2, u])
       ]));
     });
     it('createRoom should create rooms', function () {

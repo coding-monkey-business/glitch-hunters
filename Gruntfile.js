@@ -232,7 +232,9 @@ var
     },
 
     'exec': {
-      'advzip': 'advzip -a dist/index.html.zip build/index.html -4 -i 100', // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
+      // advzip doesn't create folders?
+      // grunt.file.mkdir is too much overhead to create that folder.
+      'advzip': 'mkdir dist & advzip -a dist/index.html.zip build/index.html -4 -i 100', // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
       'zopflipng': require('zopflipng-bin') + ' --lossy_transparent -m -y --prefix="" build/*.png'
     }
   },

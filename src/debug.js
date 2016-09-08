@@ -2,8 +2,10 @@
   DEBUG,
   log,
   setDebug,
-  stringify
+  stringify,
+  drawDebugMap
 */
+/* globals TILESIZE_X, map2DArray, drawField, drawWall */
 
 var
   DEBUG,
@@ -61,6 +63,24 @@ var
       toggleDebug();
     } else {
       DEBUG[key] = value;
+    }
+  },
+  drawDebugMap = function drawDebugMap (ctx, x, y) {
+    document.body.appendChild(debugMap);
+    debugMap.height = map2DArray[0].length * TILESIZE_X;
+    debugMap.width = map2DArray.length * TILESIZE_X;
+
+    ctx = debugMap.getContext('2d');
+
+    for (y = 0; y < map2DArray[0].length; y++) {
+      for (x = 0; x < map2DArray.length; x++) {
+        if (map2DArray[x][y]) {
+          drawField(x, y, map2DArray[x][y], ctx);
+          ctx.fillText(map2DArray[x][y], x * TILESIZE_X, y * TILESIZE_X + TILESIZE_X / 2);
+        } else {
+          drawWall(x, y, 32, ctx);
+        }
+      }
     }
   },
 
@@ -121,7 +141,6 @@ var
     setHelpHTML();
 
     document.body.appendChild(help);
-    document.body.appendChild(debugMap);
   };
 
 init();

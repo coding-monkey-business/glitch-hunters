@@ -12,7 +12,8 @@
   setDebug,
   sub,
   sum,
-  zero
+  zero,
+  drawDebugMap
 */
 
 /* exported
@@ -72,6 +73,7 @@ var
   tileset,
   abcImage,
   map2DArray,
+  spawnPositions = [],
 
   getId = function getId() {
     return ++id;
@@ -183,11 +185,11 @@ var
       yIncrement = -1;
     }
 
-    for (;ax !== bx && ax < arr.length - 1; ax+= xIncrement) {
+    for (;ax !== bx && (ax > 0) && (ay > 0) && (ax < arr.length - 1) && (ay < arr[ax].length - 1); ax+= xIncrement) {
       arr[ax][ay] = arr[ax][ay] || 2;
     }
 
-    for (;ay !== by && ay < arr[ax].length - 1; ay+= yIncrement) {
+    for (;ay !== by && (ax > 0) && (ay > 0) && (ax < arr.length - 1) && (ay < arr[ax].length - 1); ay+= yIncrement) {
       arr[ax][ay] = arr[ax][ay] || 2;
     }
 
@@ -201,67 +203,83 @@ var
    * @param {Number} w width
    * @param {Number} h height
    * @param {Number} color base color (or base tile) of this room
-   * @param {Number} iteration safety feature to prevent stack issues
+   * @param {Number} iterationsLeft safety feature to prevent stack issues
    */
-  createRoom = function createRoom(arr, xc, yc, w, h, color, iteration, sizeX, sizeY, i, j, xi, yj, x, y, m, n) {
+  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, circular, sizeX, sizeY, i, j, xi, yj, x, y, m, n) {
     if (w * h > 3) { // single tile wide rooms are stupid
       i = 0;
+
+      // center must not be outside of our map:
+      if (xc < 0 || xc > sizeX || yc < 0 || yc > sizeY) {
+        return;
+      }
+
+
+
       // find top left corner of new room
       x = Math.min(Math.max(xc - (w >> 1), 0), sizeX - w);
       y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - h);
+      if (w * h <= 9) {
+        circular = false;
+        color = 6;
+      }
 
-      while (i++ < w && (xi = x + i) < sizeX - 1) {
+      while (i/*++*/ < w && (xi = x + i) < sizeX - 1) {
         j = 0;
-        while (j++ < h && y + j < sizeY - 1) {
+        while (j/*++*/ < h && y + j < sizeY - 1) {
           try {
-            if (arr[xi + 1] && (
+            if (arr[xi] && (
               !arr[xi + 1][y + j + 1] &&
               !arr[xi + 0][y + j + 1] &&
-              !arr[xi + 1][y + j + 0] /*&&
-
-              !arr[xi + 2][y + j + 2]*/
+              !arr[xi + 1][y + j + 0]
             )) {
-              arr[xi][y + j] = arr[xi][y + j] || color;
+              if (circular) {
+                if (dist([xc, yc], [xi, y + j]) < (w / 2)) {
+                  arr[xi][y + j] = arr[xi][y + j] || color;
+                }
+              } else {
+                arr[xi][y + j] = arr[xi][y + j] || color;
+              }
             }
           } catch (e) {
             console.error(e);
           }
+          j++;
         }
+        i++;
       }
 
 
       if (w > 2 && h > 2) {
-        arr[x + (w >> 1)][y + (h >> 1)] = undefined;
+        spawnPositions.push([xc * TILESIZE_X, yc * TILESIZE_X]);
       }
 
       // spawn more rooms
-      if (iteration) {
-        // i = Math.max(Math.min(iteration, 1), 3);
+      if (iterationsLeft) {
         i = 4;
         while (i--) {
           // TODO: fiddle around with those values
-          // xi = (iteration * Math.max(Math.random(), 0.5) * w) | 0;
-          // yj = (iteration * Math.max(Math.random(), 0.5) * h) | 0;
-          xi = iteration * Math.max(2 * Math.random(), 0.5);
-          yj = iteration * Math.max(2 * Math.random(), 0.5);
+          // xi = Math.round(iterationsLeft * 2 + (1 - Math.random())) + 1;
+          xi = iterationsLeft * 2 + 1;
           createRoom(
             arr,
-            m = (xc + xi * ((+(Math.random() > 0.5) || -1) * 1.5) | 0), // (+(Math.random() > 0.5) || -1) -> 1 || -1
-            n = (yc + yj * ((+(Math.random() > 0.5) || -1) * 1.5) | 0),
+            m = (xc + xi * ((+(Math.random() > 0.5) || -1) * 1.1) | 0), // (+(Math.random() > 0.5) || -1) -> 1 || -1
+            n = (yc + xi * ((+(Math.random() > 0.5) || -1) * 1.1) | 0),
             xi,
-            yj,
+            xi,
             1,
-            iteration - 1,
+            iterationsLeft - 1,
+            true,
             sizeX,
             sizeY
           );
-          if (xi * yj > 1) {
-            try {
-              drawPath(arr, xc, yc, m + (xi >> 1), n + (yj >> 1));
-            } catch (e) {
-              console.warn(e);
-            }
+          // if (xi * yj > 1) {
+          try {
+            drawPath(arr, xc, yc, m, n);
+          } catch (e) {
+            console.warn(e);
           }
+          // }
         }
       }
     }
@@ -283,7 +301,7 @@ var
     }
 
     //create center room
-    createRoom(arr, sizeX >> 1, sizeY >> 1, 4, 4, 1, 3, sizeX, sizeY);
+    createRoom(arr, sizeX >> 1, sizeY >> 1, 9, 9, 1, 3, true, sizeX, sizeY);
     return arr;
   },
 
@@ -363,7 +381,7 @@ var
     //
     // Meh, maybe this is not right here, but ATM it does what I need
     //
-    if (map2DArray[x][y]) {
+    if (map2DArray[x][y] > 0) {
       return;
     }
 
@@ -973,23 +991,6 @@ var
     setScreen(screen);
 
     startLoop();
-  },
-  drawDebugMap = function drawDebugMap (ctx, x, y) {
-    debugMap.height = map2DArray[0].length * TILESIZE_X;
-    debugMap.width = map2DArray.length * TILESIZE_X;
-
-    ctx = debugMap.getContext('2d');
-
-    for (y = 0; y < map2DArray[0].length; y++) {
-      for (x = 0; x < map2DArray.length; x++) {
-        if (map2DArray[x][y]) {
-          drawField(x, y, map2DArray[x][y], ctx);
-          ctx.fillText(map2DArray[x][y], x * TILESIZE_X, y * TILESIZE_X + TILESIZE_X/2);
-        } else {
-          drawWall(x, y, 32, ctx);
-        }
-      }
-    }
   };
 
 win.onload = init;
