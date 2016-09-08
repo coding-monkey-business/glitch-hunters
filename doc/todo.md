@@ -7,8 +7,10 @@
 + projectiles should have blowing up animation
 + player should slide along the wall on tilted movement
 + sum action-applied forces(acc) together then normalize for player
-- handle bullet collision w/ glichez
++ handle bullet collision w/ glichez
+- explosion should knock back all glichez on position
 - there should be NPC mobs
+- healthbar for NPCs
 - 8-bit like music should be playing
 - 8-bit like effects should be playing
 - healthbar should be displayed
