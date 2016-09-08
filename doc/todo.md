@@ -6,7 +6,7 @@
 + projectiles should be rotated properly
 + projectiles should have blowing up animation
 + player should slide along the wall on tilted movement
-- sum action-applied forces(acc) together then normalize for player
++ sum action-applied forces(acc) together then normalize for player
 - handle bullet collision w/ glichez
 - there should be NPC mobs
 - 8-bit like music should be playing
