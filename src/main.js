@@ -3,6 +3,7 @@
   VEC_UNIT,
   aStar,
   add,
+  dist,
   div,
   mul,
   norm,
@@ -60,6 +61,7 @@ var
   frame,
   aFrame,
   buffer,
+  cursor,
   player,
   playerCfg,
   bulletCfg,
@@ -109,6 +111,7 @@ var
     cfg           = cfg           || {};
     cfg.size      = cfg.size      || 16;
     cfg.friction  = cfg.friction  || 0.8;
+    cfg.hSize     = cfg.size       / 2;
     cfg.img       = img;
 
     cfg.cnv   = createCanvas(cfg.size, cfg.size);
@@ -141,6 +144,7 @@ var
   createEntity = function createEntity(pos, cfg, spd, entity) {
     entity = {
       'id'    : getId(),
+      'hp'    : cfg.hp,
       'cfg'   : cfg, // `cfg` can be a shared reference across entities
       'pos'   : pos.slice(),
       'spd'   : spd || [0, 0],
@@ -320,7 +324,7 @@ var
 
     bctx.drawImage(
       cfg.cnv,
-      entity.pos[0] - cfg.size / 2, //dx
+      entity.pos[0] - cfg.hSize, //dx
       entity.pos[1] - cfg.size //dy
     );
 
@@ -517,13 +521,11 @@ var
     updater = fn;
   },
 
-  updateEntityDecision = function updateEntityDecision(entity, route, target) {
-    target = entity.target;
-
-    if (target) {
+  updateEntityDecision = function updateEntityDecision(entity, route) {
+    if (entity.target) {
       route = aStar(
         getTilesIndex(entity.pos),
-        getTilesIndex(target.pos),
+        getTilesIndex(entity.target.pos),
         map2DArray,
         {
           'range': 1
@@ -554,7 +556,15 @@ var
     entity.spd[axis] = axisSpd;
   },
 
-  updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, tilesIndex) {
+  isClose = function isClose(bulletPos, entityPos) {
+    return dist(bulletPos, entityPos) < 5;
+  },
+
+  explode = function explode(entity) {
+    setEntityState(entity, 'exploding', 12, removeEntity.bind(0, entity));
+  },
+
+  updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, tilesIndex, len) {
     pos   = entity.pos;
     spd   = entity.spd;
     cfg   = entity.cfg;
@@ -563,16 +573,23 @@ var
     updateEntitySpeedAxis(entity, 1);
 
     setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
-
     add(pos, spd);
-
     tilesIndex = getTilesIndex(pos);
 
-    // Handle collisions.
+    if (cfg.fragile) {
+      len = entities.length;
+
+      while (len--) {
+        if (player !== entities[len] && entities[len].hp && isClose(entity.pos, entities[len].pos)) {
+          add(entities[len].spd, mul(entity.dir.slice(), 10));
+          return explode(entity);
+        }
+      }
+    }
+
     if (!map2DArray[tilesIndex[0]][tilesIndex[1]]) {
       if (cfg.fragile) {
-        setEntityState(entity, 'breaking', 12, removeEntity.bind(0, entity));
-        return;
+        return explode(entity);
       }
 
       pos[0] -= spd[0];
@@ -627,14 +644,16 @@ var
 
       if (!entity.cnt) {
         entity.cntFn.apply(0, entity.cntPar);
-
-        setEntityState(entity, 'idling');
       }
+    } else {
+      return 1;
     }
   },
 
   updateEntity = function updateEntity(entity, command, entityCommands) {
-    updateEntityCounter(entity);
+    if (!updateEntityCounter(entity)) {
+      return;
+    }
 
     entityCommands = entity.cmd;
 
@@ -742,12 +761,14 @@ var
     add(player.acc, div(norm(sum(zero(player.mov), player.movs)), 2));
   },
 
-  shoot = function shoot(apply) {
+  shoot = function shoot(apply, bulletSpd) {
     if (!apply) {
       return;
     }
 
-    createEntity(player.pos, bulletCfg, mul(player.dir.slice(), 3));
+    bulletSpd = mul(player.dir.slice(), 3.6);
+
+    createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
   },
 
   setCommands = function setCommands(keyCode) {
@@ -789,7 +810,7 @@ var
         cfg.size, // sy
         cfg.size, // sw
         cfg.size, // sh
-        x + cfg.size / 2 - w / 2, // dx
+        x + cfg.hSize - w / 2, // dx
         img.height, // dy
         w, // dw
         cfg.size // dh
@@ -813,15 +834,15 @@ var
    * @param {Event} event
    */
   onmousemove = function onmousemove(event) {
-    mouseCoords[0] = Math.floor((event.pageX - main.offsetLeft)  / STAGE_SCALE);
-    mouseCoords[1] = Math.floor((event.pageY - main.offsetTop)   / STAGE_SCALE);
+    mouseCoords[0] = Math.floor((event.pageX - main.offsetLeft ) / STAGE_SCALE);
+    mouseCoords[1] = Math.floor((event.pageY - main.offsetTop  ) / STAGE_SCALE);
   },
 
   onclick = function onclick() {
     setScreen(1);
   },
 
-  init = function init(cursor, cctx, cursorImg, len) {
+  init = function init(cctx, cursorImg, len) {
     // Set images created by img.js
     len = win.img.length;
 
@@ -861,13 +882,14 @@ var
       images[3],
       0,
       {
-        'friction' : 0.5
+        'friction' : 0.5,
+        'hp'       : 20
       }
     );
 
     bulletCfg = createEntityConfig(
       images[0],
-      [['breaking']],
+      [['exploding']],
       {
         'friction' : 0.99,
         'rotating' : 1,
@@ -885,7 +907,10 @@ var
         ['idling', 6],
         ['moving'],
         ['tping']
-      ]
+      ],
+      {
+        'hp' : 100
+      }
     );
 
     playerCfg.img = createPlayerSprites(playerCfg);

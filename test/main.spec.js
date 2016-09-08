@@ -137,9 +137,9 @@ describe('main', function () {
 
     this.createKeyUpEvent   = createKeyEvent.bind(0, true);
     this.createKeyDownEvent = createKeyEvent.bind(0, false);
-    this.setMapWithoutWalls = setMapWithoutWalls;
 
     reset();
+    setMapWithoutWalls();
 
     if (loaded) {
       done();
@@ -342,7 +342,6 @@ describe('main', function () {
   describe('.onkeydown', function () {
     describe('with pressing (d) - right', function () {
       beforeEach(function () {
-        this.setMapWithoutWalls();
         this.positions = [player.pos.slice()];
 
         this.update = function () {
