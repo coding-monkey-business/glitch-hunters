@@ -1,13 +1,21 @@
 /* globals
   DEBUG,
+  VEC_UNIT,
   aStar,
   add,
+  div,
   mul,
   norm,
   rad,
   set,
   setDebug,
-  sub
+  sub,
+  sum,
+  zero
+*/
+
+/* exported
+  reset
 */
 
 var
@@ -28,16 +36,19 @@ var
 
   mouseCoords   = [],
 
+  DIRECTIONS = {
+    '68' : VEC_UNIT[0], // d
+    '83' : VEC_UNIT[1], // s
+    '65' : VEC_UNIT[2], // a
+    '87' : VEC_UNIT[3]  // w
+  },
+
   APPLY_TYPES         = ['keydown', 'mousedown'],
   ANIMATION_TIME_UNIT = 80,
   TIME_UNIT           = 20,
   MAP_SIZE_X          = 20,
   MAP_SIZE_Y          = 20,
   TILESIZE_X          = 16, // everything is square right now
-  UP                  = 87, // w
-  DOWN                = 83, // s
-  RIGHT               = 68, // d
-  LEFT                = 65, // a
   SPACE               = 32,
   ZERO_LIMIT          = 0.05,
   SHOOT               = 1,
@@ -62,8 +73,12 @@ var
     return ++id;
   },
 
+  remove = function remove(arr, item) {
+    arr.splice(arr.indexOf(item), 1);
+  },
+
   removeEntity = function removeEntity(entity) {
-    entities.splice(entities.indexOf(entity), 1);
+    remove(entities, entity);
   },
 
   createCanvas = function createCanvas(width, height, canvas) {
@@ -533,9 +548,7 @@ var
     axisSpd += entity.acc[axis];
     axisSpd *= entity.cfg.friction;
 
-    //
     // Round it to zero if its close enough.
-    //
     axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
 
     entity.spd[axis] = axisSpd;
@@ -552,8 +565,10 @@ var
     setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
 
     add(pos, spd);
+
     tilesIndex = getTilesIndex(pos);
 
+    // Handle collisions.
     if (!map2DArray[tilesIndex[0]][tilesIndex[1]]) {
       if (cfg.fragile) {
         setEntityState(entity, 'breaking', 12, removeEntity.bind(0, entity));
@@ -580,6 +595,7 @@ var
       pos[0] -= spd[0];
     }
 
+    // Set direction of entities, to draw them rigth.
     if (entity === player) {
       norm(sub(set(player.dir, mouseCoords), player.pos));
     } else {
@@ -587,7 +603,7 @@ var
     }
   },
 
-  teleport = function teleport(apply, event, finished, direction, pos) {
+  teleport = function teleport(apply, code, finished, direction, pos) {
     direction = direction || getAccDirection(player);
     apply     = direction && apply;
 
@@ -700,7 +716,7 @@ var
       return;
     }
 
-    player.cmd.push(command, apply, event);
+    player.cmd.push(command, apply, code);
 
     applied[code] = apply;
 
@@ -714,15 +730,16 @@ var
     return image;
   },
 
-  accelerate = function accelerate(entity, newAcc, apply, acc) {
-    acc     = entity.acc;
-    newAcc  = newAcc.slice();
+  accelerate = function accelerate(apply, code) {
+    sub(player.acc, player.mov);
 
-    if (!apply) {
-      mul(newAcc, -1);
+    if (apply) {
+      player.movs.push(DIRECTIONS[code]);
+    } else {
+      remove(player.movs, DIRECTIONS[code]);
     }
 
-    add(acc, newAcc);
+    add(player.acc, div(norm(sum(zero(player.mov), player.movs)), 2));
   },
 
   shoot = function shoot(apply) {
@@ -733,11 +750,11 @@ var
     createEntity(player.pos, bulletCfg, mul(player.dir.slice(), 3));
   },
 
-  setCommands = function setCommands() {
-    commands[UP]    = accelerate.bind(0, player, [0, -0.5]);
-    commands[DOWN]  = accelerate.bind(0, player, [0,  0.5]);
-    commands[LEFT]  = accelerate.bind(0, player, [-0.5, 0]);
-    commands[RIGHT] = accelerate.bind(0, player, [0.5,  0]);
+  setCommands = function setCommands(keyCode) {
+    for (keyCode in DIRECTIONS) {
+      commands[keyCode] = accelerate;
+    }
+
     commands[SPACE] = teleport;
     commands[SHOOT] = shoot;
   },
@@ -873,6 +890,8 @@ var
 
     playerCfg.img = createPlayerSprites(playerCfg);
     player        = createEntity([160, 160], playerCfg);
+    player.movs   = [];
+    player.mov    = [0, 0];
 
     abcImage        = images[1];
     tileset         = images[5];
@@ -967,3 +986,13 @@ if (DEBUG) {
 // On build the previous comment and everything after
 // will be removed automatically by `replace` grunt task.
 //
+var
+  reset = function reset() {
+    updaters  = [];
+    images    = [];
+    applied   = {};
+    commands  = {};
+    entities  = [];
+
+    init();
+  };

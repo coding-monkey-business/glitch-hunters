@@ -1,4 +1,5 @@
 /* exported
+  VEC_UNIT,
   add,
   dist,
   eql,
@@ -6,11 +7,26 @@
   norm,
   rad,
   set,
-  sub
+  sub,
+  sum,
+  zero
 */
 
 var
   VEC_ZERO = [0, 0],
+
+  VEC_UNIT = [
+    [ 1, 0],
+    [ 0, 1],
+    [-1, 0],
+    [ 0,-1]
+  ],
+
+  zero = function zero(v) {
+    v[0] = v[1] = 0;
+
+    return v;
+  },
 
   /**
    * Distance between two 2d-points.
@@ -60,15 +76,25 @@ var
     return v1;
   },
 
+  sum = function sum(sumVec, vecs, len) {
+    len = vecs.length;
+
+    while (len--) {
+      add(sumVec, vecs[len]);
+    }
+
+    return sumVec;
+  },
+
   eql = function eql(v1, v2) {
     return v1[0] === v2[0] && v1[1] === v2[1];
   },
 
-  norm = function norm(v, vlength) {
-    vlength = dist(VEC_ZERO, v);
+  norm = function norm(v, vLength) {
+    vLength = dist(VEC_ZERO, v);
 
-    if (vlength) {
-      div(v, vlength);
+    if (vLength) {
+      div(v, vLength);
     }
 
     return v;

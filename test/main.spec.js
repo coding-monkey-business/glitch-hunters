@@ -1,6 +1,7 @@
 /* globals
   createEntity,
   createEntityConfig,
+  dist,
   drawPath,
   entities,
   field,
@@ -8,7 +9,11 @@
   getId,
   getTilesIndex,
   map2DArray : true,
+  player,
+  reset,
   set,
+  setScreen,
+  updater,
   updateEntityPosition
 */
 
@@ -25,6 +30,8 @@ Math.sign = function sign(a) {
 
 var
   loaded,
+  RIGHT = '68',
+  DOWN  = '83',
   origCreateElement = document.createElement;
 
 describe('main', function () {
@@ -53,6 +60,24 @@ describe('main', function () {
         'save' : function save() {
         },
 
+        'scale' : function scale() {
+        },
+
+        'beginPath' : function beginPath() {
+        },
+
+        'moveTo' : function moveTo() {
+        },
+
+        'lineTo' : function lineTo() {
+        },
+
+        'stroke' : function stroke() {
+        },
+
+        'clearRect' : function clearRect() {
+        },
+
         'fillRect' : function fillRect() {
         },
 
@@ -72,23 +97,58 @@ describe('main', function () {
         'getContext' : function getContext() {
           return fakeContext;
         }
+      },
+
+      createKeyEvent = function createKeyEvent(isUp, keyCode) {
+        return {
+          'keyCode' : keyCode,
+          'type'    : isUp ? 'keyup' : 'keydown',
+
+          'preventDefault' : function preventDefault() {
+          }
+        };
+      },
+
+      fakeCreateElement = function fakeCreateElement() {
+        if (arguments[0] === 'canvas') {
+          return fakeCanvas;
+        }
+
+        return origCreateElement.apply(document, arguments);
+      },
+
+      fakeAppendChild = function fakeAppendChild() {
+      },
+
+      fakeRequestAnimationFrame = function fakeRequestAnimationFrame() {
+      },
+
+      setMapWithoutWalls = function setMapWithoutWalls() {
+        var
+          i,
+          j;
+
+        for (i = 0; i < map2DArray.length; i++) {
+          for (j = 0; j < map2DArray[i].length; j++) {
+            map2DArray[i][j] = 1;
+          }
+        }
       };
 
-    document.body.appendChild = function appendChild() {
-    };
+    this.createKeyUpEvent   = createKeyEvent.bind(0, true);
+    this.createKeyDownEvent = createKeyEvent.bind(0, false);
+    this.setMapWithoutWalls = setMapWithoutWalls;
 
-    document.createElement = function createElement() {
-      if (arguments[0] === 'canvas') {
-        return fakeCanvas;
-      }
-
-      return origCreateElement.apply(document, arguments);
-    };
+    reset();
 
     if (loaded) {
       done();
       return;
     }
+
+    window.requestAnimationFrame  = fakeRequestAnimationFrame;
+    document.body.appendChild     = fakeAppendChild;
+    document.createElement        = fakeCreateElement;
 
     var
       origOnload = window.onload;
@@ -96,6 +156,7 @@ describe('main', function () {
     window.onload = function () {
       origOnload();
       loaded = true;
+      setScreen(1);
       done();
     };
   });
@@ -277,4 +338,73 @@ describe('main', function () {
       });
     });
   });
+
+  describe('.onkeydown', function () {
+    describe('with pressing (d) - right', function () {
+      beforeEach(function () {
+        this.setMapWithoutWalls();
+        this.positions = [player.pos.slice()];
+
+        this.update = function () {
+          var
+            times = 20;
+
+          while (times--) {
+            updater();
+          }
+
+        };
+
+        window.onkeydown(this.createKeyDownEvent(RIGHT));
+
+        this.update();
+
+        this.positions.push(player.pos.slice());
+        this.firstPos   = this.positions[0];
+        this.secondPos  = this.positions[1];
+        this.firstDist  = dist(this.firstPos, this.secondPos);
+      });
+
+      it('should move the players first coordinate', function () {
+        expect(this.firstPos[0]).toBeLessThan(this.secondPos[0]);
+        expect(this.firstPos[1]).toBe(this.secondPos[1]);
+      });
+
+      describe('with releasing (d) - right', function () {
+        beforeEach(function () {
+          window.onkeydown(this.createKeyUpEvent(RIGHT));
+
+          this.update();
+
+          this.curPos   = player.pos.slice();
+          this.curDist  = dist(this.curPos, this.secondPos);
+        });
+
+        it('should finish moving by sliding a bit more', function () {
+          expect(this.curDist).toBeGreaterThan(0);
+          expect(this.secondPos[0] - this.firstPos[0]).toBeGreaterThan(this.curPos[0] - this.secondPos[0]);
+          expect(player.spd).toEqual([0, 0]);
+        });
+
+        describe('with down and right keydown events', function () {
+          beforeEach(function () {
+            this.lastPosition = player.pos.slice();
+
+            window.onkeydown(this.createKeyDownEvent(RIGHT));
+            window.onkeydown(this.createKeyDownEvent(DOWN));
+
+            this.update();
+          });
+
+          it('should move the player down-right, however just as the same amount as right before', function () {
+            var
+              curDist = dist(player.pos, this.lastPosition);
+
+            expect(curDist).toBeCloseTo(this.firstDist, 8);
+          });
+        });
+      });
+    });
+  });
+
 });

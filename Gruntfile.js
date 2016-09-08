@@ -130,9 +130,11 @@ var
         'globals'     : {
           'describe'  : true,
           'fdescribe' : true,
+          'xdescribe' : true,
           'beforeEach': true,
           'it'        : true,
           'fit'       : true,
+          'xit'       : true,
           'expect'    : true,
           'jasmine'   : true,
           'window'    : true,
