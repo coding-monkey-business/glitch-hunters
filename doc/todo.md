@@ -8,6 +8,7 @@
 + player should slide along the wall on tilted movement
 + sum action-applied forces(acc) together then normalize for player
 + handle bullet collision w/ glichez
+- player-locked camera movement causes invalid mouseCoords values
 - explosion should knock back all glichez on position
 - there should be NPC mobs
 - healthbar for NPCs

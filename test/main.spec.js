@@ -142,8 +142,19 @@ describe('main', function () {
             map2DArray[i][j] = 1;
           }
         }
+      },
+
+      update = function update() {
+        var
+          times = 20;
+
+        while (times--) {
+          updater();
+        }
       };
 
+
+    this.update             = update;
     this.createKeyUpEvent   = createKeyEvent.bind(0, true);
     this.createKeyDownEvent = createKeyEvent.bind(0, false);
 
@@ -216,6 +227,7 @@ describe('main', function () {
         jasmine.arrayContaining([u, 2, 2, 2, u])
       ]));
     });
+
     xit('createRoom should create rooms', function () {
       // TODO
     });
@@ -349,20 +361,15 @@ describe('main', function () {
     });
   });
 
+  xdescribe('.onmousedown', function () {
+    it('should shoot in the given direction', function () {
+    });
+  });
+
   describe('.onkeydown', function () {
     describe('with pressing (d) - right', function () {
       beforeEach(function () {
         this.positions = [player.pos.slice()];
-
-        this.update = function () {
-          var
-            times = 20;
-
-          while (times--) {
-            updater();
-          }
-
-        };
 
         window.onkeydown(this.createKeyDownEvent(RIGHT));
 
@@ -422,5 +429,4 @@ describe('main', function () {
       });
     });
   });
-
 });

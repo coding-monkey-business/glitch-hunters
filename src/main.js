@@ -7,6 +7,7 @@
   div,
   mul,
   norm,
+  len,
   rad,
   set,
   setDebug,
@@ -120,6 +121,7 @@ var
     cfg           = cfg           || {};
     cfg.size      = cfg.size      || 16;
     cfg.friction  = cfg.friction  || 0.8;
+    cfg.offY      = cfg.offY      || 0;
     cfg.hSize     = cfg.size       / 2;
     cfg.img       = img;
 
@@ -151,10 +153,15 @@ var
   },
 
   createEntity = function createEntity(pos, cfg, spd, entity) {
+    //
+    // `cfg` can be a shared reference across entities
+    //
     entity = {
       'id'    : getId(),
+      'cfg'   : cfg,
       'hp'    : cfg.hp,
-      'cfg'   : cfg, // `cfg` can be a shared reference across entities
+      'z'     : 0,
+      'dZ'    : 0,
       'pos'   : pos.slice(),
       'spd'   : spd || [0, 0],
       'dir'   : [1, 0],
@@ -378,8 +385,8 @@ var
 
     bctx.drawImage(
       cfg.cnv,
-      entity.pos[0] - cfg.hSize, //dx
-      entity.pos[1] - cfg.size //dy
+      entity.pos[0] - cfg.hSize,                      // dx
+      entity.pos[1] + cfg.offY - cfg.size - entity.z  // dy
     );
 
     if (entity === player) {
@@ -623,16 +630,17 @@ var
     add(player.acc, div(norm(sum(zero(player.mov), player.movs)), 2));
   },
 
-  shoot = function shoot(apply, bulletSpd) {
+  shoot = function shoot(apply, bulletSpd, bullet) {
     if (!apply || !currentAmmoAmount) {
       return;
     }
 
-
     currentAmmoAmount--;
-    bulletSpd = mul(player.dir.slice(), 3.6);
 
-    createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
+    bulletSpd     = mul(player.dir.slice(), 3.6);
+    bullet        = createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
+    bullet.z      = 8;
+    bullet.dZ     = bullet.z * len(bulletSpd) / dist(mouseCoords, bullet.pos);
   },
 
   teleport = function teleport(apply, code, finished, direction, pos) {
@@ -744,6 +752,7 @@ var
     spd   = entity.spd;
     cfg   = entity.cfg;
 
+    entity.z -= entity.dZ;
     updateEntitySpeedAxis(entity, 0);
     updateEntitySpeedAxis(entity, 1);
 
@@ -760,6 +769,10 @@ var
           damage(entities[len]);
           return explode(entity);
         }
+      }
+
+      if (entity.z < 0) {
+        return explode(entity);
       }
     }
 
@@ -1066,9 +1079,10 @@ var
       images[0],
       [['exploding']],
       {
-        'friction' : 0.99,
-        'rotating' : 1,
-        'fragile'  : 1
+        'friction'  : 1,
+        'rotating'  : 1,
+        'fragile'   : 1,
+        'offY'      : 8
       }
     );
 
@@ -1173,6 +1187,7 @@ if (DEBUG) {
 
           if (code === N) {
             var explosion = createEntity(mouseCoords, explosionCfg);
+
             setEntityState(explosion, 'idling', 20, removeEntity.bind(0, explosion));
           }
 

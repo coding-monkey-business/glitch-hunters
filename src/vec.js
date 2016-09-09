@@ -5,6 +5,7 @@
   eql,
   mul,
   norm,
+  len,
   rad,
   set,
   sub,
@@ -90,11 +91,15 @@ var
     return v1[0] === v2[0] && v1[1] === v2[1];
   },
 
-  norm = function norm(v, vLength) {
-    vLength = dist(VEC_ZERO, v);
+  len = function len(v) {
+    return dist(VEC_ZERO, v);
+  },
 
-    if (vLength) {
-      div(v, vLength);
+  norm = function norm(v, vLen) {
+    vLen = len(v);
+
+    if (vLen) {
+      div(v, vLen);
     }
 
     return v;
