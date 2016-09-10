@@ -1,6 +1,11 @@
 var
   grunt,
 
+  fs        = require('fs'),
+  path      = require('path'),
+  chalk     = require('chalk'),
+  filesize  = require('filesize'),
+
   ALL_JS = ['*.js', 'src/**/*.js', 'test/**/*.js'],
 
   TASK_CONFIG = {
@@ -235,7 +240,7 @@ var
       // advzip doesn't create folders?
       // grunt.file.mkdir is too much overhead to create that folder.
       'advzip': 'mkdir dist & advzip -a dist/index.html.zip build/index.html -4 -i 100', // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
-      'zopflipng': require('zopflipng-bin') + ' --lossy_transparent -m -y --prefix="" build/*.png'
+      'zopflipng': require('zopflipng-bin') + ' --lossy_transparent -m -y --prefix=""' + path.resolve('build/*.png')
     }
   },
 
@@ -319,11 +324,6 @@ var
       'build:compress'
     ]
   },
-
-  fs        = require('fs'),
-  path      = require('path'),
-  chalk     = require('chalk'),
-  filesize  = require('filesize'),
 
   reportSize = function reportSize() {
     var

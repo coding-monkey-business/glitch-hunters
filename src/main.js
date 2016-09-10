@@ -58,6 +58,8 @@ var
 
   offsetX             = 0,
   offsetY             = 0,
+
+  currentAmmoAmount   = 100,
   mctx,
   bctx,
   main,
@@ -361,8 +363,8 @@ var
       cfg.size,
       cfg.size
     );
-
     cfg.ctx.restore();
+
 
     bctx.drawImage(
       cfg.cnv,
@@ -370,6 +372,22 @@ var
       entity.pos[1] - cfg.size //dy
     );
 
+    if (entity === player) {
+      bctx.save();
+      // a bit hacky :/
+      bctx.translate(entity.pos[0] + 2, entity.pos[1] - 5);
+      bctx.rotate(rad(sub(player.pos.slice(), mouseCoords)) + Math.PI);
+      // rifle should not change hands & stay on one side
+      if (entity.dir[0] < 0) {
+        bctx.transform(1, 0, 0, -1, -3, 0)
+      }
+      bctx.drawImage(
+        images[5],
+        0,
+        -3
+      );
+      bctx.restore();
+    }
     if (DEBUG) {
       drawEntityDebugInfo(entity);
     }
@@ -381,7 +399,7 @@ var
     //
     // Meh, maybe this is not right here, but ATM it does what I need
     //
-    if (map2DArray[x][y] > 0) {
+    if (map2DArray[x] && map2DArray[x][y] > 0) {
       return;
     }
 
@@ -720,16 +738,25 @@ var
     }
 
     drawMap(isAnimationFrame);
+    drawUI();
+  },
+
+  drawUI = function drawUI() {
+    bctx.save();
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    text('AMMO:' + currentAmmoAmount, 5, 5, 0, aFrames)
+    bctx.restore();
+
   },
 
   updateIntro = function updateIntro() {
     starField();
     bctx.save();
     bctx.setTransform(4, 0, 0, 4, 0, 0);
-    bctx.drawImage(images[6], 0, 18);
-    bctx.drawImage(images[7], 30, 0);
+    bctx.drawImage(images[7], 0, 18);
+    bctx.drawImage(images[8], 30, 0);
     bctx.setTransform(3, 0, 0, 3, 0, 0);
-    bctx.drawImage(images[8], 4, 4);
+    bctx.drawImage(images[9], 4, 4);
     bctx.restore();
     text('START GAME', 14, 100, 2, aFrames);
     glitch(buffer);
@@ -824,10 +851,12 @@ var
   },
 
   shoot = function shoot(apply, bulletSpd) {
-    if (!apply) {
+    if (!apply || !currentAmmoAmount) {
       return;
     }
 
+
+    currentAmmoAmount--;
     bulletSpd = mul(player.dir.slice(), 3.6);
 
     createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
@@ -981,7 +1010,7 @@ var
     player.mov    = [0, 0];
 
     abcImage        = images[1];
-    tileset         = images[5];
+    tileset         = images[6];
     win.onclick     = onclick;
     win.onmousemove = onmousemove;
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = setCommand;
