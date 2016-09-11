@@ -76,7 +76,8 @@ var
   tileset,
   abcImage,
   map2DArray,
-  spawnPositions = [],
+  spawnPositions     = [],
+  shakeDuration      = 0,
 
   getId = function getId() {
     return ++id;
@@ -728,6 +729,8 @@ var
     if ((entity.hp -= 5) <= 0) {
       currentAmmoAmount += 5;
       explode(entity);
+      // make the canvas wobble:
+      shakeDuration = 10;
     }
   },
 
@@ -897,10 +900,12 @@ var
         );
       }
 
+      if (shakeDuration) {
+        main.style.left = Math.sin(frames) * --shakeDuration + 'px';
+        main.style.top = Math.cos(frames) * shakeDuration + 'px';
+      }
 
       bctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
-      // bctx.fillStyle = '#000';
-      // bctx.fillRect(0, 0, WIDTH, HEIGHT);
 
 
       updater(isAnimationFrame);
@@ -1035,7 +1040,10 @@ var
 
     monsterCfg = createEntityConfig(
       images[3],
-      0,
+      [
+        ['idling', 6],
+        ['moving', 6]
+      ],
       {
         'friction' : 0.5,
         'hp'       : 20
@@ -1075,6 +1083,8 @@ var
     win.onmousemove = onmousemove;
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = setCommand;
 
+    // bctx.fillStyle = '#000';
+    bctx.fillRect(0, 0, WIDTH, HEIGHT);
     setScreen(screen);
 
     startLoop();

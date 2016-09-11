@@ -2,3 +2,6 @@ body {
   text-align: center;
   background-color: grey;
 }
+canvas {
+	position: relative;
+}
