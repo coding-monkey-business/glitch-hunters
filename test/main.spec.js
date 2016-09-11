@@ -102,7 +102,9 @@ describe('main', function () {
           // Fake returning any of the images.
           return window.img[0];
         },
+        'style' : {
 
+        },
         'getContext' : function getContext() {
           return fakeContext;
         }

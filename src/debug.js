@@ -32,6 +32,7 @@ var
     HTML += createHelpItem('c - continue');
     HTML += createHelpItem('v - debug');
     HTML += createHelpItem('b - break');
+    HTML += createHelpItem('g - game over');
     HTML += createHelpItem('m - show map');
     HTML += createHelpItem('n - explosion');
 

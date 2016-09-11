@@ -160,6 +160,7 @@ var
       'id'    : getId(),
       'cfg'   : cfg,
       'hp'    : cfg.hp,
+      'dmg'   : cfg.dmg,
       'z'     : 0,
       'dZ'    : 0,
       'pos'   : pos.slice(),
@@ -610,7 +611,12 @@ var
    * creates a new map with monsters
    */
   createLevel = function createLevel (/*difficulty*/) {
+    player        = createEntity([MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2], playerCfg);
+    player.movs   = [];
+    player.mov    = [0, 0];
+
     entities          = [player];
+
     spawnPositions    = [];
     player.hp         = playerCfg.hp;
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
@@ -734,16 +740,25 @@ var
     setEntityState(entity, 'exploding', 12, removeEntity.bind(0, entity));
   },
 
-  damage = function damage (entity, explosion) {
-    if ((entity.hp -= 5) <= 0) {
-      currentAmmoAmount += 5;
-      explosion = createEntity(entity.pos.slice(), explosionCfg);
-      setEntityState(explosion, 'exploding', 20, removeEntity.bind(0, explosion));
-
-      explode(entity);
+  /**
+   * @param  {Object} targetEntity
+   * @param  {Object} sourceEntity not sure if needed
+   */
+  damage = function damage (targetEntity, sourceEntity, explosion) {
+    // if (targetEntity !== player) {
+    //   return;
+    // }
+    if (targetEntity.hp && (targetEntity.hp -= sourceEntity.dmg) <= 0) {
+      explode(targetEntity);
+      explosion = createEntity(targetEntity.pos.slice(), explosionCfg);
+      setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
 
       // make the canvas wobble:
-      shakeDuration += 20;
+      shakeDuration = Math.min(shakeDuration + 20, 100);
+
+    }
+    if (player.hp <= 0) {
+      gameOver();
     }
   },
 
@@ -764,9 +779,9 @@ var
       len = entities.length;
 
       while (len--) {
-        if (player !== entities[len] && entities[len].hp && isClose(entity.pos, entities[len].pos)) {
+        if (player !== entities[len] && entity !== entities[len] && entities[len].hp > 0 && isClose(entity.pos, entities[len].pos)) {
           add(entities[len].spd, mul(entity.dir.slice(), 10));
-          damage(entities[len]);
+          damage(entities[len], entity);
           return explode(entity);
         }
       }
@@ -776,13 +791,12 @@ var
       }
     }
 
-    if (entity !== player && isClose(player.pos, entity.pos)) {
-      if (--player.hp <= 0) {
-        gameOver();
-      }
+    // entitites damaging the player:
+    if (entity !== player && entity.hp > 0 && dist(player.pos, entity.pos) < 8) {
+      damage(player, entity);
     }
 
-    if (!map2DArray[tilesIndex[0]][tilesIndex[1]]) {
+    if (!map2DArray[tilesIndex[0]] || !map2DArray[tilesIndex[0]][tilesIndex[1]]) {
       if (cfg.fragile) {
         return explode(entity);
       }
@@ -827,8 +841,22 @@ var
     }
   },
 
+  //this is hacky, sry
+  splashDamage = function splashDamage(entity, i) {
+    i = entities.length;
+    while (i--) {
+      if (entities[i].hp && dist(entities[i].pos, entity.pos) < 16) {
+        damage(entities[i], entity);
+      }
+    }
+  },
+
   updateEntity = function updateEntity(entity, command, entityCommands) {
     if (!updateEntityCounter(entity)) {
+      // this is also hacky
+      if (entity.hp === Infinity) {
+        splashDamage(entity);
+      }
       return;
     }
 
@@ -1033,13 +1061,13 @@ var
     cctx      = cursor.getCtx();
 
     cctx.drawImage(cursorImg, 0, 0, 32, 32);
-    document.body.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto';
-
     //
     // Setup main canvas.
     //
     main    = createCanvas(STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
     mctx    = main.getCtx();
+
+    document.body.style.cursor = main.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto'; // firefox has issues with a body style cursor?
 
     doc.body.appendChild(main);
 
@@ -1057,9 +1085,11 @@ var
 
     explosionCfg = createEntityConfig(
       images[3],
-      [['idling', 5]],
+      [['idling', 6]],
       {
-        'size': 32
+        'size'     : 32,
+        'hp'       : Infinity,
+        'dmg'      : 2
       }
     );
 
@@ -1071,7 +1101,8 @@ var
       ],
       {
         'friction' : 0.5,
-        'hp'       : 20
+        'hp'       : 20,
+        'dmg'      : 2
       }
     );
 
@@ -1082,7 +1113,8 @@ var
         'friction'  : 1,
         'rotating'  : 1,
         'fragile'   : 1,
-        'offY'      : 8
+        'offY'      : 8,
+        'dmg'       : 5
       }
     );
 
@@ -1099,9 +1131,9 @@ var
     );
 
     playerCfg.img = createPlayerSprites(playerCfg);
-    player        = createEntity([MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2], playerCfg);
-    player.movs   = [];
-    player.mov    = [0, 0];
+    // player        = createEntity([MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2], playerCfg);
+    // player.movs   = [];
+    // player.mov    = [0, 0];
 
     abcImage        = images[1];
     tileset         = images[7];
@@ -1125,6 +1157,7 @@ if (DEBUG) {
     ESC = 27,
     B   = 66,
     C   = 67,
+    G   = 71,
     M   = 77,
     N   = 78,
     V   = 86,
@@ -1187,12 +1220,15 @@ if (DEBUG) {
 
           if (code === N) {
             var explosion = createEntity(mouseCoords, explosionCfg);
-
-            setEntityState(explosion, 'idling', 20, removeEntity.bind(0, explosion));
+            setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
           }
 
           if (code === M) {
             drawDebugMap();
+          }
+
+          if (code === G) {
+            gameOver();
           }
         };
 
