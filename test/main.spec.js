@@ -13,6 +13,7 @@
   mapGen,
   MAP_SIZE_X,
   MAP_SIZE_Y,
+  mouseCoords,
   player,
   reset,
   removeEntity,
@@ -168,6 +169,35 @@ describe('main', function () {
         }
       },
 
+      removeGlichez = function removeGlichez() {
+        var
+          len = entities.length;
+
+        while (len--) {
+          if (entities[len].target) {
+            removeEntity(entities[len]);
+          }
+        }
+      },
+
+      getLastCreatedEntity = function getLastCreatedEntity() {
+        var
+          maxId,
+          entity,
+          lastEntity,
+          len = entities.length;
+
+        while (len--) {
+          entity = entities[len];
+          if (!maxId || entity.id > maxId) {
+            lastEntity  = entity;
+            maxId       = entity.id;
+          }
+        }
+
+        return lastEntity;
+      },
+
       update = function update(times) {
         times = times || 20;
 
@@ -178,6 +208,8 @@ describe('main', function () {
 
 
     this.update               = update;
+    this.removeGlichez        = removeGlichez;
+    this.getLastCreatedEntity = getLastCreatedEntity;
     this.createMouseDownEvent = createMouseEvent.bind(0, false);
     this.createKeyUpEvent     = createKeyEvent.bind(0, true);
     this.createKeyDownEvent   = createKeyEvent.bind(0, false);
@@ -387,7 +419,12 @@ describe('main', function () {
 
   describe('.onmousedown', function () {
     beforeEach(function () {
+      this.removeGlichez();
+
       this.entityCountBefore = entities.length;
+
+      set(player.pos,  [100, 100]);
+      set(mouseCoords, [200, 200]);
 
       this.update(10);
 
@@ -395,7 +432,7 @@ describe('main', function () {
 
       this.update(1);
 
-      this.bullet = entities[entities.length - 1];
+      this.bullet = this.getLastCreatedEntity();
     });
 
     it('should spawn a new entity (bullet)', function () {
@@ -403,12 +440,8 @@ describe('main', function () {
     });
 
     it('should define its z and dZ', function () {
-      var
-        bullet = entities.some(function (e) {
-          return e.z === 8;
-        });
-
-      expect(bullet).toBeTruthy();
+      expect(this.bullet.z).toBe(8);
+      expect(this.bullet.dZ).toBeCloseTo(0.843, 2);
     });
   });
 
