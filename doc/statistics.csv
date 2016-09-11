@@ -1,4 +1,12 @@
 COMMIT  |     SIZE |     DIFF | MESSAGE                                                      | OUTPUT
+da98430 |     8563 |       36 | improves isClose + some minor tweaks                         | # dist/index.html.zip <=== 8.36 KB (8563 B)
+bd575eb |     8527 |        0 | test: cleans up shooting test                                | # dist/index.html.zip <=== 8.33 KB (8527 B)
+12f304d |     8527 |       28 | fixes locked camera/mouse-pos bug                            | # dist/index.html.zip <=== 8.33 KB (8527 B)
+ec7c58c |     8499 |        3 | fixed an endless loop                                        | # dist/index.html.zip <=== 8.3 KB (8499 B)
+4fecffb |     8496 |      223 | MORE EXPLOSIONS                                              | # dist/index.html.zip <=== 8.3 KB (8496 B)
+259eda8 |     8273 |        0 | doc: todo update                                             | # dist/index.html.zip <=== 8.08 KB (8273 B)
+cac80f7 |     8273 |       70 | entity: adds z-index for proper bullet rendering             | # dist/index.html.zip <=== 8.08 KB (8273 B)
+692c542 |     8203 |        0 | doc: updates statistics.csv                                  | # dist/index.html.zip <=== 8.01 KB (8203 B)
 e8548bb |     8203 |      685 | added explosions                                             | # dist/index.html.zip <=== 8.01 KB (8203 B)
 a02f830 |     7518 |        0 | better wobble                                                | # dist/index.html.zip <=== 7.34 KB (7518 B)
 1bbe334 |     7518 |      211 | added glitch idling state                                    | # dist/index.html.zip <=== 7.34 KB (7518 B)
