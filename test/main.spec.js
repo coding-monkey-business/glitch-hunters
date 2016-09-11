@@ -8,6 +8,7 @@
   getAccDirection,
   getId,
   getTilesIndex,
+  main,
   map2DArray : true,
   mapGen,
   MAP_SIZE_X,
@@ -48,6 +49,9 @@ describe('main', function () {
       },
 
       fakeContext = {
+        'transform' : function transform() {
+        },
+
         'setTransform' : function setTransform() {
         },
 
@@ -87,9 +91,10 @@ describe('main', function () {
 
         'fillRect' : function fillRect() {
         },
-        'fillText' : function fillText() {
 
+        'fillText' : function fillText() {
         },
+
         'translate' : function translate() {
         },
 
@@ -98,6 +103,9 @@ describe('main', function () {
       },
 
       fakeCanvas = {
+        'offsetLeft'  : 10,
+        'offsetTop'   : 10,
+
         'toDataURL' : function toDataURL() {
           // Fake returning any of the images.
           return window.img[0];
@@ -114,6 +122,18 @@ describe('main', function () {
         return {
           'keyCode' : keyCode,
           'type'    : isUp ? 'keyup' : 'keydown',
+
+          'preventDefault' : function preventDefault() {
+          }
+        };
+      },
+
+      createMouseEvent = function createMouseEvent(isUp) {
+        return {
+          'keyCode' : 1,
+          'type'    : isUp ? 'mouseup' : 'mousedown',
+          'pageX'   : 50,
+          'pageY'   : 50,
 
           'preventDefault' : function preventDefault() {
           }
@@ -138,7 +158,9 @@ describe('main', function () {
         var
           i,
           j;
+
         map2DArray = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
+
         for (i = 0; i < map2DArray.length; i++) {
           for (j = 0; j < map2DArray[i].length; j++) {
             map2DArray[i][j] = 1;
@@ -146,9 +168,8 @@ describe('main', function () {
         }
       },
 
-      update = function update() {
-        var
-          times = 20;
+      update = function update(times) {
+        times = times || 20;
 
         while (times--) {
           updater();
@@ -156,9 +177,10 @@ describe('main', function () {
       };
 
 
-    this.update             = update;
-    this.createKeyUpEvent   = createKeyEvent.bind(0, true);
-    this.createKeyDownEvent = createKeyEvent.bind(0, false);
+    this.update               = update;
+    this.createMouseDownEvent = createMouseEvent.bind(0, false);
+    this.createKeyUpEvent     = createKeyEvent.bind(0, true);
+    this.createKeyDownEvent   = createKeyEvent.bind(0, false);
 
     reset();
     setMapWithoutWalls();
@@ -363,8 +385,30 @@ describe('main', function () {
     });
   });
 
-  xdescribe('.onmousedown', function () {
-    it('should shoot in the given direction', function () {
+  describe('.onmousedown', function () {
+    beforeEach(function () {
+      this.entityCountBefore = entities.length;
+
+      this.update(10);
+
+      main.onmousedown(this.createMouseDownEvent());
+
+      this.update(1);
+
+      this.bullet = entities[entities.length - 1];
+    });
+
+    it('should spawn a new entity (bullet)', function () {
+      expect(entities.length).toBe(this.entityCountBefore + 1);
+    });
+
+    it('should define its z and dZ', function () {
+      var
+        bullet = entities.some(function (e) {
+          return e.z === 8;
+        });
+
+      expect(bullet).toBeTruthy();
     });
   });
 

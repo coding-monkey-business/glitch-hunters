@@ -3,6 +3,7 @@
   log,
   setDebug,
   stringify,
+  consolify,
   drawDebugMap
 */
 /* globals TILESIZE_X, map2DArray, drawField, drawWall */
@@ -67,6 +68,7 @@ var
       DEBUG[key] = value;
     }
   },
+
   drawDebugMap = function drawDebugMap (ctx, x, y) {
     document.body.appendChild(debugMap);
     debugMap.height = map2DArray[0].length * TILESIZE_X;
@@ -126,6 +128,26 @@ var
     }
 
     return string;
+  },
+
+  consolify = function consolify(param) {
+    var
+      key,
+      value,
+      element,
+      isObject;
+
+    for (key in param) {
+      isObject  = true;
+      element   = param[key];
+      value     = (element !== null && typeof element === 'object') ? Object.keys(element) : element;
+
+      console.log(key, value);
+    }
+
+    if (!isObject) {
+      console.log(param);
+    }
   },
 
   init = function init() {

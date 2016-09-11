@@ -22,31 +22,6 @@
 */
 
 var
-  win       = window,
-  doc       = document,
-  WIDTH     = 320,
-  HEIGHT    = 240,
-  id        = 0,
-  frames    = 0,
-  aFrames   = 0,
-  screen    = 0, // 0 =  title, 1 = game, etc
-  alphabet  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
-  updaters  = [],
-  images    = [],
-  applied   = {},
-  commands  = {},
-  entities  = [],
-
-  mouseCoords   = [],
-
-  DIRECTIONS = {
-    '68' : VEC_UNIT[0], // d
-    '83' : VEC_UNIT[1], // s
-    '65' : VEC_UNIT[2], // a
-    '87' : VEC_UNIT[3]  // w
-  },
-  ENEMY_ENGAGEMENT_DISTANCE = 150,
-
   APPLY_TYPES         = ['keydown', 'mousedown'],
   ANIMATION_TIME_UNIT = 80,
   TIME_UNIT           = 20,
@@ -57,11 +32,41 @@ var
   ZERO_LIMIT          = 0.05,
   SHOOT               = 1,
   STAGE_SCALE         = 3,
-  offsetX             = 0,
-  offsetY             = 0,
 
-  DEFAULT_AMMO_AMOUNT = 100,
-  currentAmmoAmount   = DEFAULT_AMMO_AMOUNT,
+  DEFAULT_AMMO_AMOUNT       = 100,
+  ENEMY_ENGAGEMENT_DISTANCE = 150,
+
+  win               = window,
+  doc               = document,
+  WIDTH             = 320,
+  HEIGHT            = 240,
+  id                = 0,
+  frames            = 0,
+  aFrames           = 0,
+  screen            = 0, // 0 =  title, 1 = game, etc
+  alphabet          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
+  offsetX           = 0,
+  offsetY           = 0,
+  shakeDuration     = 0,
+  currentAmmoAmount = DEFAULT_AMMO_AMOUNT,
+
+  updaters          = [],
+  images            = [],
+  applied           = {},
+  commands          = {},
+  entities          = [],
+  initializers      = [],
+  mouseCoords       = [],
+  spawnPositions    = [],
+  startingPositions = [MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2],
+
+  DIRECTIONS = {
+    '68' : VEC_UNIT[0], // d
+    '83' : VEC_UNIT[1], // s
+    '65' : VEC_UNIT[2], // a
+    '87' : VEC_UNIT[3]  // w
+  },
+
   mctx,
   bctx,
   main,
@@ -78,8 +83,7 @@ var
   tileset,
   abcImage,
   map2DArray,
-  spawnPositions     = [],
-  shakeDuration      = 0,
+  inputHandler,
 
   getId = function getId() {
     return ++id;
@@ -602,16 +606,12 @@ var
     return !res[0] && !res[1] ? 0 : res;
   },
 
-  setUpdater = function setUpdater(fn) {
-    updater = fn;
-  },
-
   /**
    * resets entitiy list, spawnpositions, health and ammo
    * creates a new map with monsters
    */
   createLevel = function createLevel (/*difficulty*/) {
-    player        = createEntity([MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2], playerCfg);
+    player        = createEntity(startingPositions, playerCfg);
     player.movs   = [];
     player.mov    = [0, 0];
 
@@ -621,6 +621,7 @@ var
     player.hp         = playerCfg.hp;
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
     map2DArray        = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
+
     spawnPositions.forEach(createMonster);
   },
 
@@ -677,19 +678,72 @@ var
   },
 
   setScreen = function setScreen(newScreen) {
+    //
+    // Remove all defined handlers.
+    //
     screen = newScreen;
 
-    if (screen === 1) {
-      createLevel();
-      setCommands();
+    initializers[screen]();
+
+    updater = updaters[screen];
+  },
+
+  /**
+   * @param {Event} event
+   */
+  setMouseCoords = function setMouseCoords(event) {
+    mouseCoords[0] = Math.floor((event.pageX - main.offsetLeft)  / STAGE_SCALE) - offsetX;
+    mouseCoords[1] = Math.floor((event.pageY - main.offsetTop)   / STAGE_SCALE) - offsetY;
+  },
+
+  getCode = function getCode(event) {
+    return event.pageX ? SHOOT : event.keyCode || event.which;
+  },
+
+  setCommand = function setCommand(event, apply, code, command) {
+    if (event.pageX) {
+      setMouseCoords(event);
     }
 
-    setUpdater(updaters[screen]);
+    apply   = APPLY_TYPES.indexOf(event.type) !== -1;
+    code    = getCode(event);
+    command = applied[code]^apply && commands[code];
+
+    if (!command) {
+      return;
+    }
+
+    player.cmd.push(command, apply, code);
+
+    applied[code] = apply;
+
+    event.preventDefault();
+  },
+
+
+  initIntro = function initIntro() {
+    inputHandler = setScreen.bind(0, 1);
+  },
+
+  initGame = function initGame() {
+    createLevel();
+    setCommands();
+    inputHandler = setCommand;
+  },
+
+  initGameOver = function initGameOver() {
+    // Not much now... remove if later stays the same.
+    initIntro();
+  },
+
+  onUserInput = function onUserInput(event) {
+    inputHandler(event);
   },
 
   gameOver = function gameOver() {
     setScreen(2);
   },
+
   updateEntityDecision = function updateEntityDecision(entity, route) {
     if (entity.target) {
       // glitches shouldn't engage the player if he's too far away
@@ -895,6 +949,8 @@ var
   },
 
   updateIntro = function updateIntro() {
+    bctx.fillRect(0, 0, WIDTH, HEIGHT);
+
     bctx.save();
     // bctx.globalAlpha = 0.9;
     bctx.drawImage(buffer, 0, 0);
@@ -908,6 +964,7 @@ var
     text('START GAME', 14, 100, 2, aFrames);
     glitch(buffer);
   },
+
   updateGameOver = function updateGameOver() {
     bctx.save();
     bctx.setTransform(2, 0, 0, 2, 0, 0);
@@ -966,26 +1023,6 @@ var
     updateLoop();
   },
 
-  getCode = function getCode(event) {
-    return event.pageX ? SHOOT : event.keyCode || event.which;
-  },
-
-  setCommand = function setCommand(event, apply, code, command) {
-    apply   = APPLY_TYPES.indexOf(event.type) !== -1;
-    code    = getCode(event);
-    command = applied[code]^apply && commands[code];
-
-    if (!command) {
-      return;
-    }
-
-    player.cmd.push(command, apply, code);
-
-    applied[code] = apply;
-
-    event.preventDefault();
-  },
-
   createImage = function createImage(src, image) {
     image     = new win.Image();
     image.src = src;
@@ -1033,20 +1070,6 @@ var
     return canvas;
   },
 
-  /**
-   * @param {Event} event
-   */
-  onmousemove = function onmousemove(event) {
-    mouseCoords[0] = Math.floor((event.pageX - main.offsetLeft)  / STAGE_SCALE) - offsetX;
-    mouseCoords[1] = Math.floor((event.pageY - main.offsetTop)   / STAGE_SCALE) - offsetY;
-  },
-
-  onclick = function onclick() {
-    if (screen !== 1) {
-      setScreen(1);
-    }
-  },
-
   init = function init(cctx, cursorImg, len) {
     // Set images created by img.js
     len = win.img.length;
@@ -1081,6 +1104,12 @@ var
       updateIntro,
       updateGame,
       updateGameOver
+    ];
+
+    initializers = [
+      initIntro,
+      initGame,
+      initGameOver
     ];
 
     explosionCfg = createEntityConfig(
@@ -1131,20 +1160,13 @@ var
     );
 
     playerCfg.img = createPlayerSprites(playerCfg);
-    // player        = createEntity([MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2], playerCfg);
-    // player.movs   = [];
-    // player.mov    = [0, 0];
 
+    win.onmousemove = setMouseCoords;
+    main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
     abcImage        = images[1];
     tileset         = images[7];
-    win.onclick     = onclick;
-    win.onmousemove = onmousemove;
-    main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = setCommand;
 
-    // bctx.fillStyle = '#000';
-    bctx.fillRect(0, 0, WIDTH, HEIGHT);
     setScreen(screen);
-
     startLoop();
   };
 
