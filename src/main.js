@@ -730,7 +730,7 @@ var
       currentAmmoAmount += 5;
       explode(entity);
       // make the canvas wobble:
-      shakeDuration = 10;
+      shakeDuration += 20;
     }
   },
 
