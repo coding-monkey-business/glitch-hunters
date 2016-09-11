@@ -440,8 +440,8 @@ describe('main', function () {
     });
 
     it('should define its z and dZ', function () {
-      expect(this.bullet.z).toBe(8);
-      expect(this.bullet.dZ).toBeCloseTo(0.843, 2);
+      expect(this.bullet.z).toBe(7);
+      expect(this.bullet.dZ).toBeCloseTo(0.814, 2);
     });
   });
 

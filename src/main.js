@@ -479,6 +479,10 @@ var
     }
 
     len = entities.length;
+    x   = entities.indexOf(player);
+
+    entities[x] = entities[0];
+    entities[0] = player;
 
     while (len--) {
       drawEntity(entities[len], isAnimationFrame);
@@ -637,6 +641,15 @@ var
     add(player.acc, div(norm(sum(zero(player.mov), player.movs)), 2));
   },
 
+  updateEntityDirection = function updateEntityDirection(entity) {
+    // Set direction of entities, to draw them rigth.
+    if (entity === player) {
+      norm(sub(set(player.dir, mouseCoords), player.pos));
+    } else {
+      norm(set(entity.dir, entity.spd));
+    }
+  },
+
   shoot = function shoot(apply, bulletSpd, bullet) {
     if (!apply || !currentAmmoAmount) {
       return;
@@ -644,10 +657,13 @@ var
 
     currentAmmoAmount--;
 
-    bulletSpd     = mul(player.dir.slice(), 3.6);
+    bulletSpd     = mul(player.dir.slice(), 4);
     bullet        = createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
-    bullet.z      = 8;
+    updateEntityDirection(bullet);
+
+    bullet.z      = 7;
     bullet.dZ     = bullet.z * len(bulletSpd) / dist(mouseCoords, bullet.pos);
+
   },
 
   teleport = function teleport(apply, code, finished, direction, pos) {
@@ -786,8 +802,11 @@ var
     entity.spd[axis] = axisSpd;
   },
 
-  isClose = function isClose(bulletPos, entityPos) {
-    return dist(bulletPos, entityPos) < 5;
+  isClose = function isClose(bulletPos, entity, pos) {
+    pos     = entity.pos.slice();
+    pos[1] -= entity.cfg.hSize;
+
+    return dist(bulletPos, pos) < entity.cfg.hSize;
   },
 
   explode = function explode(entity) {
@@ -833,7 +852,7 @@ var
       len = entities.length;
 
       while (len--) {
-        if (player !== entities[len] && entity !== entities[len] && entities[len].hp > 0 && isClose(entity.pos, entities[len].pos)) {
+        if (player !== entities[len] && entity !== entities[len] && entities[len].hp > 0 && isClose(entity.pos, entities[len])) {
           add(entities[len].spd, mul(entity.dir.slice(), 10));
           damage(entities[len], entity);
           return explode(entity);
@@ -875,12 +894,6 @@ var
       pos[0] -= spd[0];
     }
 
-    // Set direction of entities, to draw them rigth.
-    if (entity === player) {
-      norm(sub(set(player.dir, mouseCoords), player.pos));
-    } else {
-      norm(set(entity.dir, entity.spd));
-    }
   },
 
   updateEntityCounter = function updateEntityCounter(entity) {
@@ -927,6 +940,7 @@ var
 
     updateEntityDecision(entity);
     updateEntityPosition(entity);
+    updateEntityDirection(entity);
   },
 
   drawUI = function drawUI() {
