@@ -33,6 +33,7 @@ var
     HTML += createHelpItem('v - debug');
     HTML += createHelpItem('b - break');
     HTML += createHelpItem('m - show map');
+    HTML += createHelpItem('n - explosion');
 
     for (message in logged) {
       HTML += createHelpItem(message);

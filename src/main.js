@@ -72,6 +72,7 @@ var
   playerCfg,
   bulletCfg,
   monsterCfg,
+  explosionCfg,
   updater,
   tileset,
   abcImage,
@@ -391,7 +392,7 @@ var
         bctx.transform(1, 0, 0, -1, -3, 0);
       }
       bctx.drawImage(
-        images[5],
+        images[6],
         0,
         -3
       );
@@ -725,10 +726,14 @@ var
     setEntityState(entity, 'exploding', 12, removeEntity.bind(0, entity));
   },
 
-  damage = function damage (entity) {
+  damage = function damage (entity, explosion) {
     if ((entity.hp -= 5) <= 0) {
       currentAmmoAmount += 5;
+      explosion = createEntity(entity.pos.slice(), explosionCfg);
+      setEntityState(explosion, 'exploding', 20, removeEntity.bind(0, explosion));
+
       explode(entity);
+
       // make the canvas wobble:
       shakeDuration += 20;
     }
@@ -854,10 +859,10 @@ var
     bctx.drawImage(buffer, 0, 0);
     bctx.setTransform(4, 0, 0, 4, 0, 0);
     starField();
-    bctx.drawImage(images[7], 0, 18);
-    bctx.drawImage(images[8], 30, 0);
+    bctx.drawImage(images[8], 0, 18);
+    bctx.drawImage(images[9], 30, 0);
     bctx.setTransform(3, 0, 0, 3, 0, 0);
-    bctx.drawImage(images[9], 4, 4);
+    bctx.drawImage(images[10], 4, 4);
     bctx.restore();
     text('START GAME', 14, 100, 2, aFrames);
     glitch(buffer);
@@ -1037,9 +1042,16 @@ var
       updateGameOver
     ];
 
+    explosionCfg = createEntityConfig(
+      images[3],
+      [['idling', 5]],
+      {
+        'size': 32
+      }
+    );
 
     monsterCfg = createEntityConfig(
-      images[3],
+      images[4],
       [
         ['idling', 6],
         ['moving', 6]
@@ -1061,7 +1073,7 @@ var
     );
 
     playerCfg = createEntityConfig(
-      images[4],
+      images[5],
       [
         ['idling', 6],
         ['moving'],
@@ -1078,7 +1090,7 @@ var
     player.mov    = [0, 0];
 
     abcImage        = images[1];
-    tileset         = images[6];
+    tileset         = images[7];
     win.onclick     = onclick;
     win.onmousemove = onmousemove;
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = setCommand;
@@ -1100,6 +1112,7 @@ if (DEBUG) {
     B   = 66,
     C   = 67,
     M   = 77,
+    N   = 78,
     V   = 86,
     X   = 88,
 
@@ -1156,6 +1169,11 @@ if (DEBUG) {
           //
           if (code === X) {
             createMonster(mouseCoords);
+          }
+
+          if (code === N) {
+            var explosion = createEntity(mouseCoords, explosionCfg);
+            setEntityState(explosion, 'idling', 20, removeEntity.bind(0, explosion));
           }
 
           if (code === M) {
