@@ -44,6 +44,7 @@ var
     '65' : VEC_UNIT[2], // a
     '87' : VEC_UNIT[3]  // w
   },
+  ENEMY_ENGAGEMENT_DISTANCE = 150,
 
   APPLY_TYPES         = ['keydown', 'mousedown'],
   ANIMATION_TIME_UNIT = 80,
@@ -55,11 +56,11 @@ var
   ZERO_LIMIT          = 0.05,
   SHOOT               = 1,
   STAGE_SCALE         = 3,
-
   offsetX             = 0,
   offsetY             = 0,
 
-  currentAmmoAmount   = 100,
+  DEFAULT_AMMO_AMOUNT = 100,
+  currentAmmoAmount   = DEFAULT_AMMO_AMOUNT,
   mctx,
   bctx,
   main,
@@ -207,9 +208,9 @@ var
    * @param {Number} color base color (or base tile) of this room
    * @param {Number} iterationsLeft safety feature to prevent stack issues
    */
-  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, circular, sizeX, sizeY, i, j, xi, yj, x, y, m, n) {
+  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, totalIterations, circular, sizeX, sizeY, i, j, xi, yj, x, y, m, n, totalTiles) {
     if (w * h > 3) { // single tile wide rooms are stupid
-      i = 0;
+      totalTiles = i = 0;
 
       // center must not be outside of our map:
       if (xc < 0 || xc > sizeX || yc < 0 || yc > sizeY) {
@@ -238,9 +239,11 @@ var
               if (circular) {
                 if (dist([xc, yc], [xi, y + j]) < (w / 2)) {
                   arr[xi][y + j] = arr[xi][y + j] || color;
+                  totalTiles++;
                 }
               } else {
                 arr[xi][y + j] = arr[xi][y + j] || color;
+                totalTiles++;
               }
             }
           } catch (e) {
@@ -252,7 +255,7 @@ var
       }
 
 
-      if (w > 2 && h > 2) {
+      if (totalTiles > 9 && totalIterations !== iterationsLeft) {
         spawnPositions.push([xc * TILESIZE_X, yc * TILESIZE_X]);
       }
 
@@ -271,6 +274,7 @@ var
             xi,
             1,
             iterationsLeft - 1,
+            totalIterations,
             true,
             sizeX,
             sizeY
@@ -303,7 +307,7 @@ var
     }
 
     //create center room
-    createRoom(arr, sizeX >> 1, sizeY >> 1, 9, 9, 1, 3, true, sizeX, sizeY);
+    createRoom(arr, sizeX >> 1, sizeY >> 1, 9, 9, 1, 3, 3, true, sizeX, sizeY);
     return arr;
   },
 
@@ -321,6 +325,10 @@ var
           4
         );
       }
+    }
+
+    if (entity.hp) {
+      bctx.fillText(entity.hp, entity.pos[0] - TILESIZE_X/2, entity.pos[1] - TILESIZE_X);
     }
 
     bctx.beginPath();
@@ -379,7 +387,7 @@ var
       bctx.rotate(rad(sub(player.pos.slice(), mouseCoords)) + Math.PI);
       // rifle should not change hands & stay on one side
       if (entity.dir[0] < 0) {
-        bctx.transform(1, 0, 0, -1, -3, 0)
+        bctx.transform(1, 0, 0, -1, -3, 0);
       }
       bctx.drawImage(
         images[5],
@@ -485,6 +493,11 @@ var
           data[i] = data[i-4];
           break;
         }
+        // TODO
+        // case 0: {
+        //   data[i] = Math.round(data[i] * (frames%255)/255);
+        //   break;
+        // }
         case 2: {
           data[i] = data[i-8];
           break;
@@ -522,9 +535,11 @@ var
    * renders the title starfield effect
    * can be thrown away if we need the additional bytes.
    */
-  starField = function starField(i, f, z) {
+  starField = function starField(i, f, z, width, height) {
     bctx.fillStyle = '#fff';
-    i = field.length;
+    i      = field.length;
+    width  = WIDTH / 4;
+    height = HEIGHT / 4;
 
     while (i--) {
       f = field[i];
@@ -534,8 +549,8 @@ var
       }
 
       bctx.fillRect(
-        WIDTH  / 1.2 + f[0] * z * WIDTH,
-        HEIGHT / 2.5 + f[1] * z * HEIGHT,
+        width  / 1.2 + f[0] * z * width,
+        height / 2.5 + f[1] * z * height,
         z,
         f[2] -= (z * (i%3 + 1) * 0.01)
       );
@@ -581,16 +596,101 @@ var
     updater = fn;
   },
 
+  /**
+   * resets entitiy list, spawnpositions, health and ammo
+   * creates a new map with monsters
+   */
+  createLevel = function createLevel (/*difficulty*/) {
+    entities          = [player];
+    spawnPositions    = [];
+    player.hp         = playerCfg.hp;
+    currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
+    map2DArray        = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
+    spawnPositions.forEach(createMonster);
+  },
+
+  accelerate = function accelerate(apply, code) {
+    sub(player.acc, player.mov);
+
+    if (apply) {
+      player.movs.push(DIRECTIONS[code]);
+    } else {
+      remove(player.movs, DIRECTIONS[code]);
+    }
+
+    add(player.acc, div(norm(sum(zero(player.mov), player.movs)), 2));
+  },
+
+  shoot = function shoot(apply, bulletSpd) {
+    if (!apply || !currentAmmoAmount) {
+      return;
+    }
+
+
+    currentAmmoAmount--;
+    bulletSpd = mul(player.dir.slice(), 3.6);
+
+    createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
+  },
+
+  teleport = function teleport(apply, code, finished, direction, pos) {
+    direction = direction || getAccDirection(player);
+    apply     = direction && apply;
+
+    if (!apply) {
+      return;
+    }
+
+    pos = player.pos;
+
+    if (finished) {
+      pos[0] += direction[0] * 40;
+      pos[1] += direction[1] * 40;
+    } else {
+      setEntityState(player, 'tping', 12, teleport.bind(0, 1, 0, 1, direction));
+    }
+  },
+
+  setCommands = function setCommands(keyCode) {
+    for (keyCode in DIRECTIONS) {
+      commands[keyCode] = accelerate;
+    }
+
+    commands[SPACE] = teleport;
+    commands[SHOOT] = shoot;
+  },
+
+  setScreen = function setScreen(newScreen) {
+    screen = newScreen;
+
+    if (screen === 1) {
+      createLevel();
+      setCommands();
+    }
+
+    setUpdater(updaters[screen]);
+  },
+
+  gameOver = function gameOver() {
+    setScreen(2);
+  },
   updateEntityDecision = function updateEntityDecision(entity, route) {
     if (entity.target) {
-      route = aStar(
-        getTilesIndex(entity.pos),
-        getTilesIndex(entity.target.pos),
-        map2DArray,
-        {
-          'range': 1
-        }
-      );
+      // glitches shouldn't engage the player if he's too far away
+      if (dist(entity.pos, entity.target.pos) > ENEMY_ENGAGEMENT_DISTANCE) {
+        entity.acc[0] = 0;
+        entity.acc[1] = 0;
+        route = null;
+      } else {
+        route = aStar(
+          getTilesIndex(entity.pos),
+          getTilesIndex(entity.target.pos),
+          map2DArray,
+          {
+            'range': 1
+          }
+        );
+      }
 
       if (route && route[0]) {
         entity.acc[0] += ((route[0][0] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[0]);
@@ -598,9 +698,9 @@ var
 
         norm(entity.acc);
 
-        if (DEBUG) {
-          entity.route = route;
-        }
+      }
+      if (DEBUG) {
+        entity.route = route;
       }
     }
   },
@@ -624,6 +724,13 @@ var
     setEntityState(entity, 'exploding', 12, removeEntity.bind(0, entity));
   },
 
+  damage = function damage (entity) {
+    if ((entity.hp -= 5) <= 0) {
+      currentAmmoAmount += 5;
+      explode(entity);
+    }
+  },
+
   updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, tilesIndex, len) {
     pos   = entity.pos;
     spd   = entity.spd;
@@ -642,8 +749,15 @@ var
       while (len--) {
         if (player !== entities[len] && entities[len].hp && isClose(entity.pos, entities[len].pos)) {
           add(entities[len].spd, mul(entity.dir.slice(), 10));
+          damage(entities[len]);
           return explode(entity);
         }
+      }
+    }
+
+    if (entity !== player && isClose(player.pos, entity.pos)) {
+      if (--player.hp <= 0) {
+        gameOver();
       }
     }
 
@@ -680,24 +794,6 @@ var
     }
   },
 
-  teleport = function teleport(apply, code, finished, direction, pos) {
-    direction = direction || getAccDirection(player);
-    apply     = direction && apply;
-
-    if (!apply) {
-      return;
-    }
-
-    pos = player.pos;
-
-    if (finished) {
-      pos[0] += direction[0] * 40;
-      pos[1] += direction[1] * 40;
-    } else {
-      setEntityState(player, 'tping', 12, teleport.bind(0, 1, 0, 1, direction));
-    }
-  },
-
   updateEntityCounter = function updateEntityCounter(entity) {
     if (entity.cnt) {
       entity.cnt--;
@@ -730,6 +826,13 @@ var
     updateEntityPosition(entity);
   },
 
+  drawUI = function drawUI() {
+    bctx.save();
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    text('AMMO:' + currentAmmoAmount, 5, 5, 0, aFrames);
+    bctx.restore();
+  },
+
   updateGame = function updateGame(isAnimationFrame, len) {
     len = entities.length;
 
@@ -739,20 +842,15 @@ var
 
     drawMap(isAnimationFrame);
     drawUI();
-  },
-
-  drawUI = function drawUI() {
-    bctx.save();
-    bctx.setTransform(1, 0, 0, 1, 0, 0);
-    text('AMMO:' + currentAmmoAmount, 5, 5, 0, aFrames)
-    bctx.restore();
-
+    glitch(buffer);
   },
 
   updateIntro = function updateIntro() {
-    starField();
     bctx.save();
+    // bctx.globalAlpha = 0.9;
+    bctx.drawImage(buffer, 0, 0);
     bctx.setTransform(4, 0, 0, 4, 0, 0);
+    starField();
     bctx.drawImage(images[7], 0, 18);
     bctx.drawImage(images[8], 30, 0);
     bctx.setTransform(3, 0, 0, 3, 0, 0);
@@ -761,7 +859,13 @@ var
     text('START GAME', 14, 100, 2, aFrames);
     glitch(buffer);
   },
-
+  updateGameOver = function updateGameOver() {
+    bctx.save();
+    bctx.setTransform(2, 0, 0, 2, 0, 0);
+    text('GAME OVER', 20, 20);
+    bctx.restore();
+    glitch(buffer);
+  },
   /**
    * rendering loop
    */
@@ -795,8 +899,8 @@ var
 
 
       bctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
-      bctx.fillStyle = '#000';
-      bctx.fillRect(0, 0, WIDTH, HEIGHT);
+      // bctx.fillStyle = '#000';
+      // bctx.fillRect(0, 0, WIDTH, HEIGHT);
 
 
       updater(isAnimationFrame);
@@ -836,39 +940,6 @@ var
     image.src = src;
 
     return image;
-  },
-
-  accelerate = function accelerate(apply, code) {
-    sub(player.acc, player.mov);
-
-    if (apply) {
-      player.movs.push(DIRECTIONS[code]);
-    } else {
-      remove(player.movs, DIRECTIONS[code]);
-    }
-
-    add(player.acc, div(norm(sum(zero(player.mov), player.movs)), 2));
-  },
-
-  shoot = function shoot(apply, bulletSpd) {
-    if (!apply || !currentAmmoAmount) {
-      return;
-    }
-
-
-    currentAmmoAmount--;
-    bulletSpd = mul(player.dir.slice(), 3.6);
-
-    createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
-  },
-
-  setCommands = function setCommands(keyCode) {
-    for (keyCode in DIRECTIONS) {
-      commands[keyCode] = accelerate;
-    }
-
-    commands[SPACE] = teleport;
-    commands[SHOOT] = shoot;
   },
 
   /**
@@ -911,16 +982,6 @@ var
     return canvas;
   },
 
-  setScreen = function setScreen(newScreen) {
-    screen = newScreen;
-
-    if (screen) {
-      setCommands();
-    }
-
-    setUpdater(updaters[screen]);
-  },
-
   /**
    * @param {Event} event
    */
@@ -930,7 +991,9 @@ var
   },
 
   onclick = function onclick() {
-    setScreen(1);
+    if (screen !== 1) {
+      setScreen(1);
+    }
   },
 
   init = function init(cctx, cursorImg, len) {
@@ -965,7 +1028,8 @@ var
     //
     updaters = [
       updateIntro,
-      updateGame
+      updateGame,
+      updateGameOver
     ];
 
 
@@ -988,10 +1052,6 @@ var
       }
     );
 
-    //
-    // (MAP_SIZE_X * TILESIZE_X) >> 1 ===> [160, 160]
-    // there should always be some room in the center
-    //
     playerCfg = createEntityConfig(
       images[4],
       [
@@ -1014,8 +1074,6 @@ var
     win.onclick     = onclick;
     win.onmousemove = onmousemove;
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = setCommand;
-
-    map2DArray = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
 
     setScreen(screen);
 

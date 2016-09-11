@@ -9,8 +9,12 @@
   getId,
   getTilesIndex,
   map2DArray : true,
+  mapGen,
+  MAP_SIZE_X,
+  MAP_SIZE_Y,
   player,
   reset,
+  removeEntity,
   set,
   setScreen,
   updater,
@@ -63,6 +67,9 @@ describe('main', function () {
         'scale' : function scale() {
         },
 
+        'rotate' : function rotate() {
+        },
+
         'beginPath' : function beginPath() {
         },
 
@@ -80,7 +87,9 @@ describe('main', function () {
 
         'fillRect' : function fillRect() {
         },
+        'fillText' : function fillText() {
 
+        },
         'translate' : function translate() {
         },
 
@@ -127,7 +136,7 @@ describe('main', function () {
         var
           i,
           j;
-
+        map2DArray = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
         for (i = 0; i < map2DArray.length; i++) {
           for (j = 0; j < map2DArray[i].length; j++) {
             map2DArray[i][j] = 1;
@@ -207,7 +216,7 @@ describe('main', function () {
         jasmine.arrayContaining([u, 2, 2, 2, u])
       ]));
     });
-    it('createRoom should create rooms', function () {
+    xit('createRoom should create rooms', function () {
       // TODO
     });
   });
@@ -233,7 +242,7 @@ describe('main', function () {
 
   describe('.entities', function () {
     it('should have the player', function () {
-      expect(entities.length).toBe(1);
+      expect(entities).toContain(player);
     });
   });
 
@@ -373,10 +382,17 @@ describe('main', function () {
       describe('with releasing (d) - right', function () {
         beforeEach(function () {
           window.onkeydown(this.createKeyUpEvent(RIGHT));
-
+          // entities = [player];
+          var i = entities.length;
+          while (i--) {
+            if (entities[i] !== player) {
+              removeEntity(entities[i]);
+            }
+          }
           this.update();
 
           this.curPos   = player.pos.slice();
+
           this.curDist  = dist(this.curPos, this.secondPos);
         });
 
