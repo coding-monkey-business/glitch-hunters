@@ -845,7 +845,7 @@ var
   splashDamage = function splashDamage(entity, i) {
     i = entities.length;
     while (i--) {
-      if (entities[i].hp && dist(entities[i].pos, entity.pos) < 16) {
+      if (entities[i] !== entity && entities[i].hp > 0 && dist(entities[i].pos, entity.pos) < 16) {
         damage(entities[i], entity);
       }
     }
