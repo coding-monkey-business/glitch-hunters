@@ -1,4 +1,11 @@
 COMMIT  |     SIZE |     DIFF | MESSAGE                                                      | OUTPUT
+bf8ce19 |    11121 |       33 | tp: uses mouseCoords and check if tile is available          | # dist/index.html.zip <=== 10.86 KB (11121 B)
+db6f110 |    11088 |       19 | redesign: use tile() for querying field values               | # dist/index.html.zip <=== 10.83 KB (11088 B)
+4f6a4b8 |    11069 |      244 | added ammo pickup                                            | # dist/index.html.zip <=== 10.81 KB (11069 B)
+be611f3 |    10825 |       21 | rendering: adds STAGE_STICKYNESS                             | # dist/index.html.zip <=== 10.57 KB (10825 B)
+d6c0909 |    10804 |        8 | tp: skip drawing weapon                                      | # dist/index.html.zip <=== 10.55 KB (10804 B)
+1dd98a7 |    10796 |      146 | added teleportation animation                                | # dist/index.html.zip <=== 10.54 KB (10796 B)
+6686d0d |    10650 |        0 | doc: updates statistics.csv                                  | # dist/index.html.zip <=== 10.4 KB (10650 B)
 020314b |    10650 |      -45 | tp: removes unnecessary fn .getAccDirection()                | # dist/index.html.zip <=== 10.4 KB (10650 B)
 71d14ed |    10695 |       -1 | redesign: adds screenswitcher                                | # dist/index.html.zip <=== 10.44 KB (10695 B)
 530913f |    10696 |       50 | tp: simple cooldown mechanic                                 | # dist/index.html.zip <=== 10.45 KB (10696 B)
