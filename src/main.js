@@ -1250,7 +1250,7 @@ var
     return canvas;
   },
 
-  init = function init(cctx, cursorImg, len, audio) {
+  init = function init(cctx, cursorImg, len) {
     // Set images created by img.js
     len = win.img.length;
 
