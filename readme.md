@@ -1,4 +1,4 @@
-# glitch-hunter
+# glitch-hunters
 > an entry for js13k.  
 > [![js13k][js13k-image]][js13k-url]
 
