@@ -36,6 +36,7 @@ var
     HTML += createHelpItem('g - game over');
     HTML += createHelpItem('m - show map');
     HTML += createHelpItem('n - explosion');
+    HTML += createHelpItem('k - kill everything');
 
     for (message in logged) {
       HTML += createHelpItem(message);

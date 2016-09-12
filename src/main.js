@@ -2,6 +2,7 @@
   DEBUG,
   VEC_UNIT,
   aStar,
+  getNeighborNodes,
   add,
   dist,
   div,
@@ -67,6 +68,13 @@ var
     '87' : VEC_UNIT[3]  // w
   },
 
+  enemyCount,
+  PLAYER = 1,
+  MONSTER = 2,
+  EXPLOSION = 3,
+  BULLET = 4,
+  score        = 0,
+  currentLevel = 0,
   mctx,
   bctx,
   main,
@@ -91,10 +99,6 @@ var
 
   remove = function remove(arr, item) {
     arr.splice(arr.indexOf(item), 1);
-  },
-
-  removeEntity = function removeEntity(entity) {
-    remove(entities, entity);
   },
 
   createCanvas = function createCanvas(width, height, canvas) {
@@ -174,6 +178,9 @@ var
       'cmd'   : []
     };
 
+    if (cfg.type === MONSTER) {
+      enemyCount++;
+    }
     setEntityState(entity, 'idling');
     entities.push(entity);
 
@@ -616,22 +623,53 @@ var
   },
 
   /**
-   * resets entitiy list, spawnpositions, health and ammo
+   * resets entitiy list, spawnPositions, health and ammo
    * creates a new map with monsters
    */
-  createLevel = function createLevel (/*difficulty*/) {
+  createLevel = function createLevel (difficulty, tmp) {
     entities      = [];
     player        = createEntity(startingPositions, playerCfg);
     player.movs   = [];
     player.mov    = [0, 0];
 
+    enemyCount = 0;
     spawnPositions    = [];
     player.hp         = playerCfg.hp;
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
     map2DArray        = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
 
+    if (difficulty) {
+      tmp = [];
+      spawnPositions.forEach(function (position) {
+        tmp = tmp.concat(getNeighborNodes(
+          [
+            // pixels to tiles:
+            position[0] / TILESIZE_X,
+            position[1] / TILESIZE_X
+          ],
+          map2DArray,
+          1
+        ).slice(0, difficulty));
+      });
+      // tiles to pixels:
+      tmp.forEach(function (a) {
+        a[0] *= TILESIZE_X;
+        a[1] *= TILESIZE_X;
+      });
+      spawnPositions = spawnPositions.concat(tmp);
+    }
+
     spawnPositions.forEach(createMonster);
   },
+
+
+  removeEntity = function removeEntity(entity) {
+    remove(entities, entity);
+    if (entity.cfg.type === MONSTER && !--enemyCount) {
+      createLevel(++currentLevel);
+    }
+  },
+
 
   accelerate = function accelerate(apply, code) {
     sub(player.acc, player.mov);
@@ -825,6 +863,7 @@ var
     // if (targetEntity !== player) {
     //   return;
     // }
+    score += sourceEntity.dmg;
     if (targetEntity.hp && (targetEntity.hp -= sourceEntity.dmg) <= 0) {
       explode(targetEntity);
       explosion = createEntity(targetEntity.pos.slice(), explosionCfg);
@@ -987,6 +1026,7 @@ var
     bctx.save();
     bctx.setTransform(2, 0, 0, 2, 0, 0);
     text('GAME OVER', 20, 20);
+    text('' + score + ' POINTS', 20, 30);
     bctx.restore();
     glitch(buffer);
   },
@@ -1134,6 +1174,7 @@ var
       images[3],
       [['idling', 6]],
       {
+        'type'     : EXPLOSION,
         'size'     : 32,
         'hp'       : Infinity,
         'dmg'      : 2
@@ -1147,6 +1188,7 @@ var
         ['moving', 6]
       ],
       {
+        'type'     : MONSTER,
         'friction' : 0.5,
         'hp'       : 20,
         'dmg'      : 2
@@ -1157,6 +1199,7 @@ var
       images[0],
       [['exploding']],
       {
+        'type'      : BULLET,
         'friction'  : 1,
         'rotating'  : 1,
         'fragile'   : 1,
@@ -1173,7 +1216,8 @@ var
         ['tping']
       ],
       {
-        'hp' : 100
+        'type' : PLAYER,
+        'hp'   : 100
       }
     );
 
@@ -1198,6 +1242,7 @@ if (DEBUG) {
     B   = 66,
     C   = 67,
     G   = 71,
+    K   = 75,
     M   = 77,
     N   = 78,
     V   = 86,
@@ -1269,6 +1314,14 @@ if (DEBUG) {
 
           if (code === G) {
             gameOver();
+          }
+
+          if (code === K) {
+            entities.filter(function (entity) {
+              return entity.cfg.type === MONSTER;
+            }).forEach(function (entity) {
+              removeEntity(entity);
+            });
           }
         };
 
