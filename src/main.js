@@ -646,6 +646,7 @@ var
     player        = createEntity(startingPositions, playerCfg);
     player.movs   = [];
     player.mov    = [0, 0];
+    player.tpCD   = 0;
 
     enemyCount        = totalTileCount = totalGlitchedTiles = 0;
     spawnPositions    = [];
@@ -752,7 +753,10 @@ var
       pos[0] += direction[0] * 40;
       pos[1] += direction[1] * 40;
     } else {
-      setEntityState(player, 'tping', 12, teleport.bind(0, 1, 0, 1, direction));
+      if (!player.tpCD) {
+        player.tpCD = 100;
+        setEntityState(player, 'tping', 12, teleport.bind(0, 1, 0, 1, direction));
+      }
     }
   },
 
@@ -1026,11 +1030,21 @@ var
     updateEntityDirection(entity);
   },
 
+  updatePlayerSpecifics = function updatePlayerSpecifics() {
+    player.tpCD = Math.max(0, --player.tpCD);
+  },
+
   drawUI = function drawUI() {
     bctx.save();
     bctx.setTransform(1, 0, 0, 1, 0, 0);
-    text('AMMO:' + currentAmmoAmount, 5, 5, 0);
-    text('GLITCHINESS:' + Math.floor(totalGlitchedTiles / totalTileCount * 100) + '%', 5, 12, 0);
+
+    text('GLITCHINESS:' + Math.floor(totalGlitchedTiles / totalTileCount * 100) + '%', 4, 4);
+
+    if (!player.tpCD) {
+      text('BLINK - SPACE' , 200, 230);
+    }
+
+    text('AMMO:' + currentAmmoAmount, 4, 230);
     bctx.restore();
   },
 
@@ -1041,9 +1055,11 @@ var
       updateEntity(entities[len]);
     }
 
+    updatePlayerSpecifics();
+
     drawMap(isAnimationFrame);
-    drawUI();
     glitch(buffer);
+    drawUI();
   },
 
   updateIntro = function updateIntro() {
