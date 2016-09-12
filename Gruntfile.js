@@ -6,9 +6,18 @@ var
   chalk     = require('chalk'),
   filesize  = require('filesize'),
 
-  ALL_JS = ['*.js', 'src/**/*.js', 'test/**/*.js'],
+  ALL_JS = ['*.js', 'src/**/*.js', 'test/**/*.js' ,'!src/jsfxr.js'],
 
   TASK_CONFIG = {
+    'mkdir' : {
+      'dist': {
+        'options': {
+          'mode'    : 0755,
+          'create'  : ['dist']
+        }
+      }
+    },
+
     'clean' : {
       'build' : 'build/**/*',
       'dist'  : 'dist/**/*'
@@ -65,7 +74,7 @@ var
       'img' : {
         'expand'  : true,
         'cwd'     : 'src',
-        'src'     : ['img.js', 'vec.js', 'a-star.js'],
+        'src'     : ['img.js', 'vec.js', 'a-star.js', 'jsfxr.js'],
         'dest'    : 'build/'
       }
     },
@@ -86,7 +95,7 @@ var
 
       'build': {
         'files': {
-          'build/all.js'  : ['build/img.js', 'build/vec.js', 'build/a-star.js', 'build/main.js']
+          'build/all.js'  : ['build/img.js', 'build/vec.js', 'build/a-star.js', 'build/jsfxr.js', 'build/main.js']
         }
       }
     },
@@ -143,6 +152,7 @@ var
           'expect'    : true,
           'jasmine'   : true,
           'window'    : true,
+          'Audio'     : true,
           'document'  : true
         },
         'curly'       : true,
@@ -156,6 +166,7 @@ var
         'quotmark'    : 'single',
         'undef'       : true,
         'debug'       : true,
+        'elision'     : true,
         'indent'      : 2
       },
 
@@ -237,9 +248,7 @@ var
     },
 
     'exec': {
-      // advzip doesn't create folders?
-      // grunt.file.mkdir is too much overhead to create that folder.
-      'advzip': 'mkdir dist & advzip -a dist/index.html.zip build/index.html -4 -i 100', // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
+      'advzip': 'advzip -a dist/index.html.zip build/index.html -4 -i 100', // requires 'AdvanceCOMP' from http://www.advancemame.it/download, also available as AUR package
       'zopflipng': require('zopflipng-bin') + ' --lossy_transparent -m -y --prefix=""' + path.resolve('build/*.png')
     }
   },
@@ -291,6 +300,7 @@ var
 
     'build' : [
       'clean',
+      'mkdir',
       'compile:js',
       'minify:js',
       'compile:html',
@@ -448,6 +458,7 @@ var
         grunt.loadNpmTasks('grunt-pngmin');
         grunt.loadNpmTasks('grunt-replace');
         grunt.loadNpmTasks('grunt-zopfli');
+        grunt.loadNpmTasks('grunt-mkdir');
 
         registerTasks(TASKS);
       };

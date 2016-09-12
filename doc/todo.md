@@ -23,6 +23,7 @@
 - glitch power up possibilities
 - story / intro
 - level progress
+- jsfxr license should be preserved i guess
 
 # Random extra ideas
 - glich portal (/ huge-glitch) as enemy, which spawns normal glichez

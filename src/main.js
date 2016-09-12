@@ -2,6 +2,7 @@
   DEBUG,
   VEC_UNIT,
   aStar,
+  getNeighborNodes,
   add,
   dist,
   div,
@@ -14,7 +15,8 @@
   sub,
   sum,
   zero,
-  drawDebugMap
+  drawDebugMap,
+  jsfxr
 */
 
 /* exported
@@ -22,19 +24,23 @@
 */
 
 var
-  APPLY_TYPES         = ['keydown', 'mousedown'],
-  ANIMATION_TIME_UNIT = 80,
-  TIME_UNIT           = 20,
-  MAP_SIZE_X          = 32,
-  MAP_SIZE_Y          = 22,
-  TILESIZE_X          = 16, // everything is square right now
-  SPACE               = 32,
-  ZERO_LIMIT          = 0.05,
-  SHOOT               = 1,
-  STAGE_SCALE         = 3,
-
+  APPLY_TYPES               = ['keydown', 'mousedown'],
+  ANIMATION_TIME_UNIT       = 80,
+  TIME_UNIT                 = 20,
+  MAP_SIZE_X                = 32,
+  MAP_SIZE_Y                = 22,
+  TILESIZE_X                = 16, // everything is square right now
+  SPACE                     = 32,
+  ZERO_LIMIT                = 0.05,
+  SHOOT                     = 1,
+  STAGE_SCALE               = 3,
   DEFAULT_AMMO_AMOUNT       = 100,
   ENEMY_ENGAGEMENT_DISTANCE = 150,
+  PLAYER                    = 1,
+  MONSTER                   = 2,
+  EXPLOSION                 = 3,
+  BULLET                    = 4,
+
 
   win               = window,
   doc               = document,
@@ -44,10 +50,12 @@ var
   frames            = 0,
   aFrames           = 0,
   screen            = 0, // 0 =  title, 1 = game, etc
-  alphabet          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
+  alphabet          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-%',
   offsetX           = 0,
   offsetY           = 0,
   shakeDuration     = 0,
+  score             = 0,
+  currentLevel      = 1,
   currentAmmoAmount = DEFAULT_AMMO_AMOUNT,
 
   updaters          = [],
@@ -60,6 +68,7 @@ var
   spawnPositions    = [],
   startingPositions = [MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2],
   healthBarColors   = ['#ac3232','#df7126', '#99e550'],
+
   DIRECTIONS = {
     '68' : VEC_UNIT[0], // d
     '83' : VEC_UNIT[1], // s
@@ -67,6 +76,15 @@ var
     '87' : VEC_UNIT[3]  // w
   },
 
+  shootSfx = jsfxr([
+    3,,0.0847,0.5386,0.31,0.3093,,0.02,-0.0035,-0.4905,-0.6864,0.8999,
+    -0.3426,0.2932,-0.6135,-0.3311,-0.4232,,0.4883,0.0005,0.1197,0.749,
+    0.1926,0.79
+  ]),
+
+  totalTileCount,
+  totalGlitchedTiles,
+  enemyCount,
   mctx,
   bctx,
   main,
@@ -91,10 +109,6 @@ var
 
   remove = function remove(arr, item) {
     arr.splice(arr.indexOf(item), 1);
-  },
-
-  removeEntity = function removeEntity(entity) {
-    remove(entities, entity);
   },
 
   createCanvas = function createCanvas(width, height, canvas) {
@@ -174,6 +188,9 @@ var
       'cmd'   : []
     };
 
+    if (cfg.type === MONSTER) {
+      enemyCount++;
+    }
     setEntityState(entity, 'idling');
     entities.push(entity);
 
@@ -222,9 +239,9 @@ var
    * @param {Number} color base color (or base tile) of this room
    * @param {Number} iterationsLeft safety feature to prevent stack issues
    */
-  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, totalIterations, circular, sizeX, sizeY, i, j, xi, yj, x, y, m, n, totalTiles) {
+  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, totalIterations, circular, sizeX, sizeY, i, j, xi, yj, x, y, m, n, totalRoomTiles) {
     if (w * h > 3) { // single tile wide rooms are stupid
-      totalTiles = i = 0;
+      totalRoomTiles = i = 0;
 
       // center must not be outside of our map:
       if (xc < 0 || xc > sizeX || yc < 0 || yc > sizeY) {
@@ -238,7 +255,7 @@ var
       y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - h);
       if (w * h <= 9) {
         circular = false;
-        color = 6;
+        color = 2;
       }
 
       while (i/*++*/ < w && (xi = x + i) < sizeX - 1) {
@@ -253,11 +270,11 @@ var
               if (circular) {
                 if (dist([xc, yc], [xi, y + j]) < (w / 2)) {
                   arr[xi][y + j] = arr[xi][y + j] || color;
-                  totalTiles++;
+                  totalRoomTiles++;
                 }
               } else {
                 arr[xi][y + j] = arr[xi][y + j] || color;
-                totalTiles++;
+                totalRoomTiles++;
               }
             }
           } catch (e) {
@@ -269,10 +286,10 @@ var
       }
 
 
-      if (totalTiles > 9 && totalIterations !== iterationsLeft) {
+      if (totalRoomTiles > 9 && totalIterations !== iterationsLeft) {
         spawnPositions.push([xc * TILESIZE_X, yc * TILESIZE_X]);
       }
-
+      totalTileCount += totalRoomTiles;
       // spawn more rooms
       if (iterationsLeft) {
         i = 4;
@@ -438,7 +455,7 @@ var
 
     (opt_ctx || bctx).drawImage(
       tileset, //img
-      32, //sx
+      48, //sx
       9, //sy
       TILESIZE_X, //sw
       height, //sh
@@ -452,7 +469,7 @@ var
   drawField = function drawField(x, y, tileType, opt_ctx) {
     (opt_ctx || bctx).drawImage(
       tileset, //img
-      (tileType % 2) * TILESIZE_X, //sx
+      (tileType - 1) * TILESIZE_X, //sx
       TILESIZE_X, //sy
       TILESIZE_X, //sw
       TILESIZE_X, //sh
@@ -504,11 +521,12 @@ var
    * Just some color jittering (for now)
    * @param {Number} type e.g. JITTER
    */
-  glitch = function glitch(canvas, ctx, obj, data, i) {
+  glitch = function glitch(canvas, ctx, obj, data, i, glitchiness) {
     ctx  = canvas.getCtx();
     obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     data = obj.data;
     i    = data.length;
+    glitchiness = totalGlitchedTiles / totalTileCount;
 
     while (i--) {
       switch (i%4) {
@@ -516,11 +534,11 @@ var
           data[i] = data[i-4];
           break;
         }
-        // TODO
-        // case 0: {
-        //   data[i] = Math.round(data[i] * (frames%255)/255);
-        //   break;
-        // }
+        // TODO: unsure if this is a good idea
+        case 0: {
+          data[i] = data[i - (glitchiness * 4 | 0) * WIDTH];
+          break;
+        }
         case 2: {
           data[i] = data[i-8];
           break;
@@ -616,22 +634,64 @@ var
   },
 
   /**
-   * resets entitiy list, spawnpositions, health and ammo
+   * resets entitiy list, spawnPositions, health and ammo
    * creates a new map with monsters
    */
-  createLevel = function createLevel (/*difficulty*/) {
+  createLevel = function createLevel (difficulty, tmp) {
     entities      = [];
     player        = createEntity(startingPositions, playerCfg);
     player.movs   = [];
     player.mov    = [0, 0];
 
+    enemyCount        = totalTileCount = totalGlitchedTiles = 0;
     spawnPositions    = [];
     player.hp         = playerCfg.hp;
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
     map2DArray        = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
 
+    if (difficulty) {
+      tmp = [];
+      spawnPositions.forEach(function (position) {
+        tmp = tmp.concat(getNeighborNodes(
+          [
+            // pixels to tiles:
+            position[0] / TILESIZE_X,
+            position[1] / TILESIZE_X
+          ],
+          map2DArray,
+          1
+        ).slice(0, difficulty));
+      });
+      // tiles to pixels:
+      tmp.forEach(function (a) {
+        a[0] *= TILESIZE_X;
+        a[1] *= TILESIZE_X;
+      });
+      spawnPositions = spawnPositions.concat(tmp);
+    }
+
     spawnPositions.forEach(createMonster);
   },
+
+  setScreen = function setScreen(newScreen) {
+    //
+    // Remove all defined handlers.
+    //
+    screen = newScreen;
+
+    initializers[screen]();
+
+    updater = updaters[screen];
+  },
+
+  removeEntity = function removeEntity(entity) {
+    remove(entities, entity);
+
+    if (entity.cfg.type === MONSTER && !--enemyCount) {
+      setScreen(1);
+    }
+  },
+
 
   accelerate = function accelerate(apply, code) {
     sub(player.acc, player.mov);
@@ -658,6 +718,10 @@ var
     if (!apply || !currentAmmoAmount) {
       return;
     }
+
+    shootSfx.pause();
+    shootSfx.currentTime = 0;
+    shootSfx.play();
 
     currentAmmoAmount--;
 
@@ -697,17 +761,6 @@ var
     commands[SHOOT] = shoot;
   },
 
-  setScreen = function setScreen(newScreen) {
-    //
-    // Remove all defined handlers.
-    //
-    screen = newScreen;
-
-    initializers[screen]();
-
-    updater = updaters[screen];
-  },
-
   /**
    * @param {Event} event
    */
@@ -740,13 +793,25 @@ var
     event.preventDefault();
   },
 
-
+  //ugly copypaste ;/
   initIntro = function initIntro() {
-    inputHandler = setScreen.bind(0, 1);
+    inputHandler = function (event) {
+      if (event.type === 'mousedown') {
+        setScreen(1);
+      }
+    };
+  },
+
+  initGameInfo = function initGameInfo() {
+    inputHandler = function (event) {
+      if (event.type === 'mousedown') {
+        setScreen(2);
+      }
+    };
   },
 
   initGame = function initGame() {
-    createLevel();
+    createLevel(currentLevel++);
     setCommands();
     inputHandler = setCommand;
   },
@@ -761,7 +826,7 @@ var
   },
 
   gameOver = function gameOver() {
-    setScreen(2);
+    setScreen(3);
   },
 
   updateEntityDecision = function updateEntityDecision(entity, route) {
@@ -825,13 +890,14 @@ var
     // if (targetEntity !== player) {
     //   return;
     // }
+    score += sourceEntity.dmg;
     if (targetEntity.hp && (targetEntity.hp -= sourceEntity.dmg) <= 0) {
       explode(targetEntity);
       explosion = createEntity(targetEntity.pos.slice(), explosionCfg);
       setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
 
       // make the canvas wobble:
-      shakeDuration = Math.min(shakeDuration + 20, 100);
+      shakeDuration = Math.min(shakeDuration + 20, 70);
 
     }
     if (player.hp <= 0) {
@@ -851,6 +917,14 @@ var
     setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
     add(pos, spd);
     tilesIndex = getTilesIndex(pos);
+
+    if (entity.cfg.type === MONSTER && Math.random() > 0.7 && frames % 5 === 0) {
+      if (map2DArray[tilesIndex[0]][tilesIndex[1]] !== 3) {
+        totalGlitchedTiles++;
+        map2DArray[tilesIndex[0]][tilesIndex[1]] = 3;
+      }
+    }
+
 
     if (cfg.fragile) {
       len = entities.length;
@@ -950,7 +1024,8 @@ var
   drawUI = function drawUI() {
     bctx.save();
     bctx.setTransform(1, 0, 0, 1, 0, 0);
-    text('AMMO:' + currentAmmoAmount, 5, 5, 0, aFrames);
+    text('AMMO:' + currentAmmoAmount, 5, 5, 0);
+    text('GLITCHINESS:' + Math.floor(totalGlitchedTiles / totalTileCount * 100) + '%', 5, 12, 0);
     bctx.restore();
   },
 
@@ -983,10 +1058,25 @@ var
     glitch(buffer);
   },
 
+  updateGameInfo = function updateGameInfo() {
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.fillRect(0, 0, WIDTH, HEIGHT);
+    if (currentLevel === 1) {
+      text('GLITCHMONSTERS ARE TRYING', 20, 20);
+      text('TO TAKE OVER THE WORLD!', 20, 30);
+      text('THEY LOOK LIKE THIS:', 20, 50);
+      //sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight
+      bctx.drawImage(monsterCfg.img, 0, 16, 16, 16, 200, 40, 32, 32);
+      text('SHOOT THEM!', 20, 70);
+    }
+    text('LEVEL ' + currentLevel, (WIDTH >> 1) - 28, HEIGHT>>1);
+  },
+
   updateGameOver = function updateGameOver() {
     bctx.save();
     bctx.setTransform(2, 0, 0, 2, 0, 0);
     text('GAME OVER', 20, 20);
+    text('' + score + ' POINTS', 20, 30);
     bctx.restore();
     glitch(buffer);
   },
@@ -1004,7 +1094,7 @@ var
       frame   = frames;
       aFrame  = aFrames;
 
-      if (screen === 1) { // map should move/keep the player centered
+      if (screen === 2) { // map should move/keep the player centered
         offsetX = Math.max(
           Math.min(
             0,
@@ -1088,7 +1178,7 @@ var
     return canvas;
   },
 
-  init = function init(cctx, cursorImg, len) {
+  init = function init(cctx, cursorImg, len, audio) {
     // Set images created by img.js
     len = win.img.length;
 
@@ -1120,12 +1210,14 @@ var
     //
     updaters = [
       updateIntro,
+      updateGameInfo,
       updateGame,
       updateGameOver
     ];
 
     initializers = [
       initIntro,
+      initGameInfo,
       initGame,
       initGameOver
     ];
@@ -1134,6 +1226,7 @@ var
       images[3],
       [['idling', 6]],
       {
+        'type'     : EXPLOSION,
         'size'     : 32,
         'hp'       : Infinity,
         'dmg'      : 2
@@ -1147,6 +1240,7 @@ var
         ['moving', 6]
       ],
       {
+        'type'     : MONSTER,
         'friction' : 0.5,
         'hp'       : 20,
         'dmg'      : 2
@@ -1157,6 +1251,7 @@ var
       images[0],
       [['exploding']],
       {
+        'type'      : BULLET,
         'friction'  : 1,
         'rotating'  : 1,
         'fragile'   : 1,
@@ -1173,7 +1268,8 @@ var
         ['tping']
       ],
       {
-        'hp' : 100
+        'type' : PLAYER,
+        'hp'   : 100
       }
     );
 
@@ -1183,6 +1279,10 @@ var
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
     abcImage        = images[1];
     tileset         = images[7];
+
+    audio = new Audio();
+    audio.src = shootSfx;
+    shootSfx = audio;
 
     setScreen(screen);
     startLoop();
@@ -1198,6 +1298,7 @@ if (DEBUG) {
     B   = 66,
     C   = 67,
     G   = 71,
+    K   = 75,
     M   = 77,
     N   = 78,
     V   = 86,
@@ -1269,6 +1370,14 @@ if (DEBUG) {
 
           if (code === G) {
             gameOver();
+          }
+
+          if (code === K) {
+            entities.filter(function (entity) {
+              return entity.cfg.type === MONSTER;
+            }).forEach(function (entity) {
+              removeEntity(entity);
+            });
           }
         };
 

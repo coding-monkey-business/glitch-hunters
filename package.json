@@ -22,6 +22,7 @@
     "grunt-inline": "^0.3.6",
     "grunt-jscs": "^2.8.0",
     "grunt-karma": "^2.0.0",
+    "grunt-mkdir": "^1.0.0",
     "grunt-pngmin": "^1.1.0",
     "grunt-replace": "^1.0.1",
     "grunt-zopfli": "^0.3.3",

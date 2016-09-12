@@ -13,16 +13,23 @@
   mapGen,
   MAP_SIZE_X,
   MAP_SIZE_Y,
+  MONSTER,
   mouseCoords,
   player,
   reset,
-  removeEntity,
+  remove,
   set,
   setScreen,
   updater,
   updateEntityPosition
 */
 
+Audio = function Audio() {
+  return {
+    'pause' : function pause()  {},
+    'play'  : function play()   {}
+  };
+};
 /**
  * phantomjs does not have Math.sign ... yay
  */
@@ -171,11 +178,14 @@ describe('main', function () {
 
       removeGlichez = function removeGlichez() {
         var
+          entity,
           len = entities.length;
 
         while (len--) {
-          if (entities[len].target) {
-            removeEntity(entities[len]);
+          entity = entities[len];
+
+          if (entity.cfg.type === MONSTER) {
+            remove(entities, entity);
           }
         }
       },
@@ -232,7 +242,7 @@ describe('main', function () {
     window.onload = function () {
       origOnload();
       loaded = true;
-      setScreen(1);
+      setScreen(2);
       done();
     };
   });
@@ -449,6 +459,7 @@ describe('main', function () {
     describe('with pressing (d) - right', function () {
       beforeEach(function () {
         this.positions = [player.pos.slice()];
+        this.removeGlichez();
 
         window.onkeydown(this.createKeyDownEvent(RIGHT));
 
@@ -468,17 +479,10 @@ describe('main', function () {
       describe('with releasing (d) - right', function () {
         beforeEach(function () {
           window.onkeydown(this.createKeyUpEvent(RIGHT));
-          // entities = [player];
-          var i = entities.length;
-          while (i--) {
-            if (entities[i] !== player) {
-              removeEntity(entities[i]);
-            }
-          }
+
           this.update();
 
           this.curPos   = player.pos.slice();
-
           this.curDist  = dist(this.curPos, this.secondPos);
         });
 
