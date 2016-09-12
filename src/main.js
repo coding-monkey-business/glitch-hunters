@@ -67,6 +67,7 @@ var
   entities          = [],
   initializers      = [],
   mouseCoords       = [],
+  margins           = [-480, -360],
   spawnPositions    = [],
   startingPositions = [MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2],
   healthBarColors   = ['#ac3232','#df7126', '#99e550'],
@@ -1245,8 +1246,8 @@ var
       aFrame  = aFrames;
 
       if (shakeDuration) {
-        main.style.left = Math.sin(frames) * --shakeDuration + 'px';
-        main.style.top = Math.cos(frames) * shakeDuration + 'px';
+        main.style.marginLeft = (margins[0] + Math.sin(frames) * --shakeDuration) + 'px';
+        main.style.marginTop  = (margins[1] + Math.cos(frames) * shakeDuration  ) + 'px';
       }
 
       updater(isAnimationFrame);
@@ -1331,6 +1332,8 @@ var
 
           document.body.style.cursor = main.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto'; // firefox has issues with a body style cursor?
 
+          main.style.marginLeft = margins[0];
+          main.style.marginTop  = margins[1];
           doc.body.appendChild(main);
 
           buffer  = createCanvas();

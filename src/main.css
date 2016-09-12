@@ -1,7 +1,11 @@
 body {
-  text-align: center;
-  background-color: grey;
+  text-align        : center;
+  background-color  : #121212;
 }
+
 canvas {
-	position: relative;
+  top         : 50%;
+  left        : 50%;
+  box-shadow  : 0 0 20px #888888;
+  position    : fixed;
 }
