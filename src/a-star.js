@@ -42,6 +42,10 @@ var
     return p.reverse();
   },
 
+  heuristicCostEstimate = function heuristicCostEstimate(start, goal, grid) {
+    return dist(start, goal) * grid[start[0]][start[1]]; // monsters shold try to glitch unglitched fields
+  },
+
   /**
    * @param {Object<string, number>} node
    * @param {Array<Array<Object>>} grid
@@ -101,7 +105,7 @@ var
     gScore[start[0]][start[1]] = 0; // Cost from start along best known path.
     // Estimated total cost from start to goal through y.
     fScore[start[0]] = {};
-    fScore[start[0]][start[1]] = gScore[start[0]][start[1]] + dist(start, goal);
+    fScore[start[0]][start[1]] = gScore[start[0]][start[1]] + heuristicCostEstimate(start, goal, grid);
 
     while (openlist.length) {
       // TODO: getNodeWithLowestFScore should return a coordinate pair instead of a node?
@@ -136,7 +140,7 @@ var
 
           // set fScore:
           fScore[neighbor[0]] = fScore[neighbor[0]] || {};
-          fScore[neighbor[0]][neighbor[1]] = tentativeGScore + dist(neighbor, goal);
+          fScore[neighbor[0]][neighbor[1]] = tentativeGScore + heuristicCostEstimate(neighbor, goal, grid);
 
           if (!(openset[neighbor[0]] && openset[neighbor[0]][neighbor[1]])) {
             // add neighbor to openset & openlist

@@ -45,7 +45,7 @@ var
   frames            = 0,
   aFrames           = 0,
   screen            = 0, // 0 =  title, 1 = game, etc
-  alphabet          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-',
+  alphabet          = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-%',
   offsetX           = 0,
   offsetY           = 0,
   shakeDuration     = 0,
@@ -68,6 +68,8 @@ var
     '87' : VEC_UNIT[3]  // w
   },
 
+  totalTileCount,
+  totalGlitchedTiles,
   enemyCount,
   PLAYER = 1,
   MONSTER = 2,
@@ -229,9 +231,9 @@ var
    * @param {Number} color base color (or base tile) of this room
    * @param {Number} iterationsLeft safety feature to prevent stack issues
    */
-  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, totalIterations, circular, sizeX, sizeY, i, j, xi, yj, x, y, m, n, totalTiles) {
+  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, totalIterations, circular, sizeX, sizeY, i, j, xi, yj, x, y, m, n, totalRoomTiles) {
     if (w * h > 3) { // single tile wide rooms are stupid
-      totalTiles = i = 0;
+      totalRoomTiles = i = 0;
 
       // center must not be outside of our map:
       if (xc < 0 || xc > sizeX || yc < 0 || yc > sizeY) {
@@ -245,7 +247,7 @@ var
       y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - h);
       if (w * h <= 9) {
         circular = false;
-        color = 6;
+        color = 2;
       }
 
       while (i/*++*/ < w && (xi = x + i) < sizeX - 1) {
@@ -260,11 +262,11 @@ var
               if (circular) {
                 if (dist([xc, yc], [xi, y + j]) < (w / 2)) {
                   arr[xi][y + j] = arr[xi][y + j] || color;
-                  totalTiles++;
+                  totalRoomTiles++;
                 }
               } else {
                 arr[xi][y + j] = arr[xi][y + j] || color;
-                totalTiles++;
+                totalRoomTiles++;
               }
             }
           } catch (e) {
@@ -276,10 +278,10 @@ var
       }
 
 
-      if (totalTiles > 9 && totalIterations !== iterationsLeft) {
+      if (totalRoomTiles > 9 && totalIterations !== iterationsLeft) {
         spawnPositions.push([xc * TILESIZE_X, yc * TILESIZE_X]);
       }
-
+      totalTileCount += totalRoomTiles;
       // spawn more rooms
       if (iterationsLeft) {
         i = 4;
@@ -445,7 +447,7 @@ var
 
     (opt_ctx || bctx).drawImage(
       tileset, //img
-      32, //sx
+      48, //sx
       9, //sy
       TILESIZE_X, //sw
       height, //sh
@@ -459,7 +461,7 @@ var
   drawField = function drawField(x, y, tileType, opt_ctx) {
     (opt_ctx || bctx).drawImage(
       tileset, //img
-      (tileType % 2) * TILESIZE_X, //sx
+      (tileType - 1) * TILESIZE_X, //sx
       TILESIZE_X, //sy
       TILESIZE_X, //sw
       TILESIZE_X, //sh
@@ -632,7 +634,7 @@ var
     player.movs   = [];
     player.mov    = [0, 0];
 
-    enemyCount = 0;
+    enemyCount = totalTileCount = totalGlitchedTiles = 0;
     spawnPositions    = [];
     player.hp         = playerCfg.hp;
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
@@ -870,7 +872,7 @@ var
       setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
 
       // make the canvas wobble:
-      shakeDuration = Math.min(shakeDuration + 20, 100);
+      shakeDuration = Math.min(shakeDuration + 20, 70);
 
     }
     if (player.hp <= 0) {
@@ -890,6 +892,14 @@ var
     setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
     add(pos, spd);
     tilesIndex = getTilesIndex(pos);
+
+    if (entity.cfg.type === MONSTER && Math.random() > 0.7 && frames % 5 === 0) {
+      if (map2DArray[tilesIndex[0]][tilesIndex[1]] !== 3) {
+        totalGlitchedTiles++;
+        map2DArray[tilesIndex[0]][tilesIndex[1]] = 3;
+      }
+    }
+
 
     if (cfg.fragile) {
       len = entities.length;
@@ -989,7 +999,8 @@ var
   drawUI = function drawUI() {
     bctx.save();
     bctx.setTransform(1, 0, 0, 1, 0, 0);
-    text('AMMO:' + currentAmmoAmount, 5, 5, 0, aFrames);
+    text('AMMO:' + currentAmmoAmount, 5, 5, 0);
+    text('GLITCHINESS:' + Math.floor(totalGlitchedTiles / totalTileCount * 100) + '%', 5, 12, 0);
     bctx.restore();
   },
 
