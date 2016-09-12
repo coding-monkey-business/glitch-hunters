@@ -453,11 +453,21 @@ var
     entity.frame += stepFrame ? 1 : 0;
   },
 
+  tile = function tile(tilesIndex, val, tileRow) {
+    tileRow = map2DArray[tilesIndex[0]];
+
+    if (tileRow && val) {
+      tileRow[tilesIndex[1]] = val;
+    }
+
+    return tileRow && tileRow[tilesIndex[1]];
+  },
+
   drawWall = function drawWall(x, y, height, opt_ctx) {
     //
     // Meh, maybe this is not right here, but ATM it does what I need
     //
-    if (map2DArray[x] && map2DArray[x][y] > 0) {
+    if (tile([x, y])) {
       return;
     }
 
@@ -501,13 +511,14 @@ var
     return b.pos[1] - a.pos[1];
   },
 
-  drawMap = function drawMap(isAnimationFrame, x, y, len, entityTilesIndex) {
+  drawMap = function drawMap(isAnimationFrame, x, y, len, currentTile, entityTilesIndex) {
     entities.sort(zCompare);
 
     for (y = 0; y < map2DArray[0].length; y++) {
       for (x = 0; x < map2DArray.length; x++) {
-        if (map2DArray[x][y]) {
-          drawField(x, y, map2DArray[x][y]);
+        currentTile = tile([x, y]);
+        if (currentTile) {
+          drawField(x, y, currentTile);
         } else {
           drawWall(x, y);
         }
@@ -931,9 +942,9 @@ var
     tilesIndex = getTilesIndex(pos);
 
     if (entity.cfg.type === MONSTER && Math.random() > 0.7 && frames % 5 === 0) {
-      if (map2DArray[tilesIndex[0]][tilesIndex[1]] !== 3) {
+      if (tile(tilesIndex) !== 3) {
         totalGlitchedTiles++;
-        map2DArray[tilesIndex[0]][tilesIndex[1]] = 3;
+        tile(tilesIndex, 3);
       }
     }
 
@@ -970,7 +981,7 @@ var
       damage(player, entity);
     }
 
-    if (!map2DArray[tilesIndex[0]] || !map2DArray[tilesIndex[0]][tilesIndex[1]]) {
+    if (!tile(tilesIndex)) {
       if (cfg.fragile) {
         return explode(entity);
       }
@@ -979,7 +990,7 @@ var
 
       tilesIndex = getTilesIndex(pos);
 
-      if (map2DArray[tilesIndex[0]][tilesIndex[1]]) {
+      if (tile(tilesIndex)) {
         return;
       }
 
@@ -988,7 +999,7 @@ var
 
       tilesIndex = getTilesIndex(pos);
 
-      if (map2DArray[tilesIndex[0]][tilesIndex[1]]) {
+      if (tile(tilesIndex)) {
         return;
       }
 
