@@ -40,8 +40,9 @@ var
   MONSTER                   = 2,
   EXPLOSION                 = 3,
   BULLET                    = 4,
+  MEDKIT                    = 5,
+  ANTI_GLITCH_KIT           = 6,
   STAGE_STICKYNESS          = 10,
-  DROP                      = 5,
 
   win               = window,
   doc               = document,
@@ -94,7 +95,7 @@ var
   ]),
 
   totalTileCount,
-  totalGlitchedTiles,
+  totalGlitchedTiles = [],
   enemyCount,
   mctx,
   bctx,
@@ -106,7 +107,8 @@ var
   player,
   playerCfg,
   bulletCfg,
-  dropCfg,
+  medkitCfg,
+  antiGlitchKitCfg,
   monsterCfg,
   explosionCfg,
   updater,
@@ -469,7 +471,7 @@ var
         bctx.transform(1, 0, 0, -1, -3, 0);
       }
       bctx.drawImage(
-        images[7],
+        images[8],
         0,
         -3
       );
@@ -589,7 +591,7 @@ var
     obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     data = obj.data;
     i    = data.length;
-    glitchiness = totalGlitchedTiles / totalTileCount;
+    glitchiness = totalGlitchedTiles.length / totalTileCount;
 
     while (i--) {
       switch (i%4) {
@@ -681,7 +683,7 @@ var
     player.mov    = [0, 0];
     player.tpCD   = 0;
 
-    enemyCount        = totalTileCount = totalGlitchedTiles = 0;
+    enemyCount        = totalTileCount = totalGlitchedTiles.length = 0;
     spawnPositions    = [];
     player.hp         = playerCfg.hp;
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
@@ -722,14 +724,17 @@ var
     updater = updaters[screen];
   },
 
-  removeEntity = function removeEntity(entity) {
+  removeEntity = function removeEntity(entity, drop, random) {
     remove(entities, entity);
+    random = Math.random();
 
     if (entity.cfg.type === MONSTER) {
       // random drop:
-      if (Math.random() < 0.5) {
-        // createEntity
-        createEntity(entity.pos, dropCfg);
+      if (random < 0.33) {
+        createEntity(entity.pos, medkitCfg);
+      }
+      if (random > 0.66) {
+        createEntity(entity.pos, antiGlitchKitCfg);
       }
       if (!--enemyCount) {
         setScreen(1);
@@ -965,7 +970,7 @@ var
 
     if (entity.cfg.type === MONSTER && Math.random() > 0.7 && frames % 5 === 0) {
       if (tile(tilesIndex) !== 3) {
-        totalGlitchedTiles++;
+        totalGlitchedTiles.push(tilesIndex);
         tile(tilesIndex, 3);
       }
     }
@@ -991,18 +996,30 @@ var
     }
 
 
-    // ammo drops
-    if (entity.cfg.type === DROP && isClose(entity.pos, player)) {
-      removeEntity(entity);
-      currentAmmoAmount += entity.cfg.amount;
-      playSound(dropPickupSfx);
-      player.say = [['GROOVY', 'OH YEAH!'][Math.random() * 2 | 0], 60];
-    }
+    // monster drops
+    if (dist(entity.pos, player.pos) < 8) {
+      if (entity.cfg.type === MEDKIT) {
+        removeEntity(entity);
+        currentAmmoAmount += entity.cfg.amount;
+        playSound(dropPickupSfx);
+        player.say = [['GROOVY', 'OH YEAH!'][Math.random() * 2 | 0], 60];
+      }
 
-    // entitites damaging the player:
-    if (entity !== player && entity.hp > 0 && dist(player.pos, entity.pos) < 8 && player.state !== 'tping') {
-      damage(player, entity);
-      player.say = ['OW!', 60];
+      if (entity.cfg.type === ANTI_GLITCH_KIT) {
+        removeEntity(entity);
+        entitiesLen = entity.cfg.amount;
+        while (entitiesLen && totalGlitchedTiles.length) {
+          tile(totalGlitchedTiles.pop(), 1);
+          entitiesLen--;
+        }
+        playSound(dropPickupSfx);
+      }
+
+      // entitites damaging the player:
+      if (entity !== player && entity.hp > 0 && player.state !== 'tping') {
+        damage(player, entity);
+        player.say = ['OW!', 60];
+      }
     }
 
     if (!tile(tilesIndex)) {
@@ -1087,7 +1104,7 @@ var
     bctx.save();
     bctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    text('GLITCHINESS:' + Math.floor(totalGlitchedTiles / totalTileCount * 100) + '%', 4, 4);
+    text('GLITCHINESS:' + Math.floor(totalGlitchedTiles.length / totalTileCount * 100) + '%', 4, 4);
 
     if (!player.tpCD) {
       text('BLINK - SPACE' , 200, 230);
@@ -1142,10 +1159,10 @@ var
     bctx.drawImage(buffer, 0, 0);
     bctx.setTransform(4, 0, 0, 4, 0, 0);
     starField();
-    bctx.drawImage(images[9], 0, 18);
-    bctx.drawImage(images[10], 30, 0);
+    bctx.drawImage(images[10], 0, 18);
+    bctx.drawImage(images[11], 30, 0);
     bctx.setTransform(3, 0, 0, 3, 0, 0);
-    bctx.drawImage(images[11], 4, 4);
+    bctx.drawImage(images[12], 4, 4);
     bctx.restore();
     text('START GAME', 14, 100, 2, aFrames);
     glitch(buffer);
@@ -1334,17 +1351,30 @@ var
     );
 
 
-    dropCfg = createEntityConfig(
-      images[5],
-      [['idling', 1]],
+    medkitCfg = createEntityConfig(
+      images[6],
+      [
+        ['idling', 1]
+      ],
       {
-        'type'  : DROP,
+        'type'  : MEDKIT,
         'amount': 10
       }
     );
 
+    antiGlitchKitCfg = createEntityConfig(
+      images[5],
+      [
+        ['idling', 1]
+      ],
+      {
+        'type'  : ANTI_GLITCH_KIT,
+        'amount': 20
+      }
+    );
+
     playerCfg = createEntityConfig(
-      images[6],
+      images[7],
       [
         ['idling', 6],
         ['moving'],
@@ -1361,7 +1391,7 @@ var
     win.onmousemove = setMouseCoords;
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
     abcImage        = images[1];
-    tileset         = images[8];
+    tileset         = images[9];
 
     setScreen(screen);
     startLoop();
@@ -1461,7 +1491,11 @@ if (DEBUG) {
           }
 
           if (code === L) {
-            createEntity(mouseCoords, dropCfg);
+            if (Math.random() < 0.5) {
+              createEntity(mouseCoords, medkitCfg);
+            } else {
+              createEntity(mouseCoords, antiGlitchKitCfg);
+            }
           }
         };
 
