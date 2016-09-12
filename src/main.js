@@ -479,10 +479,6 @@ var
     }
 
     len = entities.length;
-    x   = entities.indexOf(player);
-
-    entities[x] = entities[0];
-    entities[0] = player;
 
     while (len--) {
       drawEntity(entities[len], isAnimationFrame);
