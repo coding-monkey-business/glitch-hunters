@@ -381,6 +381,33 @@ var
     bctx.stroke();
   },
 
+  /**
+   * Renders a given string
+   * @param  {String} str must be uppercase
+   * @param  {Number} x
+   * @param  {Number} y
+   * @param  {Number} wave make waving text
+   * @param  {Number} frame current frame
+   */
+  text = function text(str, x, y, wave, frame, i) {
+    // text = function (str, x, y, wave = 0, frame, alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-', i = 0)
+    // no ES6 support in uglify :/
+    wave = wave || 0;
+
+    for (i = 0; i < str.length; i++) {
+      bctx.drawImage(
+        abcImage, //img
+        alphabet.indexOf(str[i]) * 8, //sx
+        0, //sy
+        8, //sw
+        8, //sh
+        x + i * 9, //dx
+        y + (wave * Math.sin(frame / 2 + i) | 0) || 0, //dy
+        8, //dh
+        8 //dw
+      );
+    }
+  },
   drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg, healthFraction)  {
     cfg       = entity.cfg;
     frameCfg  = cfg[entity.state] || cfg.idling;
@@ -425,6 +452,7 @@ var
       bctx.save();
       // a bit hacky :/
       bctx.translate(entity.pos[0] + 2, entity.pos[1] - 5);
+      bctx.save();
       bctx.rotate(rad(sub(player.pos.slice(), mouseCoords)) + Math.PI);
       // rifle should not change hands & stay on one side
       if (entity.dir[0] < 0) {
@@ -435,6 +463,10 @@ var
         0,
         -3
       );
+      bctx.restore();
+      if (player.say && --player.say[1] > 0) {
+        text(player.say[0], - (player.say[0].length * 8)/2, -16, 3, frames);
+      }
       bctx.restore();
     }
 
@@ -624,34 +656,6 @@ var
         height / 2.5 + f[1] * z * height,
         z,
         f[2] -= (z * (i%3 + 1) * 0.01)
-      );
-    }
-  },
-
-  /**
-   * Renders a given string
-   * @param  {String} str must be uppercase
-   * @param  {Number} x
-   * @param  {Number} y
-   * @param  {Number} wave make waving text
-   * @param  {Number} frame current frame
-   */
-  text = function text(str, x, y, wave, frame, i) {
-    // text = function (str, x, y, wave = 0, frame, alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:!-', i = 0)
-    // no ES6 support in uglify :/
-    wave = wave || 0;
-
-    for (i = 0; i < str.length; i++) {
-      bctx.drawImage(
-        abcImage, //img
-        alphabet.indexOf(str[i]) * 8, //sx
-        0, //sy
-        8, //sw
-        8, //sh
-        x + i * 9, //dx
-        y + (wave * Math.sin(frame / 2 + i) | 0) || 0, //dy
-        8, //dh
-        8 //dw
       );
     }
   },
@@ -982,11 +986,13 @@ var
       removeEntity(entity);
       currentAmmoAmount += entity.cfg.amount;
       playSound(dropPickupSfx);
+      player.say = [['GROOVY', 'OH YEAH!'][Math.random() * 2 | 0], 60];
     }
 
     // entitites damaging the player:
     if (entity !== player && entity.hp > 0 && dist(player.pos, entity.pos) < 8) {
       damage(player, entity);
+      player.say = ['OW!', 60];
     }
 
     if (!tile(tilesIndex)) {
