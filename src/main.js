@@ -15,7 +15,8 @@
   sub,
   sum,
   zero,
-  drawDebugMap
+  drawDebugMap,
+  jsfxr
 */
 
 /* exported
@@ -23,19 +24,23 @@
 */
 
 var
-  APPLY_TYPES         = ['keydown', 'mousedown'],
-  ANIMATION_TIME_UNIT = 80,
-  TIME_UNIT           = 20,
-  MAP_SIZE_X          = 32,
-  MAP_SIZE_Y          = 22,
-  TILESIZE_X          = 16, // everything is square right now
-  SPACE               = 32,
-  ZERO_LIMIT          = 0.05,
-  SHOOT               = 1,
-  STAGE_SCALE         = 3,
-
+  APPLY_TYPES               = ['keydown', 'mousedown'],
+  ANIMATION_TIME_UNIT       = 80,
+  TIME_UNIT                 = 20,
+  MAP_SIZE_X                = 32,
+  MAP_SIZE_Y                = 22,
+  TILESIZE_X                = 16, // everything is square right now
+  SPACE                     = 32,
+  ZERO_LIMIT                = 0.05,
+  SHOOT                     = 1,
+  STAGE_SCALE               = 3,
   DEFAULT_AMMO_AMOUNT       = 100,
   ENEMY_ENGAGEMENT_DISTANCE = 150,
+  PLAYER                    = 1,
+  MONSTER                   = 2,
+  EXPLOSION                 = 3,
+  BULLET                    = 4,
+
 
   win               = window,
   doc               = document,
@@ -49,6 +54,8 @@ var
   offsetX           = 0,
   offsetY           = 0,
   shakeDuration     = 0,
+  score             = 0,
+  currentLevel      = 1,
   currentAmmoAmount = DEFAULT_AMMO_AMOUNT,
 
   updaters          = [],
@@ -61,6 +68,7 @@ var
   spawnPositions    = [],
   startingPositions = [MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2],
   healthBarColors   = ['#ac3232','#df7126', '#99e550'],
+
   DIRECTIONS = {
     '68' : VEC_UNIT[0], // d
     '83' : VEC_UNIT[1], // s
@@ -68,15 +76,15 @@ var
     '87' : VEC_UNIT[3]  // w
   },
 
+  shootSfx = jsfxr([
+    3,,0.0847,0.5386,0.31,0.3093,,0.02,-0.0035,-0.4905,-0.6864,0.8999,
+    -0.3426,0.2932,-0.6135,-0.3311,-0.4232,,0.4883,0.0005,0.1197,0.749,
+    0.1926,0.79
+  ]),
+
   totalTileCount,
   totalGlitchedTiles,
   enemyCount,
-  PLAYER = 1,
-  MONSTER = 2,
-  EXPLOSION = 3,
-  BULLET = 4,
-  score        = 0,
-  currentLevel = 0,
   mctx,
   bctx,
   main,
@@ -665,11 +673,22 @@ var
     spawnPositions.forEach(createMonster);
   },
 
+  setScreen = function setScreen(newScreen) {
+    //
+    // Remove all defined handlers.
+    //
+    screen = newScreen;
+
+    initializers[screen]();
+
+    updater = updaters[screen];
+  },
 
   removeEntity = function removeEntity(entity) {
     remove(entities, entity);
+
     if (entity.cfg.type === MONSTER && !--enemyCount) {
-      createLevel(++currentLevel);
+      setScreen(1);
     }
   },
 
@@ -699,6 +718,10 @@ var
     if (!apply || !currentAmmoAmount) {
       return;
     }
+
+    shootSfx.pause();
+    shootSfx.currentTime = 0;
+    shootSfx.play();
 
     currentAmmoAmount--;
 
@@ -738,17 +761,6 @@ var
     commands[SHOOT] = shoot;
   },
 
-  setScreen = function setScreen(newScreen) {
-    //
-    // Remove all defined handlers.
-    //
-    screen = newScreen;
-
-    initializers[screen]();
-
-    updater = updaters[screen];
-  },
-
   /**
    * @param {Event} event
    */
@@ -784,7 +796,7 @@ var
   //ugly copypaste ;/
   initIntro = function initIntro() {
     inputHandler = function (event) {
-      if (APPLY_TYPES.indexOf(event.type) < 0) {
+      if (event.type === 'mousedown') {
         setScreen(1);
       }
     };
@@ -792,14 +804,14 @@ var
 
   initGameInfo = function initGameInfo() {
     inputHandler = function (event) {
-      if (APPLY_TYPES.indexOf(event.type) < 0) {
+      if (event.type === 'mousedown') {
         setScreen(2);
       }
     };
   },
 
   initGame = function initGame() {
-    createLevel();
+    createLevel(currentLevel++);
     setCommands();
     inputHandler = setCommand;
   },
@@ -1049,11 +1061,15 @@ var
   updateGameInfo = function updateGameInfo() {
     bctx.setTransform(1, 0, 0, 1, 0, 0);
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
-    text('GLITCHES HAVE TAKEN OVER!', 20, 20);
-    text('THEY LOOK LIKE THIS:', 20, 40);
-    //sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight
-    bctx.drawImage(monsterCfg.img, 0, 16, 16, 16, 200, 30, 32, 32);
-    text('SHOOT THEM!', 20, 60);
+    if (currentLevel === 1) {
+      text('GLITCHMONSTERS ARE TRYING', 20, 20);
+      text('TO TAKE OVER THE WORLD!', 20, 30);
+      text('THEY LOOK LIKE THIS:', 20, 50);
+      //sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight
+      bctx.drawImage(monsterCfg.img, 0, 16, 16, 16, 200, 40, 32, 32);
+      text('SHOOT THEM!', 20, 70);
+    }
+    text('LEVEL ' + currentLevel, (WIDTH >> 1) - 28, HEIGHT>>1);
   },
 
   updateGameOver = function updateGameOver() {
@@ -1162,7 +1178,7 @@ var
     return canvas;
   },
 
-  init = function init(cctx, cursorImg, len) {
+  init = function init(cctx, cursorImg, len, audio) {
     // Set images created by img.js
     len = win.img.length;
 
@@ -1263,6 +1279,10 @@ var
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
     abcImage        = images[1];
     tileset         = images[7];
+
+    audio = new Audio();
+    audio.src = shootSfx;
+    shootSfx = audio;
 
     setScreen(screen);
     startLoop();
