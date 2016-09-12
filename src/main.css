@@ -7,5 +7,13 @@ canvas {
   top         : 50%;
   left        : 50%;
   box-shadow  : 0 0 20px #888888;
+  border-radius: 10px;
   position    : fixed;
+}
+
+a {
+	display: inherit;
+	color: #fff;
+	font: 12px monospace;
+	outline: none;
 }

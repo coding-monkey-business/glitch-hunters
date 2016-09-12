@@ -962,7 +962,7 @@ var
       setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
 
       // make the canvas wobble:
-      shakeDuration = Math.min(shakeDuration + 20, 70);
+      shakeDuration = Math.min(shakeDuration + 20, 50);
     }
 
     if (player.hp <= 0) {
