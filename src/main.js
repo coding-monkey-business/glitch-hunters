@@ -862,6 +862,7 @@ var
 
   initGameOver = function initGameOver() {
     // Not much now... remove if later stays the same.
+    currentLevel = 1;
     initIntro();
   },
 
