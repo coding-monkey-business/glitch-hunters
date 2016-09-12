@@ -1181,9 +1181,9 @@ var
     bctx.drawImage(images[10], 0, 18);
     bctx.drawImage(images[11], 30, 0);
     bctx.setTransform(3, 0, 0, 3, 0, 0);
-    bctx.drawImage(images[12], 4, 4);
+    bctx.drawImage(images[12], 2, 2);
     bctx.restore();
-    text('START GAME', 14, 100, 2, aFrames);
+    text('START GAME', 8, 94, 2, aFrames);
     glitch(buffer);
   },
 
