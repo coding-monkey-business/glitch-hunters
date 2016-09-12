@@ -40,7 +40,7 @@ var
   MONSTER                   = 2,
   EXPLOSION                 = 3,
   BULLET                    = 4,
-  MEDKIT                    = 5,
+  AMMO                      = 5,
   ANTI_GLITCH_KIT           = 6,
   STAGE_STICKYNESS          = 10,
 
@@ -107,7 +107,7 @@ var
   player,
   playerCfg,
   bulletCfg,
-  medkitCfg,
+  ammoCfg,
   antiGlitchKitCfg,
   monsterCfg,
   explosionCfg,
@@ -731,7 +731,7 @@ var
     if (entity.cfg.type === MONSTER) {
       // random drop:
       if (random < 0.33) {
-        createEntity(entity.pos, medkitCfg);
+        createEntity(entity.pos, ammoCfg);
       }
       if (random > 0.66) {
         createEntity(entity.pos, antiGlitchKitCfg);
@@ -998,7 +998,7 @@ var
 
     // monster drops
     if (dist(entity.pos, player.pos) < 8) {
-      if (entity.cfg.type === MEDKIT) {
+      if (entity.cfg.type === AMMO) {
         removeEntity(entity);
         currentAmmoAmount += entity.cfg.amount;
         playSound(dropPickupSfx);
@@ -1172,14 +1172,23 @@ var
     bctx.setTransform(1, 0, 0, 1, 0, 0);
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
     if (currentLevel === 1) {
-      text('GLITCHMONSTERS ARE TRYING', 20, 20);
-      text('TO TAKE OVER THE WORLD!', 20, 30);
-      text('THEY LOOK LIKE THIS:', 20, 50);
+      text('GLITCHMONSTERS ARE TRYING', 10, 10);
+      text('TO TAKE OVER THE WORLD!', 10, 20);
+      text('THEY LOOK LIKE THIS:', 10, 40);
       //sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight
-      bctx.drawImage(monsterCfg.img, 0, 16, 16, 16, 200, 40, 32, 32);
-      text('SHOOT THEM!', 20, 70);
+      bctx.drawImage(monsterCfg.img, 0, 16, 16, 16, 190, 36, 16, 16);
+
+      text('SHOOT THEM!', 10, 60);
+      text('MOVE WITH WASD', 10, 70);
+
+      text('PICK UP AMMO', 10, 90);
+      bctx.drawImage(ammoCfg.img, 0, 0, 16, 16, 120, 86, 16, 16);
+      text('AND ANTIGLITCH', 10, 100);
+      bctx.drawImage(antiGlitchKitCfg.img, 0, 0, 16, 16, 140, 96, 16, 16);
+
     }
     text('LEVEL ' + currentLevel, (WIDTH >> 1) - 28, HEIGHT>>1);
+    glitch(buffer);
   },
 
   updateGameOver = function updateGameOver() {
@@ -1351,13 +1360,13 @@ var
     );
 
 
-    medkitCfg = createEntityConfig(
+    ammoCfg = createEntityConfig(
       images[6],
       [
         ['idling', 1]
       ],
       {
-        'type'  : MEDKIT,
+        'type'  : AMMO,
         'amount': 10
       }
     );
@@ -1492,7 +1501,7 @@ if (DEBUG) {
 
           if (code === L) {
             if (Math.random() < 0.5) {
-              createEntity(mouseCoords, medkitCfg);
+              createEntity(mouseCoords, ammoCfg);
             } else {
               createEntity(mouseCoords, antiGlitchKitCfg);
             }
