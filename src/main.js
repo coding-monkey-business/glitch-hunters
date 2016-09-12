@@ -248,11 +248,9 @@ var
         return;
       }
 
-
-
       // find top left corner of new room
-      x = Math.min(Math.max(xc - (w >> 1), 0), sizeX - w);
-      y = Math.min(Math.max(yc - (h >> 1), 0), sizeY - h);
+      x = Math.min(Math.max(xc - (w >> 1), 1), sizeX - w);
+      y = Math.min(Math.max(yc - (h >> 1), 1), sizeY - h);
       if (w * h <= 9) {
         circular = false;
         color = 2;

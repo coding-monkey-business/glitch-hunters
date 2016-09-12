@@ -11,7 +11,7 @@
 + ~~player-locked camera movement causes invalid mouseCoords values~~
 + ~~healthbar~~
 + ~~there should be NPC mobs~~
-- mapGen should create trees around border
++ mapGen should create trees around border
 - add shadow for flying (z+) entities (e.g. bullets)
 - explosion should knock back all glichez on position
 - 8-bit like music should be playing
