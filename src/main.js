@@ -783,8 +783,7 @@ var
     }
 
     if (finished) {
-      tpPos     = mouseCoords.slice();
-      finished  = dist(tpPos, player.pos) < 60 && tile(getTilesIndex(tpPos));
+      finished = dist(tpPos, player.pos) < 60 && tile(getTilesIndex(tpPos));
 
       while (!finished) {
         sub(tpPos, player.dir);
@@ -794,7 +793,7 @@ var
       set(player.pos, tpPos);
     } else if (!player.tpCD) {
       player.tpCD = 100;
-      setEntityState(player, 'tping', 20, teleport.bind(0, 1, 0, 1));
+      setEntityState(player, 'tping', 20, teleport.bind(0, 1, 0, 1, mouseCoords.slice()));
       playSound(teleportSfx);
     }
   },
