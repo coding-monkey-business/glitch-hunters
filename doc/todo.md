@@ -11,18 +11,17 @@
 + ~~player-locked camera movement causes invalid mouseCoords values~~
 + ~~healthbar~~
 + ~~there should be NPC mobs~~
-+ mapGen should create trees around border
-- add shadow for flying (z+) entities (e.g. bullets)
-- explosion should knock back all glichez on position
++ ~~mapGen should create trees around border~~
++ ~~add shadow for flying (z+) entities (e.g. bullets)~~
++ ~~tp should have a cooldown~~
++ ~~tp should stay inside bounds~~
 - 8-bit like music should be playing
 - 8-bit like effects should be playing
-- tp should have a cooldown
-- tp should stay inside bounds
 
 # Stuff to figure out
 - glitch power up possibilities
-- story / intro
-- level progress
++ ~~story / intro~~
++ ~~level progress~~
 - jsfxr license should be preserved i guess
 
 # Random extra ideas
