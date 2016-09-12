@@ -40,7 +40,7 @@ var
   MONSTER                   = 2,
   EXPLOSION                 = 3,
   BULLET                    = 4,
-
+  STAGE_STICKYNESS          = 10,
 
   win               = window,
   doc               = document,
@@ -105,6 +105,10 @@ var
 
   getId = function getId() {
     return ++id;
+  },
+
+  roundToZero = function roundToZero(value) {
+    return Math.abs(value) < ZERO_LIMIT ? 0 : value;
   },
 
   remove = function remove(arr, item) {
@@ -727,23 +731,21 @@ var
     bullet        = createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
     updateEntityDirection(bullet);
 
-    bullet.z      = 7;
-    bullet.dZ     = bullet.z * len(bulletSpd) / dist(mouseCoords, bullet.pos);
+    bullet.z  = 7;
+    bullet.dZ = bullet.z * len(bulletSpd) / dist(mouseCoords, bullet.pos);
 
   },
 
-  teleport = function teleport(apply, code, finished, direction, pos) {
+  teleport = function teleport(apply, code, finished) {
     if (!apply) {
       return;
     }
-
-    pos = player.pos;
 
     if (finished) {
       add(player.pos, mul(player.dir.slice(), 60));
     } else if (!player.tpCD) {
       player.tpCD = 100;
-      setEntityState(player, 'tping', 24, teleport.bind(0, 1, 0, 1, direction));
+      setEntityState(player, 'tping', 20, teleport.bind(0, 1, 0, 1));
     }
   },
 
@@ -859,7 +861,7 @@ var
     axisSpd *= entity.cfg.friction;
 
     // Round it to zero if its close enough.
-    axisSpd  = Math.abs(axisSpd) < ZERO_LIMIT ? 0 : axisSpd;
+    axisSpd  = roundToZero(axisSpd);
 
     entity.spd[axis] = axisSpd;
   },
@@ -1036,7 +1038,30 @@ var
     bctx.restore();
   },
 
-  updateGame = function updateGame(isAnimationFrame, len) {
+  updateGame = function updateGame(isAnimationFrame, len, targetOffsetX, targetOffsetY) {
+    // map should move/keep the player centered
+    targetOffsetX = Math.max(
+      Math.min(
+        0,
+        (-player.pos[0] | 0) + (WIDTH >> 1)
+      ),
+      WIDTH - (MAP_SIZE_X * TILESIZE_X)
+    );
+
+    offsetX = roundToZero(offsetX + (targetOffsetX - offsetX) / STAGE_STICKYNESS);
+
+    targetOffsetY = Math.max(
+      Math.min(
+        0,
+        (-player.pos[1] | 0) + (HEIGHT >> 1)
+      ),
+      HEIGHT - (MAP_SIZE_Y * TILESIZE_X)
+    );
+
+    offsetY = roundToZero(offsetY + (targetOffsetY - offsetY) / STAGE_STICKYNESS);
+
+    bctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
+
     len = entities.length;
 
     while (len--) {
@@ -1103,30 +1128,10 @@ var
       frame   = frames;
       aFrame  = aFrames;
 
-      if (screen === 2) { // map should move/keep the player centered
-        offsetX = Math.max(
-          Math.min(
-            0,
-            (-player.pos[0] | 0) +  (WIDTH >> 1)
-          ),
-          WIDTH - (MAP_SIZE_X * TILESIZE_X)
-        );
-        offsetY = Math.max(
-          Math.min(
-            0,
-            (-player.pos[1] | 0) + (HEIGHT >> 1)
-          ),
-          HEIGHT - (MAP_SIZE_Y * TILESIZE_X)
-        );
-      }
-
       if (shakeDuration) {
         main.style.left = Math.sin(frames) * --shakeDuration + 'px';
         main.style.top = Math.cos(frames) * shakeDuration + 'px';
       }
-
-      bctx.setTransform(1, 0, 0, 1, offsetX, offsetY);
-
 
       updater(isAnimationFrame);
 

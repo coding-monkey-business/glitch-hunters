@@ -1,4 +1,8 @@
 /* globals
+  MAP_SIZE_X,
+  MAP_SIZE_Y,
+  MONSTER,
+  STAGE_STICKYNESS : true,
   createEntity,
   createEntityConfig,
   dist,
@@ -10,18 +14,17 @@
   main,
   map2DArray : true,
   mapGen,
-  MAP_SIZE_X,
-  MAP_SIZE_Y,
-  MONSTER,
   mouseCoords,
   player,
-  reset,
   remove,
+  reset,
   set,
   setScreen,
-  updater,
-  updateEntityPosition
+  updateEntityPosition,
+  updater
 */
+
+STAGE_STICKYNESS = 1;
 
 Audio = function Audio() {
   return {
@@ -413,10 +416,10 @@ describe('main', function () {
 
       this.entityCountBefore = entities.length;
 
+      this.update(10);
+
       set(player.pos,  [100, 100]);
       set(mouseCoords, [200, 200]);
-
-      this.update(10);
 
       main.onmousedown(this.createMouseDownEvent());
 
@@ -431,7 +434,7 @@ describe('main', function () {
 
     it('should define its z and dZ', function () {
       expect(this.bullet.z).toBe(7);
-      expect(this.bullet.dZ).toBeCloseTo(0.814, 2);
+      expect(this.bullet.dZ).toBeCloseTo(0.898, 2);
     });
   });
 
