@@ -37,6 +37,7 @@ var
     HTML += createHelpItem('m - show map');
     HTML += createHelpItem('n - explosion');
     HTML += createHelpItem('k - kill everything');
+    HTML += createHelpItem('l - random drop');
 
     for (message in logged) {
       HTML += createHelpItem(message);

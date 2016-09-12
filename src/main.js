@@ -41,6 +41,7 @@ var
   EXPLOSION                 = 3,
   BULLET                    = 4,
   STAGE_STICKYNESS          = 10,
+  DROP                      = 5,
 
   win               = window,
   doc               = document,
@@ -75,7 +76,7 @@ var
     '65' : VEC_UNIT[2], // a
     '87' : VEC_UNIT[3]  // w
   },
-
+  dropPickupSfx = jsfxr([0,,0.0884,0.3296,0.4575,0.4049,,,,,,0.2827,0.5488,,,,,,1,,,,,0.7]),
   shootSfx = jsfxr([
     3,,0.0847,0.5386,0.31,0.3093,,0.02,-0.0035,-0.4905,-0.6864,0.8999,
     -0.3426,0.2932,-0.6135,-0.3311,-0.4232,,0.4883,0.0005,0.1197,0.749,
@@ -95,6 +96,7 @@ var
   player,
   playerCfg,
   bulletCfg,
+  dropCfg,
   monsterCfg,
   explosionCfg,
   updater,
@@ -429,7 +431,7 @@ var
         bctx.transform(1, 0, 0, -1, -3, 0);
       }
       bctx.drawImage(
-        images[6],
+        images[7],
         0,
         -3
       );
@@ -555,6 +557,15 @@ var
     }
 
     ctx.putImageData(obj, 0, 0);
+  },
+
+  /**
+   * @param  {HTMLAudioElement} audio
+   */
+  playSound = function playSound (audio) {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play();
   },
 
   /**
@@ -689,8 +700,15 @@ var
   removeEntity = function removeEntity(entity) {
     remove(entities, entity);
 
-    if (entity.cfg.type === MONSTER && !--enemyCount) {
-      setScreen(1);
+    if (entity.cfg.type === MONSTER) {
+      // random drop:
+      if (Math.random() < 0.5) {
+        // createEntity
+        createEntity(entity.pos, dropCfg);
+      }
+      if (!--enemyCount) {
+        setScreen(1);
+      }
     }
   },
 
@@ -721,9 +739,7 @@ var
       return;
     }
 
-    shootSfx.pause();
-    shootSfx.currentTime = 0;
-    shootSfx.play();
+    playSound(shootSfx);
 
     currentAmmoAmount--;
 
@@ -941,6 +957,14 @@ var
       }
     }
 
+
+    // ammo drops
+    if (entity.cfg.type === DROP && isClose(entity.pos, player)) {
+      removeEntity(entity);
+      currentAmmoAmount += entity.cfg.amount;
+      playSound(dropPickupSfx);
+    }
+
     // entitites damaging the player:
     if (entity !== player && entity.hp > 0 && dist(player.pos, entity.pos) < 8) {
       damage(player, entity);
@@ -1083,10 +1107,10 @@ var
     bctx.drawImage(buffer, 0, 0);
     bctx.setTransform(4, 0, 0, 4, 0, 0);
     starField();
-    bctx.drawImage(images[8], 0, 18);
-    bctx.drawImage(images[9], 30, 0);
+    bctx.drawImage(images[9], 0, 18);
+    bctx.drawImage(images[10], 30, 0);
     bctx.setTransform(3, 0, 0, 3, 0, 0);
-    bctx.drawImage(images[10], 4, 4);
+    bctx.drawImage(images[11], 4, 4);
     bctx.restore();
     text('START GAME', 14, 100, 2, aFrames);
     glitch(buffer);
@@ -1274,8 +1298,18 @@ var
       }
     );
 
-    playerCfg = createEntityConfig(
+
+    dropCfg = createEntityConfig(
       images[5],
+      [['idling', 1]],
+      {
+        'type'  : DROP,
+        'amount': 10
+      }
+    );
+
+    playerCfg = createEntityConfig(
+      images[6],
       [
         ['idling', 6],
         ['moving'],
@@ -1292,11 +1326,15 @@ var
     win.onmousemove = setMouseCoords;
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
     abcImage        = images[1];
-    tileset         = images[7];
+    tileset         = images[8];
 
     audio = new Audio();
     audio.src = shootSfx;
     shootSfx = audio;
+
+    audio = new Audio();
+    audio.src = dropPickupSfx;
+    dropPickupSfx = audio;
 
     setScreen(screen);
     startLoop();
@@ -1313,6 +1351,7 @@ if (DEBUG) {
     C   = 67,
     G   = 71,
     K   = 75,
+    L   = 76,
     M   = 77,
     N   = 78,
     V   = 86,
@@ -1392,6 +1431,10 @@ if (DEBUG) {
             }).forEach(function (entity) {
               removeEntity(entity);
             });
+          }
+
+          if (code === L) {
+            createEntity(mouseCoords, dropCfg);
           }
         };
 
