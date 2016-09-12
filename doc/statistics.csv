@@ -1,4 +1,11 @@
 COMMIT  |     SIZE |     DIFF | MESSAGE                                                      | OUTPUT
+020314b |    10650 |      -45 | tp: removes unnecessary fn .getAccDirection()                | # dist/index.html.zip <=== 10.4 KB (10650 B)
+71d14ed |    10695 |       -1 | redesign: adds screenswitcher                                | # dist/index.html.zip <=== 10.44 KB (10695 B)
+530913f |    10696 |       50 | tp: simple cooldown mechanic                                 | # dist/index.html.zip <=== 10.45 KB (10696 B)
+105d49d |    10646 |        0 | fix trees around the border of rooms                         | # dist/index.html.zip <=== 10.4 KB (10646 B)
+a28156e |    10646 |        3 | graphics: remove unnecessary shadows on explosion            | # dist/index.html.zip <=== 10.4 KB (10646 B)
+d4b580b |    10643 |       32 | graphics: adds simple shadow for bullets                     | # dist/index.html.zip <=== 10.39 KB (10643 B)
+bcc9d79 |    10611 |        0 | doc: updates statistics.csv                                  | # dist/index.html.zip <=== 10.36 KB (10611 B)
 17e9fa2 |    10611 |        0 | Merge branch 'stuff'                                         | # dist/index.html.zip <=== 10.36 KB (10611 B)
 8394a16 |    10611 |     1603 | added jsfxr                                                  | # dist/index.html.zip <=== 10.36 KB (10611 B)
 267f5b6 |     9008 |      122 | added story-/info-screen                                     | # dist/index.html.zip <=== 8.8 KB (9008 B)
