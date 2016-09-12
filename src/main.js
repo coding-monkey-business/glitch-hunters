@@ -343,6 +343,7 @@ var
   },
 
   drawEntityDebugInfo = function drawEntityDebugInfo(entity, len) {
+    bctx.fillStyle = '#000';
     bctx.fillRect(entity.pos[0] - 1, entity.pos[1] - 1, 2, 2); // center point of entity, comment back in for debugging & stuff
 
     if (entity.route) {
@@ -410,6 +411,11 @@ var
       entity.pos[0] - cfg.hSize,                      // dx
       entity.pos[1] + cfg.offY - cfg.size - entity.z  // dy
     );
+
+    if (entity.z > 1) {
+      bctx.fillStyle = '#335';
+      bctx.fillRect(entity.pos[0] - 3, entity.pos[1] - 1, 5, 2); // center point of entity, comment back in for debugging & stuff
+    }
 
     if (entity === player) {
       bctx.save();
