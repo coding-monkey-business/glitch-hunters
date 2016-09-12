@@ -56,7 +56,7 @@ var
   offsetY           = 0,
   shakeDuration     = 0,
   score             = 0,
-  currentLevel      = 1,
+  currentLevel      = 0,
   currentAmmoAmount = DEFAULT_AMMO_AMOUNT,
 
   updaters          = [],
@@ -674,7 +674,7 @@ var
    * resets entitiy list, spawnPositions, health and ammo
    * creates a new map with monsters
    */
-  createLevel = function createLevel (difficulty, tmp) {
+  createLevel = function createLevel(tmp) {
     entities      = [];
     player        = createEntity(startingPositions, playerCfg);
     player.movs   = [];
@@ -687,7 +687,7 @@ var
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
     map2DArray        = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
 
-    if (difficulty) {
+    if (currentLevel) {
       tmp = [];
       spawnPositions.forEach(function (position) {
         tmp = tmp.concat(getNeighborNodes(
@@ -698,7 +698,7 @@ var
           ],
           map2DArray,
           1
-        ).slice(0, difficulty));
+        ).slice(0, currentLevel));
       });
       // tiles to pixels:
       tmp.forEach(function (a) {
@@ -851,18 +851,19 @@ var
   },
 
   initGameInfo = function initGameInfo() {
+    currentLevel++;
     inputHandler = screenSwitcher.bind(0, 2);
   },
 
   initGame = function initGame() {
-    createLevel(currentLevel++);
+    createLevel();
     setCommands();
     inputHandler = setCommand;
   },
 
   initGameOver = function initGameOver() {
     // Not much now... remove if later stays the same.
-    currentLevel = 1;
+    currentLevel = 0;
     initIntro();
   },
 
@@ -896,8 +897,7 @@ var
         entity.acc[0] += ((route[0][0] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[0]);
         entity.acc[1] += ((route[0][1] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[1]);
 
-        norm(entity.acc);
-
+        mul(norm(entity.acc), (currentLevel + 10) / 10);
       }
       if (DEBUG) {
         entity.route = route;
