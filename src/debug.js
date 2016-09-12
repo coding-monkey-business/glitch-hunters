@@ -8,6 +8,14 @@
 */
 /* globals TILESIZE_X, map2DArray, drawField, drawWall */
 
+if (!window.Audio) {
+  Audio = function Audio() {
+    return {
+      'pause' : function pause()  {},
+      'play'  : function play()   {}
+    };
+  };
+}
 var
   DEBUG,
 

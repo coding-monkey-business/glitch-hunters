@@ -76,10 +76,18 @@ var
     '65' : VEC_UNIT[2], // a
     '87' : VEC_UNIT[3]  // w
   },
-  explosionSfx = jsfxr([3,,0.29,0.44,0.56,0.0915,,0.0771,,,,,,,,,,-0.36,1,,,,,0.57]),
-  teleportSfx = jsfxr([2,,0.3429,,0.58,0.3034,,0.1785,,0.2982,0.4754,,,,,,,,0.77,,,,,0.57]),
-  dropPickupSfx = jsfxr([0,,0.0884,0.3296,0.4575,0.4049,,,,,,0.2827,0.5488,,,,,,1,,,,,0.7]),
-  shootSfx = jsfxr([
+
+  createAudio = function createAudio(tones, audio) {
+    audio = new Audio();
+    audio.src = jsfxr(tones);
+    return audio;
+  },
+
+  evenExplosionSfx  = createAudio([3,,0.29,0.44,0.56,0.0915,,0.0771,,,,,,,,,,-0.36,1,,,,,0.57]),
+  oddExplosionSfx   = createAudio([3,0.05,0.51,0.67,0.25,0.05,,-0.3199,0.06,,,-0.72,0.56,,,0.42,0.6799,,1,-1,,,-1,0.5]),
+  teleportSfx       = createAudio([2,,0.3429,,0.58,0.3034,,0.1785,,0.2982,0.4754,,,,,,,,0.77,,,,,0.57]),
+  dropPickupSfx     = createAudio([0,,0.0884,0.3296,0.4575,0.4049,,,,,,0.2827,0.5488,,,,,,1,,,,,0.7]),
+  shootSfx          = createAudio([
     3,,0.0847,0.5386,0.31,0.3093,,0.02,-0.0035,-0.4905,-0.6864,0.8999,
     -0.3426,0.2932,-0.6135,-0.3311,-0.4232,,0.4883,0.0005,0.1197,0.749,
     0.1926,0.79
@@ -613,11 +621,6 @@ var
     audio.play();
   },
 
-  createAudio = function createAudio(sfx, audio) {
-    audio = new Audio();
-    audio.src = sfx;
-    return audio;
-  },
   /**
    * Creates a basic star [x, y, z]
    * @return {Array.<Number>}
@@ -936,7 +939,7 @@ var
     score += sourceEntity.dmg;
     if (targetEntity.hp && (targetEntity.hp -= sourceEntity.dmg) <= 0) {
       explode(targetEntity);
-      playSound(explosionSfx);
+      playSound(aFrames % 2 ? evenExplosionSfx : oddExplosionSfx);
       explosion = createEntity(targetEntity.pos.slice(), explosionCfg);
       setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
 
@@ -1361,12 +1364,6 @@ var
     main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
     abcImage        = images[1];
     tileset         = images[8];
-
-
-    shootSfx = createAudio(shootSfx);
-    dropPickupSfx = createAudio(dropPickupSfx);
-    teleportSfx = createAudio(teleportSfx);
-    explosionSfx = createAudio(explosionSfx);
 
     setScreen(screen);
     startLoop();

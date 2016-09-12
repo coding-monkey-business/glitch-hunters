@@ -26,12 +26,6 @@
 
 STAGE_STICKYNESS = 1;
 
-Audio = function Audio() {
-  return {
-    'pause' : function pause()  {},
-    'play'  : function play()   {}
-  };
-};
 /**
  * phantomjs does not have Math.sign ... yay
  */
