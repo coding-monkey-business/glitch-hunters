@@ -763,13 +763,21 @@ var
 
   },
 
-  teleport = function teleport(apply, code, finished) {
+  teleport = function teleport(apply, code, finished, tpPos) {
     if (!apply) {
       return;
     }
 
     if (finished) {
-      add(player.pos, mul(player.dir.slice(), 60));
+      tpPos     = mouseCoords.slice();
+      finished  = dist(tpPos, player.pos) < 60 && tile(getTilesIndex(tpPos));
+
+      while (!finished) {
+        sub(tpPos, player.dir);
+        finished = dist(tpPos, player.pos) < 60 && tile(getTilesIndex(tpPos));
+      }
+
+      set(player.pos, tpPos);
     } else if (!player.tpCD) {
       player.tpCD = 100;
       setEntityState(player, 'tping', 20, teleport.bind(0, 1, 0, 1));
