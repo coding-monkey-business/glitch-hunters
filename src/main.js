@@ -611,11 +611,10 @@ var
    * creates a new map with monsters
    */
   createLevel = function createLevel (/*difficulty*/) {
+    entities      = [];
     player        = createEntity(startingPositions, playerCfg);
     player.movs   = [];
     player.mov    = [0, 0];
-
-    entities          = [player];
 
     spawnPositions    = [];
     player.hp         = playerCfg.hp;
