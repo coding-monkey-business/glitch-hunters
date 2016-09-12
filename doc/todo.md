@@ -9,14 +9,13 @@
 + ~~sum action-applied forces(acc) together then normalize for player~~
 + ~~handle bullet collision w/ glichez~~
 + ~~player-locked camera movement causes invalid mouseCoords values~~
++ ~~healthbar~~
++ ~~there should be NPC mobs~~
+- mapGen should create trees around border
 - add shadow for flying (z+) entities (e.g. bullets)
-- shooting/clicking on glichez should aim their pos instead mouseCoords
 - explosion should knock back all glichez on position
-- there should be NPC mobs
-- healthbar for NPCs
 - 8-bit like music should be playing
 - 8-bit like effects should be playing
-- ~~healthbar should be displayed~~
 - tp should have a cooldown
 - tp should stay inside bounds
 
@@ -24,3 +23,7 @@
 - glitch power up possibilities
 - story / intro
 - level progress
+
+# Random extra ideas
+- glich portal (/ huge-glitch) as enemy, which spawns normal glichez
+- special fire (grenades or somethin) on RMB, which could create exploisions
