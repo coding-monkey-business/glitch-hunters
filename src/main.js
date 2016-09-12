@@ -513,11 +513,12 @@ var
    * Just some color jittering (for now)
    * @param {Number} type e.g. JITTER
    */
-  glitch = function glitch(canvas, ctx, obj, data, i) {
+  glitch = function glitch(canvas, ctx, obj, data, i, glitchiness) {
     ctx  = canvas.getCtx();
     obj  = ctx.getImageData(0, 0, canvas.width, canvas.height);
     data = obj.data;
     i    = data.length;
+    glitchiness = totalGlitchedTiles / totalTileCount;
 
     while (i--) {
       switch (i%4) {
@@ -525,11 +526,11 @@ var
           data[i] = data[i-4];
           break;
         }
-        // TODO
-        // case 0: {
-        //   data[i] = Math.round(data[i] * (frames%255)/255);
-        //   break;
-        // }
+        // TODO: unsure if this is a good idea
+        case 0: {
+          data[i] = data[i - (glitchiness * 4 | 0) * WIDTH];
+          break;
+        }
         case 2: {
           data[i] = data[i-8];
           break;
@@ -634,7 +635,7 @@ var
     player.movs   = [];
     player.mov    = [0, 0];
 
-    enemyCount = totalTileCount = totalGlitchedTiles = 0;
+    enemyCount        = totalTileCount = totalGlitchedTiles = 0;
     spawnPositions    = [];
     player.hp         = playerCfg.hp;
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
@@ -780,9 +781,21 @@ var
     event.preventDefault();
   },
 
-
+  //ugly copypaste ;/
   initIntro = function initIntro() {
-    inputHandler = setScreen.bind(0, 1);
+    inputHandler = function (event) {
+      if (APPLY_TYPES.indexOf(event.type) < 0) {
+        setScreen(1);
+      }
+    };
+  },
+
+  initGameInfo = function initGameInfo() {
+    inputHandler = function (event) {
+      if (APPLY_TYPES.indexOf(event.type) < 0) {
+        setScreen(2);
+      }
+    };
   },
 
   initGame = function initGame() {
@@ -801,7 +814,7 @@ var
   },
 
   gameOver = function gameOver() {
-    setScreen(2);
+    setScreen(3);
   },
 
   updateEntityDecision = function updateEntityDecision(entity, route) {
@@ -1033,6 +1046,16 @@ var
     glitch(buffer);
   },
 
+  updateGameInfo = function updateGameInfo() {
+    bctx.setTransform(1, 0, 0, 1, 0, 0);
+    bctx.fillRect(0, 0, WIDTH, HEIGHT);
+    text('GLITCHES HAVE TAKEN OVER!', 20, 20);
+    text('THEY LOOK LIKE THIS:', 20, 40);
+    //sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight
+    bctx.drawImage(monsterCfg.img, 0, 16, 16, 16, 200, 30, 32, 32);
+    text('SHOOT THEM!', 20, 60);
+  },
+
   updateGameOver = function updateGameOver() {
     bctx.save();
     bctx.setTransform(2, 0, 0, 2, 0, 0);
@@ -1055,7 +1078,7 @@ var
       frame   = frames;
       aFrame  = aFrames;
 
-      if (screen === 1) { // map should move/keep the player centered
+      if (screen === 2) { // map should move/keep the player centered
         offsetX = Math.max(
           Math.min(
             0,
@@ -1171,12 +1194,14 @@ var
     //
     updaters = [
       updateIntro,
+      updateGameInfo,
       updateGame,
       updateGameOver
     ];
 
     initializers = [
       initIntro,
+      initGameInfo,
       initGame,
       initGameOver
     ];

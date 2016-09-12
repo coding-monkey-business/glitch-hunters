@@ -232,7 +232,7 @@ describe('main', function () {
     window.onload = function () {
       origOnload();
       loaded = true;
-      setScreen(1);
+      setScreen(2);
       done();
     };
   });
