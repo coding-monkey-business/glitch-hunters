@@ -415,7 +415,7 @@ var
       bctx.fillRect(entity.pos[0] - 3, entity.pos[1] - 1, 5, 2); // center point of entity, comment back in for debugging & stuff
     }
 
-    if (entity === player) {
+    if (entity === player && player.state !== 'tping') {
       bctx.save();
       // a bit hacky :/
       bctx.translate(entity.pos[0] + 2, entity.pos[1] - 5);
