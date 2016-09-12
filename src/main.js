@@ -885,6 +885,7 @@ var
   },
 
   explode = function explode(entity) {
+    entity.z = 0;
     setEntityState(entity, 'exploding', 12, removeEntity.bind(0, entity));
   },
 
