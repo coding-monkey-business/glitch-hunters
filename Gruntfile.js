@@ -167,6 +167,7 @@ var
         'undef'       : true,
         'debug'       : true,
         'elision'     : true,
+        'loopfunc'    : true,
         'indent'      : 2
       },
 

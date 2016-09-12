@@ -1261,8 +1261,9 @@ var
     updateLoop();
   },
 
-  createImage = function createImage(src, image) {
+  createImage = function createImage(src, onload, image) {
     image     = new win.Image();
+    image.onload = onload;
     image.src = src;
 
     return image;
@@ -1308,133 +1309,136 @@ var
     return canvas;
   },
 
-  init = function init(cctx, cursorImg, len) {
+  init = function init(cctx, cursorImg, len, outstanding) {
     // Set images created by img.js
-    len = win.img.length;
+    len = outstanding =win.img.length;
 
     while (len--) {
-      images.unshift(createImage(win.img[len]));
+      // firefox still needs onload ... otherwise player & curser are invisible with an unprimed cache :/
+      images.unshift(createImage(win.img[len], function () {
+        if (!--outstanding) {
+          // Setup cursor.
+          cursorImg = images[2];
+          cursor    = createCanvas(32, 32);
+          cctx      = cursor.getCtx();
+
+          cctx.drawImage(cursorImg, 0, 0, 32, 32);
+          //
+          // Setup main canvas.
+          //
+          main    = createCanvas(STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
+          mctx    = main.getCtx();
+
+          document.body.style.cursor = main.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto'; // firefox has issues with a body style cursor?
+
+          doc.body.appendChild(main);
+
+          buffer  = createCanvas();
+          bctx    = buffer.getCtx();
+
+          //
+          // Define possible updaters.
+          //
+          updaters = [
+            updateIntro,
+            updateGameInfo,
+            updateGame,
+            updateGameOver
+          ];
+
+          initializers = [
+            initIntro,
+            initGameInfo,
+            initGame,
+            initGameOver
+          ];
+
+          explosionCfg = createEntityConfig(
+            images[3],
+            [['idling', 6]],
+            {
+              'type'     : EXPLOSION,
+              'size'     : 32,
+              'hp'       : Infinity,
+              'dmg'      : 2
+            }
+          );
+
+          monsterCfg = createEntityConfig(
+            images[4],
+            [
+              ['idling', 6],
+              ['moving', 6]
+            ],
+            {
+              'type'     : MONSTER,
+              'friction' : 0.5,
+              'hp'       : 20,
+              'dmg'      : 2
+            }
+          );
+
+          bulletCfg = createEntityConfig(
+            images[0],
+            [['exploding']],
+            {
+              'type'      : BULLET,
+              'friction'  : 1,
+              'rotating'  : 1,
+              'fragile'   : 1,
+              'offY'      : 8,
+              'dmg'       : 5
+            }
+          );
+
+
+          ammoCfg = createEntityConfig(
+            images[6],
+            [
+              ['idling', 1]
+            ],
+            {
+              'type'  : AMMO,
+              'amount': 10
+            }
+          );
+
+          antiGlitchKitCfg = createEntityConfig(
+            images[5],
+            [
+              ['idling', 1]
+            ],
+            {
+              'type'  : ANTI_GLITCH_KIT,
+              'amount': 20
+            }
+          );
+
+          playerCfg = createEntityConfig(
+            images[7],
+            [
+              ['idling', 6],
+              ['moving'],
+              ['tping', 6]
+            ],
+            {
+              'type' : PLAYER,
+              'hp'   : 100
+            }
+          );
+
+          playerCfg.img = createPlayerSprites(playerCfg);
+
+          win.onmousemove = setMouseCoords;
+          main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
+          abcImage        = images[1];
+          tileset         = images[9];
+
+          setScreen(screen);
+          startLoop();
+        }
+      }));
     }
-
-    // Setup cursor.
-    cursorImg = images[2];
-    cursor    = createCanvas(32, 32);
-    cctx      = cursor.getCtx();
-
-    cctx.drawImage(cursorImg, 0, 0, 32, 32);
-    //
-    // Setup main canvas.
-    //
-    main    = createCanvas(STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
-    mctx    = main.getCtx();
-
-    document.body.style.cursor = main.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto'; // firefox has issues with a body style cursor?
-
-    doc.body.appendChild(main);
-
-    buffer  = createCanvas();
-    bctx    = buffer.getCtx();
-
-    //
-    // Define possible updaters.
-    //
-    updaters = [
-      updateIntro,
-      updateGameInfo,
-      updateGame,
-      updateGameOver
-    ];
-
-    initializers = [
-      initIntro,
-      initGameInfo,
-      initGame,
-      initGameOver
-    ];
-
-    explosionCfg = createEntityConfig(
-      images[3],
-      [['idling', 6]],
-      {
-        'type'     : EXPLOSION,
-        'size'     : 32,
-        'hp'       : Infinity,
-        'dmg'      : 2
-      }
-    );
-
-    monsterCfg = createEntityConfig(
-      images[4],
-      [
-        ['idling', 6],
-        ['moving', 6]
-      ],
-      {
-        'type'     : MONSTER,
-        'friction' : 0.5,
-        'hp'       : 20,
-        'dmg'      : 2
-      }
-    );
-
-    bulletCfg = createEntityConfig(
-      images[0],
-      [['exploding']],
-      {
-        'type'      : BULLET,
-        'friction'  : 1,
-        'rotating'  : 1,
-        'fragile'   : 1,
-        'offY'      : 8,
-        'dmg'       : 5
-      }
-    );
-
-
-    ammoCfg = createEntityConfig(
-      images[6],
-      [
-        ['idling', 1]
-      ],
-      {
-        'type'  : AMMO,
-        'amount': 10
-      }
-    );
-
-    antiGlitchKitCfg = createEntityConfig(
-      images[5],
-      [
-        ['idling', 1]
-      ],
-      {
-        'type'  : ANTI_GLITCH_KIT,
-        'amount': 20
-      }
-    );
-
-    playerCfg = createEntityConfig(
-      images[7],
-      [
-        ['idling', 6],
-        ['moving'],
-        ['tping', 6]
-      ],
-      {
-        'type' : PLAYER,
-        'hp'   : 100
-      }
-    );
-
-    playerCfg.img = createPlayerSprites(playerCfg);
-
-    win.onmousemove = setMouseCoords;
-    main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
-    abcImage        = images[1];
-    tileset         = images[9];
-
-    setScreen(screen);
-    startLoop();
   };
 
 win.onload = init;
@@ -1456,91 +1460,92 @@ if (DEBUG) {
 
     debugInit = function debugInit() {
       origOnload();
+      // this is terrible ... but only debug ... so I guess we're fine
+      window.setTimeout(function () {
+        var
+          origRequestAnimationFrame = win.requestAnimationFrame,
 
-      var
-        origRequestAnimationFrame = win.requestAnimationFrame,
+          origOnkeyDown = win.onkeydown,
 
-        origOnkeyDown = win.onkeydown,
+          debugOnkeydown = function debugOnkeydown(event) {
+            var
+              input = getInput(event),
+              code  = input[0];
+            origOnkeyDown(event);
 
-        debugOnkeydown = function debugOnkeydown(event) {
-          var
-            input = getInput(event),
-            code  = input[0];
-
-          origOnkeyDown(event);
-
-          //
-          // Toggle debug with V
-          //
-          if (code === V) {
-            setDebug();
-          }
-
-          if (!DEBUG) {
-            return;
-          }
-
-          //
-          // By pushing the `esc` key, you can land in sort of debug
-          // mode for the whole updateLoop. The execution will step
-          // by pressing the `esc` again.
-          //
-          if (code === ESC || code === B) {
-            setDebug('break', true);
-
-            win.requestAnimationFrame = function () {};
-
-            updateLoop();
-          }
-
-          //
-          // Continue execution by pressing C
-          //
-          if (code === C) {
-            setDebug('break', false);
-
-            win.requestAnimationFrame = origRequestAnimationFrame;
-            win.requestAnimationFrame(updateLoop);
-          }
-
-          //
-          // Add a monster under the cursor.
-          //
-          if (code === X) {
-            createMonster(mouseCoords);
-          }
-
-          if (code === N) {
-            var explosion = createEntity(mouseCoords, explosionCfg);
-            setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
-          }
-
-          if (code === M) {
-            drawDebugMap();
-          }
-
-          if (code === G) {
-            gameOver();
-          }
-
-          if (code === K) {
-            entities.filter(function (entity) {
-              return entity.cfg.type === MONSTER;
-            }).forEach(function (entity) {
-              removeEntity(entity);
-            });
-          }
-
-          if (code === L) {
-            if (Math.random() < 0.5) {
-              createEntity(mouseCoords, ammoCfg);
-            } else {
-              createEntity(mouseCoords, antiGlitchKitCfg);
+            //
+            // Toggle debug with V
+            //
+            if (code === V) {
+              setDebug();
             }
-          }
-        };
 
-      win.onkeydown = debugOnkeydown;
+            if (!DEBUG) {
+              return;
+            }
+
+            //
+            // By pushing the `esc` key, you can land in sort of debug
+            // mode for the whole updateLoop. The execution will step
+            // by pressing the `esc` again.
+            //
+            if (code === ESC || code === B) {
+              setDebug('break', true);
+
+              win.requestAnimationFrame = function () {};
+
+              updateLoop();
+            }
+
+            //
+            // Continue execution by pressing C
+            //
+            if (code === C) {
+              setDebug('break', false);
+
+              win.requestAnimationFrame = origRequestAnimationFrame;
+              win.requestAnimationFrame(updateLoop);
+            }
+
+            //
+            // Add a monster under the cursor.
+            //
+            if (code === X) {
+              createMonster(mouseCoords);
+            }
+
+            if (code === N) {
+              var explosion = createEntity(mouseCoords, explosionCfg);
+              setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
+            }
+
+            if (code === M) {
+              drawDebugMap();
+            }
+
+            if (code === G) {
+              gameOver();
+            }
+
+            if (code === K) {
+              entities.filter(function (entity) {
+                return entity.cfg.type === MONSTER;
+              }).forEach(function (entity) {
+                removeEntity(entity);
+              });
+            }
+
+            if (code === L) {
+              if (Math.random() < 0.5) {
+                createEntity(mouseCoords, ammoCfg);
+              } else {
+                createEntity(mouseCoords, antiGlitchKitCfg);
+              }
+            }
+          };
+
+        win.onkeydown = debugOnkeydown;
+      }, 100);
     };
 
   win.onload = debugInit;
