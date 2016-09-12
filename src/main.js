@@ -76,6 +76,7 @@ var
     '65' : VEC_UNIT[2], // a
     '87' : VEC_UNIT[3]  // w
   },
+  teleportSfx = jsfxr([2,,0.3429,,0.58,0.3034,,0.1785,,0.2982,0.4754,,,,,,,,0.77,,,,,0.57]),
   dropPickupSfx = jsfxr([0,,0.0884,0.3296,0.4575,0.4049,,,,,,0.2827,0.5488,,,,,,1,,,,,0.7]),
   shootSfx = jsfxr([
     3,,0.0847,0.5386,0.31,0.3093,,0.02,-0.0035,-0.4905,-0.6864,0.8999,
@@ -785,6 +786,7 @@ var
     } else if (!player.tpCD) {
       player.tpCD = 100;
       setEntityState(player, 'tping', 20, teleport.bind(0, 1, 0, 1));
+      playSound(teleportSfx);
     }
   },
 
@@ -1360,6 +1362,10 @@ var
     audio = new Audio();
     audio.src = dropPickupSfx;
     dropPickupSfx = audio;
+
+    audio = new Audio();
+    audio.src = teleportSfx;
+    teleportSfx = audio;
 
     setScreen(screen);
     startLoop();
