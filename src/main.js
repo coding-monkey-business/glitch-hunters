@@ -96,6 +96,8 @@ var
 
   totalTileCount,
   totalGlitchedTiles = [],
+  totalShots,
+  totalHits,
   enemyCount,
   mctx,
   bctx,
@@ -688,6 +690,7 @@ var
     player.hp         = playerCfg.hp;
     currentAmmoAmount = DEFAULT_AMMO_AMOUNT;
     map2DArray        = mapGen(MAP_SIZE_X, MAP_SIZE_Y);
+    monsterCfg.hp     = 20 + currentLevel * 2;
 
     if (currentLevel) {
       tmp = [];
@@ -724,7 +727,7 @@ var
     updater = updaters[screen];
   },
 
-  removeEntity = function removeEntity(entity, drop, random) {
+  removeEntity = function removeEntity(entity, random) {
     remove(entities, entity);
     random = Math.random();
 
@@ -772,6 +775,7 @@ var
     playSound(shootSfx);
 
     currentAmmoAmount--;
+    totalShots++;
 
     bulletSpd     = mul(player.dir.slice(), 4);
     bullet        = createEntity(add(player.pos.slice(), bulletSpd), bulletCfg, bulletSpd);
@@ -820,8 +824,12 @@ var
     mouseCoords[1] = Math.floor((event.pageY - main.offsetTop)   / STAGE_SCALE) - offsetY;
   },
 
-  getCode = function getCode(event) {
-    return event.pageX ? SHOOT : event.keyCode || event.which;
+  getInput = function getInput(event) {
+    return [
+      event.pageX ? SHOOT : event.keyCode || event.which,
+      APPLY_TYPES.indexOf(event.type) !== -1,
+      event
+    ];
   },
 
   setCommand = function setCommand(event, apply, code, command) {
@@ -829,8 +837,9 @@ var
       setMouseCoords(event);
     }
 
-    apply   = APPLY_TYPES.indexOf(event.type) !== -1;
-    code    = getCode(event);
+    event   = getInput(event);
+    code    = event[0];
+    apply   = event[1];
     command = applied[code]^apply && commands[code];
 
     if (!command) {
@@ -841,23 +850,28 @@ var
 
     applied[code] = apply;
 
-    event.preventDefault();
+    event[2].preventDefault();
   },
 
-  screenSwitcher = function screenSwitcher(screenToSet, event) {
-    if (event.type === 'mousedown') {
+  screenSwitcher = function screenSwitcher(screenToSet, isMouse, event) {
+    event = getInput(event);
+
+    if (event[1] && (isMouse || event[0] === SPACE)) {
       setScreen(screenToSet);
     }
   },
 
-  //ugly copypaste ;/
   initIntro = function initIntro() {
-    inputHandler = screenSwitcher.bind(0, 1);
+    inputHandler = screenSwitcher.bind(0, 1, 1);
   },
 
   initGameInfo = function initGameInfo() {
+    if (!currentLevel) {
+      score = totalShots = totalHits = 0;
+    }
+
     currentLevel++;
-    inputHandler = screenSwitcher.bind(0, 2);
+    inputHandler = screenSwitcher.bind(0, 2, 0);
   },
 
   initGame = function initGame() {
@@ -869,7 +883,7 @@ var
   initGameOver = function initGameOver() {
     // Not much now... remove if later stays the same.
     currentLevel = 0;
-    initIntro();
+    inputHandler = screenSwitcher.bind(0, 1, 0);
   },
 
   onUserInput = function onUserInput(event) {
@@ -902,7 +916,7 @@ var
         entity.acc[0] += ((route[0][0] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[0]);
         entity.acc[1] += ((route[0][1] * TILESIZE_X + (TILESIZE_X>>1)) - entity.pos[1]);
 
-        mul(norm(entity.acc), (currentLevel + 10) / 10);
+        mul(norm(entity.acc), 1 + currentLevel / 8);
       }
       if (DEBUG) {
         entity.route = route;
@@ -971,6 +985,7 @@ var
     if (entity.cfg.type === MONSTER && Math.random() > 0.7 && frames % 5 === 0) {
       if (tile(tilesIndex) !== 3) {
         totalGlitchedTiles.push(tilesIndex);
+        score = Math.max(0, --score);
         tile(tilesIndex, 3);
       }
     }
@@ -983,6 +998,7 @@ var
 
         if (player !== otherEntity && entity !== otherEntity && otherEntity.hp > 0 && isClose(entity.pos, otherEntity)) {
           add(otherEntity.spd, mul(entity.dir.slice(), 10));
+          totalHits++;
 
           damage(otherEntity, entity);
 
@@ -1009,6 +1025,7 @@ var
         removeEntity(entity);
         entitiesLen = entity.cfg.amount;
         while (entitiesLen && totalGlitchedTiles.length) {
+          score++;
           tile(totalGlitchedTiles.pop(), 1);
           entitiesLen--;
         }
@@ -1104,7 +1121,9 @@ var
     bctx.save();
     bctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    text('GLITCHINESS:' + Math.floor(totalGlitchedTiles.length / totalTileCount * 100) + '%', 4, 4);
+    text('POINTS :' + score, 4, 4);
+    text('AIM    :' + (totalShots === 0 ? 100 : Math.floor(totalHits / totalShots * 100)) + '%', 4, 13);
+    text('GLITCH :' + Math.floor(totalGlitchedTiles.length / totalTileCount * 100) + '%', 4, 22);
 
     if (!player.tpCD) {
       text('BLINK - SPACE' , 200, 230);
@@ -1171,6 +1190,7 @@ var
   updateGameInfo = function updateGameInfo() {
     bctx.setTransform(1, 0, 0, 1, 0, 0);
     bctx.fillRect(0, 0, WIDTH, HEIGHT);
+
     if (currentLevel === 1) {
       text('GLITCHMONSTERS ARE TRYING', 10, 10);
       text('TO TAKE OVER THE WORLD!', 10, 20);
@@ -1183,19 +1203,30 @@ var
 
       text('PICK UP AMMO', 10, 90);
       bctx.drawImage(ammoCfg.img, 0, 0, 16, 16, 120, 86, 16, 16);
+
       text('AND ANTIGLITCH', 10, 100);
       bctx.drawImage(antiGlitchKitCfg.img, 0, 0, 16, 16, 140, 96, 16, 16);
 
     }
+
     text('LEVEL ' + currentLevel, (WIDTH >> 1) - 28, HEIGHT>>1);
-    glitch(buffer);
+
+    if (aFrames % 16 > 4) {
+      text('- PRESS SPACE -', (WIDTH >> 1) - 65, (HEIGHT>>1) + 22);
+    }
+
   },
 
   updateGameOver = function updateGameOver() {
     bctx.save();
     bctx.setTransform(2, 0, 0, 2, 0, 0);
     text('GAME OVER', 20, 20);
-    text('' + score + ' POINTS', 20, 30);
+    text(score + ' POINTS', 20, 30);
+
+    if (aFrames % 16 > 4) {
+      text('- PRESS SPACE -', 14, 60);
+    }
+
     bctx.restore();
     glitch(buffer);
   },
@@ -1433,7 +1464,8 @@ if (DEBUG) {
 
         debugOnkeydown = function debugOnkeydown(event) {
           var
-            code = getCode(event);
+            input = getInput(event),
+            code  = input[0];
 
           origOnkeyDown(event);
 
