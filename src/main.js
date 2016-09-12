@@ -630,13 +630,6 @@ var
     }
   },
 
-  getAccDirection = function getAccDirection(entity, acc, res) {
-    acc = entity.acc;
-    res = [Math.sign(acc[0]), Math.sign(acc[1])];
-
-    return !res[0] && !res[1] ? 0 : res;
-  },
-
   /**
    * resets entitiy list, spawnPositions, health and ammo
    * creates a new map with monsters
@@ -740,9 +733,6 @@ var
   },
 
   teleport = function teleport(apply, code, finished, direction, pos) {
-    direction = direction || getAccDirection(player);
-    apply     = direction && apply;
-
     if (!apply) {
       return;
     }
@@ -750,13 +740,10 @@ var
     pos = player.pos;
 
     if (finished) {
-      pos[0] += direction[0] * 40;
-      pos[1] += direction[1] * 40;
-    } else {
-      if (!player.tpCD) {
-        player.tpCD = 100;
-        setEntityState(player, 'tping', 12, teleport.bind(0, 1, 0, 1, direction));
-      }
+      add(player.pos, mul(player.dir.slice(), 60));
+    } else if (!player.tpCD) {
+      player.tpCD = 100;
+      setEntityState(player, 'tping', 12, teleport.bind(0, 1, 0, 1, direction));
     }
   },
 
@@ -801,7 +788,7 @@ var
     event.preventDefault();
   },
 
-  screenSwitcher = function screenSwitcher(screenToSet, event, code) {
+  screenSwitcher = function screenSwitcher(screenToSet, event) {
     if (event.type === 'mousedown') {
       setScreen(screenToSet);
     }
@@ -912,7 +899,7 @@ var
     }
   },
 
-  updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, tilesIndex, len) {
+  updateEntityPosition = function updateEntityPosition(entity, spd, pos, cfg, tilesIndex, entitiesLen, otherEntity) {
     pos   = entity.pos;
     spd   = entity.spd;
     cfg   = entity.cfg;
@@ -921,7 +908,7 @@ var
     updateEntitySpeedAxis(entity, 0);
     updateEntitySpeedAxis(entity, 1);
 
-    setEntityState(entity, getAccDirection(entity) ? 'moving' : 'idling');
+    setEntityState(entity, len(spd) ? 'moving' : 'idling');
     add(pos, spd);
     tilesIndex = getTilesIndex(pos);
 
@@ -932,14 +919,17 @@ var
       }
     }
 
-
     if (cfg.fragile) {
-      len = entities.length;
+      entitiesLen = entities.length;
 
-      while (len--) {
-        if (player !== entities[len] && entity !== entities[len] && entities[len].hp > 0 && isClose(entity.pos, entities[len])) {
-          add(entities[len].spd, mul(entity.dir.slice(), 10));
-          damage(entities[len], entity);
+      while (entitiesLen--) {
+        otherEntity = entities[entitiesLen];
+
+        if (player !== otherEntity && entity !== otherEntity && otherEntity.hp > 0 && isClose(entity.pos, otherEntity)) {
+          add(otherEntity.spd, mul(entity.dir.slice(), 10));
+
+          damage(otherEntity, entity);
+
           return explode(entity);
         }
       }

@@ -5,7 +5,6 @@
   drawPath,
   entities,
   field,
-  getAccDirection,
   getId,
   getTilesIndex,
   main,
@@ -296,25 +295,6 @@ describe('main', function () {
 
     xit('createRoom should create rooms', function () {
       // TODO
-    });
-  });
-
-  describe('.getAccDirection()', function () {
-    it('should return correct values', function () {
-
-      var
-        createEntity = function createEntity(x, y) {
-          return {
-            'acc' : [x, y]
-          };
-        };
-
-      expect(getAccDirection(createEntity(1, 2))).toEqual([1, 1]);
-      expect(getAccDirection(createEntity(-1, 2))).toEqual([-1, 1]);
-      expect(getAccDirection(createEntity(1, -200))).toEqual([1, -1]);
-      expect(getAccDirection(createEntity(0, -200))).toEqual([0, -1]);
-      expect(getAccDirection(createEntity(100, 0))).toEqual([1, 0]);
-      expect(getAccDirection(createEntity(0, 0))).toEqual(0);
     });
   });
 
