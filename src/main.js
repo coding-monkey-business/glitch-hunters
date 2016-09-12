@@ -743,7 +743,7 @@ var
       add(player.pos, mul(player.dir.slice(), 60));
     } else if (!player.tpCD) {
       player.tpCD = 100;
-      setEntityState(player, 'tping', 12, teleport.bind(0, 1, 0, 1, direction));
+      setEntityState(player, 'tping', 24, teleport.bind(0, 1, 0, 1, direction));
     }
   },
 
@@ -1274,7 +1274,7 @@ var
       [
         ['idling', 6],
         ['moving'],
-        ['tping']
+        ['tping', 6]
       ],
       {
         'type' : PLAYER,
