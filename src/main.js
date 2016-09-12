@@ -801,21 +801,19 @@ var
     event.preventDefault();
   },
 
+  screenSwitcher = function screenSwitcher(screenToSet, event, code) {
+    if (event.type === 'mousedown') {
+      setScreen(screenToSet);
+    }
+  },
+
   //ugly copypaste ;/
   initIntro = function initIntro() {
-    inputHandler = function (event) {
-      if (event.type === 'mousedown') {
-        setScreen(1);
-      }
-    };
+    inputHandler = screenSwitcher.bind(0, 1);
   },
 
   initGameInfo = function initGameInfo() {
-    inputHandler = function (event) {
-      if (event.type === 'mousedown') {
-        setScreen(2);
-      }
-    };
+    inputHandler = screenSwitcher.bind(0, 2);
   },
 
   initGame = function initGame() {
