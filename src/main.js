@@ -933,10 +933,8 @@ var
    * @param  {Object} sourceEntity not sure if needed
    */
   damage = function damage (targetEntity, sourceEntity, explosion) {
-    // if (targetEntity !== player) {
-    //   return;
-    // }
     score += sourceEntity.dmg;
+
     if (targetEntity.hp && (targetEntity.hp -= sourceEntity.dmg) <= 0) {
       explode(targetEntity);
       playSound(aFrames % 2 ? evenExplosionSfx : oddExplosionSfx);
@@ -945,8 +943,8 @@ var
 
       // make the canvas wobble:
       shakeDuration = Math.min(shakeDuration + 20, 70);
-
     }
+
     if (player.hp <= 0) {
       gameOver();
     }
@@ -1002,7 +1000,7 @@ var
     }
 
     // entitites damaging the player:
-    if (entity !== player && entity.hp > 0 && dist(player.pos, entity.pos) < 8) {
+    if (entity !== player && entity.hp > 0 && dist(player.pos, entity.pos) < 8 && player.state !== 'tping') {
       damage(player, entity);
       player.say = ['OW!', 60];
     }
