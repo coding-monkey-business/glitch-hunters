@@ -59,7 +59,7 @@ var
   mouseCoords       = [],
   spawnPositions    = [],
   startingPositions = [MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2],
-
+  healthBarColors   = ['#ac3232','#df7126', '#99e550'],
   DIRECTIONS = {
     '68' : VEC_UNIT[0], // d
     '83' : VEC_UNIT[1], // s
@@ -359,7 +359,7 @@ var
     bctx.stroke();
   },
 
-  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg)  {
+  drawEntity = function drawEntity(entity, stepFrame, cfg, frame, frameCfg, healthFraction)  {
     cfg       = entity.cfg;
     frameCfg  = cfg[entity.state] || cfg.idling;
     frame     = entity.frame % frameCfg.frames;
@@ -387,7 +387,7 @@ var
     );
     cfg.ctx.restore();
 
-
+    // moving 'entity.pos[0] - cfg.hSize' to a var increases zip size :(
     bctx.drawImage(
       cfg.cnv,
       entity.pos[0] - cfg.hSize,                      // dx
@@ -410,6 +410,15 @@ var
       );
       bctx.restore();
     }
+
+    if (!entity.cnt && entity.hp) {
+      bctx.fillStyle = '#000';
+      bctx.fillRect(entity.pos[0] - cfg.hSize | 0, entity.pos[1] | 0, 16, 3);
+      healthFraction = entity.hp / cfg.hp;
+      bctx.fillStyle = healthBarColors[healthFraction * 2 | 0];
+      bctx.fillRect(entity.pos[0] - cfg.hSize + 1 | 0, entity.pos[1] + 1 | 0, 14 * healthFraction, 1);
+    }
+
     if (DEBUG) {
       drawEntityDebugInfo(entity);
     }
