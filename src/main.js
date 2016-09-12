@@ -76,6 +76,7 @@ var
     '65' : VEC_UNIT[2], // a
     '87' : VEC_UNIT[3]  // w
   },
+  explosionSfx = jsfxr([3,,0.29,0.44,0.56,0.0915,,0.0771,,,,,,,,,,-0.36,1,,,,,0.57]),
   teleportSfx = jsfxr([2,,0.3429,,0.58,0.3034,,0.1785,,0.2982,0.4754,,,,,,,,0.77,,,,,0.57]),
   dropPickupSfx = jsfxr([0,,0.0884,0.3296,0.4575,0.4049,,,,,,0.2827,0.5488,,,,,,1,,,,,0.7]),
   shootSfx = jsfxr([
@@ -612,6 +613,11 @@ var
     audio.play();
   },
 
+  createAudio = function createAudio(sfx, audio) {
+    audio = new Audio();
+    audio.src = sfx;
+    return audio;
+  },
   /**
    * Creates a basic star [x, y, z]
    * @return {Array.<Number>}
@@ -930,6 +936,7 @@ var
     score += sourceEntity.dmg;
     if (targetEntity.hp && (targetEntity.hp -= sourceEntity.dmg) <= 0) {
       explode(targetEntity);
+      playSound(explosionSfx);
       explosion = createEntity(targetEntity.pos.slice(), explosionCfg);
       setEntityState(explosion, 'exploding', 24, removeEntity.bind(0, explosion));
 
@@ -1355,17 +1362,11 @@ var
     abcImage        = images[1];
     tileset         = images[8];
 
-    audio = new Audio();
-    audio.src = shootSfx;
-    shootSfx = audio;
 
-    audio = new Audio();
-    audio.src = dropPickupSfx;
-    dropPickupSfx = audio;
-
-    audio = new Audio();
-    audio.src = teleportSfx;
-    teleportSfx = audio;
+    shootSfx = createAudio(shootSfx);
+    dropPickupSfx = createAudio(dropPickupSfx);
+    teleportSfx = createAudio(teleportSfx);
+    explosionSfx = createAudio(explosionSfx);
 
     setScreen(screen);
     startLoop();
