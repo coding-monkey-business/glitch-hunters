@@ -136,6 +136,7 @@ var
     if (!tweetTag) {
       tweetTag            = doc.createElement('a');
       tweetTag.innerHTML  = 'Tweet my record: ' + topScore;
+      tweetTag.target     = '_blank';
       d.insertBefore(tweetTag, d.firstChild);
     }
 
