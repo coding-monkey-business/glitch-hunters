@@ -135,7 +135,7 @@ var
 
     if (!tweetTag) {
       tweetTag            = doc.createElement('a');
-      tweetTag.innerHTML  = 'Tweet my record (' + topScore + ')!';
+      tweetTag.innerHTML  = 'Tweet my record: ' + topScore;
       d.insertBefore(tweetTag, d.firstChild);
     }
 
