@@ -5,8 +5,8 @@
 Glitchmonsters are trying to take over the world!
 Shoot them!
 
-![screenshot-1](screenshots/160x160.png)
-![screenshot-2](screenshots/400x250.png)
+![screenshot-1](screenshots/160x160.png)  
+![screenshot-2](screenshots/400x250.png)  
 
 ## setup
 ```bash
