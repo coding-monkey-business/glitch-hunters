@@ -144,7 +144,7 @@ var
       'https://www.twitter.com/intent/tweet?text=' +
       encodeURIComponent(
         'Yay, ' + topScore + ' points in glitch hunters! ' +
-        '#glitchHunters #js13kgames by @cmonkeybusiness [@flo-, @p1100i] http://js13kgames.com/entries/glitch-hunters/'
+        '#glitchHunters #js13kgames by @cmonkeybusiness [@fl0ptimus_prime, @p1100i] http://js13kgames.com/entries/glitch-hunters/'
       );
   },
 
