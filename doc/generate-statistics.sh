@@ -29,7 +29,10 @@ function grunt_size_in_git_commit()
   fi
 
   echo "DIRTY - git is dirty, DON'T STOP ME NOW!"
-  git checkout $1 src Gruntfile.js
+  rm build/*
+  rm img/*
+  rm src/*
+  git checkout $1 src img Gruntfile.js
 
   # Some sed magic to get right info into the .csv file
   gruntline=$(./grunt build:advzip | tail -n 3 | head -n 1)
@@ -45,9 +48,9 @@ function grunt_size_in_git_commit()
 
   last_size=$size
 
-  git reset -q HEAD src Gruntfile.js
-  git checkout src Gruntfile.js
-  git clean -qf src
+  git reset -q HEAD img src Gruntfile.js
+  git checkout img src Gruntfile.js
+  git clean -qf img src
 
   echo "CLEAN - git is clean again for 1 sec, CTRL-C me now to stop w/ clean repo state."
 

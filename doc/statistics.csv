@@ -1,4 +1,14 @@
 COMMIT  |     SIZE |     DIFF | MESSAGE                                                      | OUTPUT
+fe69597 |    12241 |        0 | removes unnecessary index.html                               | # dist/index.html.zip <=== 11.95 KB (12241 B)
+3eac5a4 |    12241 |        0 | add index.html so there will be github pages                 | # dist/index.html.zip <=== 11.95 KB (12241 B)
+51c11e2 |    12241 |       10 | tweet: fixes link for fl0! \o_                               | # dist/index.html.zip <=== 11.95 KB (12241 B)
+830bd4a |    12231 |        0 | doc: updates readme                                          | # dist/index.html.zip <=== 11.94 KB (12231 B)
+f31f7d2 |    12231 |        0 | doc: readme now has newlines between screenshots             | # dist/index.html.zip <=== 11.94 KB (12231 B)
+f429e2b |    12231 |        0 | doc: readme update                                           | # dist/index.html.zip <=== 11.94 KB (12231 B)
+e2ce054 |    12231 |       19 | tweet: shorten it to fit entry link                          | # dist/index.html.zip <=== 11.94 KB (12231 B)
+b440b31 |    12212 |        0 | remove size reporting from default build job                 | # dist/index.html.zip <=== 11.93 KB (12212 B)
+6d05a4a |    12212 |       10 | balance: cap ammo at 100                                     | # dist/index.html.zip <=== 11.93 KB (12212 B)
+b34c092 |    12202 |        0 | doc: updates statistics.csv                                  | # dist/index.html.zip <=== 11.92 KB (12202 B)
 9d0a7bf |    12202 |        1 | tweet: open in new page                                      | # dist/index.html.zip <=== 11.92 KB (12202 B)
 03f07d7 |    12201 |       -1 | tweet: modify msg                                            | # dist/index.html.zip <=== 11.92 KB (12201 B)
 3c34285 |    12202 |       20 | reload super slowly                                          | # dist/index.html.zip <=== 11.92 KB (12202 B)
@@ -141,46 +151,46 @@ ce99910 |     3560 |        0 | improves asset:stringify file commenting        
 1a8a767 |     3538 |      193 | adds basic tp effect                                         | # dist/index.html.zip <=== 3.46 KB (3538 B)
 b8739f5 |     3345 |        0 | use strict for jshint unused                                 | # dist/index.html.zip <=== 3.27 KB (3345 B)
 21944a1 |     3345 |        0 | updates img.js by new generated commnet                      | # dist/index.html.zip <=== 3.27 KB (3345 B)
-9b42e14 |     3345 |     -109 | removes asset regeneration from build process                | # dist/index.html.zip <=== 3.27 KB (3345 B)
-9c9356c |     3454 |       33 | prepares procedural spritesheet definition for entities      | # dist/index.html.zip <=== 3.37 KB (3454 B)
-09638e0 |     3421 |       -1 | whoops wrong params for createCanvas call                    | # dist/index.html.zip <=== 3.34 KB (3421 B)
-b55de83 |     3422 |        2 | minor fn move                                                | # dist/index.html.zip <=== 3.34 KB (3422 B)
-f5706ac |     3420 |       -5 | moar params for .createCanvas                                | # dist/index.html.zip <=== 3.34 KB (3420 B)
-3a80827 |     3425 |       47 | adds asset config to entity creation                         | # dist/index.html.zip <=== 3.34 KB (3425 B)
-cc2f907 |     3378 |        0 | Merge branch 'array-based-position'                          | # dist/index.html.zip <=== 3.3 KB (3378 B)
-4dfcfd8 |     3378 |      104 | adds .moving state to entities                               | # dist/index.html.zip <=== 3.3 KB (3378 B)
-6e4bf3e |     3274 |       33 | use moar animation frames - in progress ...                  | # dist/index.html.zip <=== 3.2 KB (3274 B)
-4194675 |     3241 |       15 | preventDefault for binded action keys                        | # dist/index.html.zip <=== 3.17 KB (3241 B)
-305dcba |     3226 |       -5 | removes Math shortcuts                                       | # dist/index.html.zip <=== 3.15 KB (3226 B)
-3713b8e |     3231 |        0 | Merge branch 'teleport'                                      | # dist/index.html.zip <=== 3.16 KB (3231 B)
-8a55f22 |     3231 |       70 | improves command handling + teleport                         | # dist/index.html.zip <=== 3.16 KB (3231 B)
-5d5b1d4 |     3161 |       -9 | minor clean after merge                                      | # dist/index.html.zip <=== 3.09 KB (3161 B)
-cdbf9d4 |     3170 |       52 | connected updateEntity with the map data structure           | # dist/index.html.zip <=== 3.1 KB (3170 B)
-be9752e |     3118 |       -3 | improved map & added new player sprite                       | # dist/index.html.zip <=== 3.04 KB (3118 B)
-9a476db |     3121 |       16 | basic map rendering with simple tiles                        | # dist/index.html.zip <=== 3.05 KB (3121 B)
-2e26383 |     3105 |      373 | map gen prototype                                            | # dist/index.html.zip <=== 3.03 KB (3105 B)
-f407044 |     2732 |        0 | Merge branch 'movement'                                      | # dist/index.html.zip <=== 2.67 KB (2732 B)
-ef3708c |     2732 |       13 | improves movement handling                                   | # dist/index.html.zip <=== 2.67 KB (2732 B)
-f34f4d4 |     2719 |        0 | grunt: simplify autoremoved script part                      | # dist/index.html.zip <=== 2.66 KB (2719 B)
-fa97c7d |     2719 |        0 | modifies package description                                 | # dist/index.html.zip <=== 2.66 KB (2719 B)
-fec5b29 |     2719 |        0 | removes unnecessary mock markup from test                    | # dist/index.html.zip <=== 2.66 KB (2719 B)
-c5b653b |     2719 |        0 | regenerate current img.js                                    | # dist/index.html.zip <=== 2.66 KB (2719 B)
-0e1fe30 |     2719 |        0 | removed es6                                                  | # dist/index.html.zip <=== 2.66 KB (2719 B)
-9da06a3 |     2719 |        0 | fixed build, me sorry                                        | # dist/index.html.zip <=== 2.66 KB (2719 B)
-2fc4cfd |     2719 |      -84 | saves some more bytes                                        | # dist/index.html.zip <=== 2.66 KB (2719 B)
-e6f6c1b |     2803 |      -90 | decrease built size                                          | # dist/index.html.zip <=== 2.74 KB (2803 B)
-272703a |     2893 |      -84 | removes unnecessary shortcuts                                | # dist/index.html.zip <=== 2.83 KB (2893 B)
-18e367f |     2977 |          | added MAX_SIZE to report:size grunt task                     | # dist/index.html.zip <=== 2.91 KB (2977 B)
-12f8610 |  2.91 KB |          | adds shortcut for some useful methods on string/array        | # dist/index.html.zip <=== 2.91 KB
-c99960a |  2.83 KB |          | minor renames                                                | # dist/index.html.zip <=== 2.83 KB
-93dd016 |  2.83 KB |          | movement: 0.0.1 movement logic                               | # dist/index.html.zip <=== 2.83 KB
-2b4ec8d |   2.6 KB |          | generalizes image creation                                   | # dist/index.html.zip <=== 2.6 KB
-b55cd03 |  2.58 KB |          | grunt: adds strict config to grunt test                      | # dist/index.html.zip <=== 2.58 KB
-eab4f27 |  2.58 KB |          | adds comment to generated file                               | # dist/index.html.zip <=== 2.58 KB
-495bfa9 |  2.58 KB |          | animation time_unit modification                             | # dist/index.html.zip <=== 2.58 KB
-354aff4 |  2.58 KB |          | Merge branch 'asset-stringify'                               | # dist/index.html.zip <=== 2.58 KB
-9c78554 |  2.58 KB |          | img: image stringify                                         | # dist/index.html.zip <=== 2.58 KB
-d634ad7 |  2.58 KB |          | grunt: adds pngmin / asset-stringify tasks                   | # dist/index.html.zip <=== 2.58 KB
+9b42e14 |     3345 |        0 | removes asset regeneration from build process                | # dist/index.html.zip <=== 3.27 KB (3345 B)
+9c9356c |     3345 |       33 | prepares procedural spritesheet definition for entities      | # dist/index.html.zip <=== 3.27 KB (3345 B)
+09638e0 |     3312 |        0 | whoops wrong params for createCanvas call                    | # dist/index.html.zip <=== 3.23 KB (3312 B)
+b55de83 |     3312 |        1 | minor fn move                                                | # dist/index.html.zip <=== 3.23 KB (3312 B)
+f5706ac |     3311 |       -6 | moar params for .createCanvas                                | # dist/index.html.zip <=== 3.23 KB (3311 B)
+3a80827 |     3317 |       47 | adds asset config to entity creation                         | # dist/index.html.zip <=== 3.24 KB (3317 B)
+cc2f907 |     3270 |        0 | Merge branch 'array-based-position'                          | # dist/index.html.zip <=== 3.19 KB (3270 B)
+4dfcfd8 |     3270 |      105 | adds .moving state to entities                               | # dist/index.html.zip <=== 3.19 KB (3270 B)
+6e4bf3e |     3165 |       29 | use moar animation frames - in progress ...                  | # dist/index.html.zip <=== 3.09 KB (3165 B)
+4194675 |     3136 |       18 | preventDefault for binded action keys                        | # dist/index.html.zip <=== 3.06 KB (3136 B)
+305dcba |     3118 |       -9 | removes Math shortcuts                                       | # dist/index.html.zip <=== 3.04 KB (3118 B)
+3713b8e |     3127 |        0 | Merge branch 'teleport'                                      | # dist/index.html.zip <=== 3.05 KB (3127 B)
+8a55f22 |     3127 |       75 | improves command handling + teleport                         | # dist/index.html.zip <=== 3.05 KB (3127 B)
+5d5b1d4 |     3052 |      -10 | minor clean after merge                                      | # dist/index.html.zip <=== 2.98 KB (3052 B)
+cdbf9d4 |     3062 |       54 | connected updateEntity with the map data structure           | # dist/index.html.zip <=== 2.99 KB (3062 B)
+be9752e |     3008 |      399 | improved map & added new player sprite                       | # dist/index.html.zip <=== 2.94 KB (3008 B)
+9a476db |     2609 |      341 | basic map rendering with simple tiles                        | # dist/index.html.zip <=== 2.55 KB (2609 B)
+2e26383 |     2268 |      370 | map gen prototype                                            | # dist/index.html.zip <=== 2.21 KB (2268 B)
+f407044 |     1898 |        0 | Merge branch 'movement'                                      | # dist/index.html.zip <=== 1.85 KB (1898 B)
+ef3708c |     1898 |       16 | improves movement handling                                   | # dist/index.html.zip <=== 1.85 KB (1898 B)
+f34f4d4 |     1882 |        0 | grunt: simplify autoremoved script part                      | # dist/index.html.zip <=== 1.84 KB (1882 B)
+fa97c7d |     1882 |        0 | modifies package description                                 | # dist/index.html.zip <=== 1.84 KB (1882 B)
+fec5b29 |     1882 |        0 | removes unnecessary mock markup from test                    | # dist/index.html.zip <=== 1.84 KB (1882 B)
+c5b653b |     1882 |        0 | regenerate current img.js                                    | # dist/index.html.zip <=== 1.84 KB (1882 B)
+0e1fe30 |     1882 |        0 | removed es6                                                  | # dist/index.html.zip <=== 1.84 KB (1882 B)
+9da06a3 |     1882 |        0 | fixed build, me sorry                                        | # dist/index.html.zip <=== 1.84 KB (1882 B)
+2fc4cfd |     1882 |      -22 | saves some more bytes                                        | # dist/index.html.zip <=== 1.84 KB (1882 B)
+e6f6c1b |     1904 |      -87 | decrease built size                                          | # dist/index.html.zip <=== 1.86 KB (1904 B)
+272703a |     1991 |      -79 | removes unnecessary shortcuts                                | # dist/index.html.zip <=== 1.94 KB (1991 B)
+18e367f |     2070 |          | added MAX_SIZE to report:size grunt task                     | # dist/index.html.zip <=== 2.02 KB (2070 B)
+12f8610 |  2.02 KB |          | adds shortcut for some useful methods on string/array        | # dist/index.html.zip <=== 2.02 KB
+c99960a |  1.94 KB |          | minor renames                                                | # dist/index.html.zip <=== 1.94 KB
+93dd016 |  1.96 KB |          | movement: 0.0.1 movement logic                               | # dist/index.html.zip <=== 1.96 KB
+2b4ec8d |  1.72 KB |          | generalizes image creation                                   | # dist/index.html.zip <=== 1.72 KB
+b55cd03 |   1.7 KB |          | grunt: adds strict config to grunt test                      | # dist/index.html.zip <=== 1.7 KB
+eab4f27 |   1.7 KB |          | adds comment to generated file                               | # dist/index.html.zip <=== 1.7 KB
+495bfa9 |   1.7 KB |          | animation time_unit modification                             | # dist/index.html.zip <=== 1.7 KB
+354aff4 |  1.69 KB |          | Merge branch 'asset-stringify'                               | # dist/index.html.zip <=== 1.69 KB
+9c78554 |  1.69 KB |          | img: image stringify                                         | # dist/index.html.zip <=== 1.69 KB
+d634ad7 |   1.5 KB |          | grunt: adds pngmin / asset-stringify tasks                   | # dist/index.html.zip <=== 1.5 KB
 1222f6d |  1.76 KB |          | grunt: renames fn                                            | # dist/index.html.zip <=== 1.76 KB
 a7978d4 |  1.76 KB |          | Merge branch 'build-fix'                                     | # dist/index.html.zip <=== 1.76 KB
 4e80d33 |  1.76 KB |          | fixes build about file size reporting                        | # dist/index.html.zip <=== 1.76 KB
@@ -196,4 +206,4 @@ efe8701 |          |        - | Merge branch 'gitlab-yaml'                      
 0fb989a |          |        - | build: adds gitlab ci integration                            | dist/index.html
 a863878 |          |        - | fixes build                                                  | dist/index.html
 dd4b453 |          |        - | Added basic title screen                                     | dist/index.html
-1b234b3 |          |          | init: adds skeleton based on js13k-prep                      | dist/index.html
+1b234b3 |          |          | init: adds skeleton based on js13k-prep                      | Warning: Path must be a string. Received undefined Use --fo
