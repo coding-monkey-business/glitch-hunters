@@ -5,6 +5,11 @@
 Glitchmonsters are trying to take over the world!
 Shoot them!
 
+## Try it on
+- [js13kGames game page][js13k-glitch-hunters]
+- [github.io game page][github.io]
+
+## Screenshots
 ![screenshot-1](screenshots/160x160.png)  
 ![screenshot-2](screenshots/400x250.png)  
 
@@ -26,3 +31,5 @@ npm install   # install dependencies
 
 [js13k-image]: http://js13kgames.com/img/js13kgames.png
 [js13k-url]: http://js13kgames.com
+[js13k-glitch-hunters]: http://js13kgames.com/entries/glitch-hunters
+[github.io]: https://coding-monkey-business.github.io/glitch-hunters
