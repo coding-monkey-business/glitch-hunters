@@ -1315,135 +1315,139 @@ var
     return canvas;
   },
 
-  init = function init(cctx, cursorImg, len, outstanding) {
+  onImagesLoaded = function onImagesLoaded(cctx, cursorImg) {
+    // Setup cursor.
+    cursorImg = images[2];
+    cursor    = createCanvas(32, 32);
+    cctx      = cursor.getCtx();
+
+    cctx.drawImage(cursorImg, 0, 0, 32, 32);
+    //
+    // Setup main canvas.
+    //
+    main    = createCanvas(STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
+    mctx    = main.getCtx();
+
+    document.body.style.cursor = main.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto'; // firefox has issues with a body style cursor?
+
+    main.style.marginLeft = margins[0];
+    main.style.marginTop  = margins[1];
+    doc.body.appendChild(main);
+
+    buffer  = createCanvas();
+    bctx    = buffer.getCtx();
+
+    //
+    // Define possible updaters.
+    //
+    updaters = [
+      updateIntro,
+      updateGameInfo,
+      updateGame,
+      updateGameOver
+    ];
+
+    initializers = [
+      initIntro,
+      initGameInfo,
+      initGame,
+      initGameOver
+    ];
+
+    explosionCfg = createEntityConfig(
+      images[3],
+      [['idling', 6]],
+      {
+        'type'     : EXPLOSION,
+        'size'     : 32,
+        'hp'       : Infinity,
+        'dmg'      : 2
+      }
+    );
+
+    monsterCfg = createEntityConfig(
+      images[4],
+      [
+        ['idling', 6],
+        ['moving', 6]
+      ],
+      {
+        'type'     : MONSTER,
+        'friction' : 0.5,
+        'hp'       : 20,
+        'dmg'      : 2
+      }
+    );
+
+    bulletCfg = createEntityConfig(
+      images[0],
+      [['exploding']],
+      {
+        'type'      : BULLET,
+        'friction'  : 1,
+        'rotating'  : 1,
+        'fragile'   : 1,
+        'offY'      : 8,
+        'dmg'       : 5
+      }
+    );
+
+
+    ammoCfg = createEntityConfig(
+      images[6],
+      [
+        ['idling', 1]
+      ],
+      {
+        'type'  : AMMO,
+        'amount': 10
+      }
+    );
+
+    antiGlitchKitCfg = createEntityConfig(
+      images[5],
+      [
+        ['idling', 1]
+      ],
+      {
+        'type'  : ANTI_GLITCH_KIT,
+        'amount': 20
+      }
+    );
+
+    playerCfg = createEntityConfig(
+      images[7],
+      [
+        ['idling', 6],
+        ['moving'],
+        ['tping', 6]
+      ],
+      {
+        'type' : PLAYER,
+        'hp'   : 100
+      }
+    );
+
+    playerCfg.img = createPlayerSprites(playerCfg);
+
+    win.onmousemove = setMouseCoords;
+    main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
+    abcImage        = images[1];
+    tileset         = images[9];
+
+    setScreen(screen);
+    startLoop();
+  },
+
+  init = function init(len, outstanding) {
     // Set images created by img.js
-    len = outstanding =win.img.length;
+    len = outstanding = win.img.length;
 
     while (len--) {
       // firefox still needs onload ... otherwise player & curser are invisible with an unprimed cache :/
       images.unshift(createImage(win.img[len], function () {
         if (!--outstanding) {
-          // Setup cursor.
-          cursorImg = images[2];
-          cursor    = createCanvas(32, 32);
-          cctx      = cursor.getCtx();
-
-          cctx.drawImage(cursorImg, 0, 0, 32, 32);
-          //
-          // Setup main canvas.
-          //
-          main    = createCanvas(STAGE_SCALE * WIDTH, STAGE_SCALE * HEIGHT);
-          mctx    = main.getCtx();
-
-          document.body.style.cursor = main.style.cursor = 'url("' + cursor.toDataURL() + '") 16 16, auto'; // firefox has issues with a body style cursor?
-
-          main.style.marginLeft = margins[0];
-          main.style.marginTop  = margins[1];
-          doc.body.appendChild(main);
-
-          buffer  = createCanvas();
-          bctx    = buffer.getCtx();
-
-          //
-          // Define possible updaters.
-          //
-          updaters = [
-            updateIntro,
-            updateGameInfo,
-            updateGame,
-            updateGameOver
-          ];
-
-          initializers = [
-            initIntro,
-            initGameInfo,
-            initGame,
-            initGameOver
-          ];
-
-          explosionCfg = createEntityConfig(
-            images[3],
-            [['idling', 6]],
-            {
-              'type'     : EXPLOSION,
-              'size'     : 32,
-              'hp'       : Infinity,
-              'dmg'      : 2
-            }
-          );
-
-          monsterCfg = createEntityConfig(
-            images[4],
-            [
-              ['idling', 6],
-              ['moving', 6]
-            ],
-            {
-              'type'     : MONSTER,
-              'friction' : 0.5,
-              'hp'       : 20,
-              'dmg'      : 2
-            }
-          );
-
-          bulletCfg = createEntityConfig(
-            images[0],
-            [['exploding']],
-            {
-              'type'      : BULLET,
-              'friction'  : 1,
-              'rotating'  : 1,
-              'fragile'   : 1,
-              'offY'      : 8,
-              'dmg'       : 5
-            }
-          );
-
-
-          ammoCfg = createEntityConfig(
-            images[6],
-            [
-              ['idling', 1]
-            ],
-            {
-              'type'  : AMMO,
-              'amount': 10
-            }
-          );
-
-          antiGlitchKitCfg = createEntityConfig(
-            images[5],
-            [
-              ['idling', 1]
-            ],
-            {
-              'type'  : ANTI_GLITCH_KIT,
-              'amount': 20
-            }
-          );
-
-          playerCfg = createEntityConfig(
-            images[7],
-            [
-              ['idling', 6],
-              ['moving'],
-              ['tping', 6]
-            ],
-            {
-              'type' : PLAYER,
-              'hp'   : 100
-            }
-          );
-
-          playerCfg.img = createPlayerSprites(playerCfg);
-
-          win.onmousemove = setMouseCoords;
-          main.onmouseup  = main.onmousedown = win.onkeydown = win.onkeyup = onUserInput;
-          abcImage        = images[1];
-          tileset         = images[9];
-
-          setScreen(screen);
-          startLoop();
+          onImagesLoaded();
         }
       }));
     }
@@ -1568,10 +1572,9 @@ if (DEBUG) {
 var
   reset = function reset() {
     updaters  = [];
-    images    = [];
     applied   = {};
     commands  = {};
     entities  = [];
 
-    init();
+    onImagesLoaded();
   };

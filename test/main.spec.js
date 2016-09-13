@@ -210,6 +210,12 @@ describe('main', function () {
         while (times--) {
           updater();
         }
+      },
+
+      restart = function restart() {
+        reset();
+        setMapWithoutWalls();
+        setScreen(2);
       };
 
 
@@ -220,10 +226,11 @@ describe('main', function () {
     this.createKeyUpEvent     = createKeyEvent.bind(0, true);
     this.createKeyDownEvent   = createKeyEvent.bind(0, false);
 
-    reset();
-    setMapWithoutWalls();
+
 
     if (loaded) {
+      restart();
+
       done();
       return;
     }
@@ -237,8 +244,9 @@ describe('main', function () {
 
     window.onload = function () {
       origOnload();
+      restart();
+
       loaded = true;
-      setScreen(2);
       done();
     };
   });
