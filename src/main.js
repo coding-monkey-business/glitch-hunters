@@ -143,8 +143,8 @@ var
     tweetTag.href =
       'https://www.twitter.com/intent/tweet?text=' +
       encodeURIComponent(
-        'I\'ve made ' + topScore + ' points in glitch hunters! ' +
-        '#glitchHunters #js13kgames by @cmonkeybusiness [@flo-, @p1100i]'
+        'Yay, ' + topScore + ' points in glitch hunters! ' +
+        '#glitchHunters #js13kgames by @cmonkeybusiness [@flo-, @p1100i] http://js13kgames.com/entries/glitch-hunters/'
       );
   },
 
