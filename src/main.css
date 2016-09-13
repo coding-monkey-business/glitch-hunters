@@ -12,7 +12,7 @@ canvas {
 }
 
 a {
-	display: inherit;
+	display: inline-block;
 	color: #fff;
 	font: 12px monospace;
 	outline: none;

@@ -142,18 +142,19 @@ var
     'jshint' : {
       'options': {
         'globals'     : {
-          'describe'  : true,
-          'fdescribe' : true,
-          'xdescribe' : true,
-          'beforeEach': true,
-          'it'        : true,
-          'fit'       : true,
-          'xit'       : true,
-          'expect'    : true,
-          'jasmine'   : true,
-          'window'    : true,
-          'Audio'     : true,
-          'document'  : true
+          'describe'      : true,
+          'fdescribe'     : true,
+          'xdescribe'     : true,
+          'beforeEach'    : true,
+          'it'            : true,
+          'fit'           : true,
+          'xit'           : true,
+          'expect'        : true,
+          'jasmine'       : true,
+          'window'        : true,
+          'Audio'         : true,
+          'localStorage'  : true,
+          'document'      : true
         },
         'curly'       : true,
         'eqeqeq'      : true,

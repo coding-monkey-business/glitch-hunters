@@ -71,6 +71,7 @@ var
   spawnPositions    = [],
   startingPositions = [MAP_SIZE_X * TILESIZE_X / 2, MAP_SIZE_Y * TILESIZE_X / 2],
   healthBarColors   = ['#ac3232','#df7126', '#99e550'],
+  topScore          = localStorage.getItem('topScore'),
 
   DIRECTIONS = {
     '68' : VEC_UNIT[0], // d
@@ -119,9 +120,31 @@ var
   abcImage,
   map2DArray,
   inputHandler,
+  tweetTag,
 
   getId = function getId() {
     return ++id;
+  },
+
+  writeTopScore = function writeTopScore(d) {
+    if (!topScore) {
+      return;
+    }
+
+    d = doc.getElementById('l');
+
+    if (!tweetTag) {
+      tweetTag            = doc.createElement('a');
+      tweetTag.innerHTML  = 'Tweet my record!';
+      d.insertBefore(tweetTag, d.firstChild);
+    }
+
+    tweetTag.href =
+      'https://www.twitter.com/intent/tweet?text=' +
+      encodeURIComponent(
+        'I\'ve made ' + topScore + ' points in glitch hunters! ' +
+        '#glitchHunters #js13kgames by @cmonkeybusiness [@flo-, @p1100i]'
+      );
   },
 
   roundToZero = function roundToZero(value) {
@@ -260,7 +283,7 @@ var
    * @param {Number} color base color (or base tile) of this room
    * @param {Number} iterationsLeft safety feature to prevent stack issues
    */
-  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, totalIterations, circular, sizeX, sizeY, i, j, xi, yj, x, y, m, n, totalRoomTiles) {
+  createRoom = function createRoom(arr, xc, yc, w, h, color, iterationsLeft, totalIterations, circular, sizeX, sizeY, i, j, xi, x, y, m, n, totalRoomTiles) {
     if (w * h > 3) { // single tile wide rooms are stupid
       totalRoomTiles = i = 0;
 
@@ -329,13 +352,12 @@ var
             sizeX,
             sizeY
           );
-          // if (xi * yj > 1) {
+
           try {
             drawPath(arr, xc, yc, m, n);
           } catch (e) {
             console.warn(e);
           }
-          // }
         }
       }
     }
@@ -889,6 +911,13 @@ var
   initGameOver = function initGameOver() {
     // Not much now... remove if later stays the same.
     currentLevel = 0;
+
+    if (score > topScore) {
+      topScore = score;
+      localStorage.setItem('topScore', topScore);
+      writeTopScore();
+    }
+
     inputHandler = screenSwitcher.bind(0, 1, 0);
   },
 
@@ -1232,8 +1261,8 @@ var
     if (aFrames % 16 > 4) {
       text('- PRESS SPACE -', 14, 60);
     }
-
     bctx.restore();
+
     glitch(buffer);
   },
   /**
@@ -1332,6 +1361,7 @@ var
 
     main.style.marginLeft = margins[0];
     main.style.marginTop  = margins[1];
+
     doc.body.appendChild(main);
 
     buffer  = createCanvas();
@@ -1392,7 +1422,6 @@ var
       }
     );
 
-
     ammoCfg = createEntityConfig(
       images[6],
       [
@@ -1435,6 +1464,7 @@ var
     abcImage        = images[1];
     tileset         = images[9];
 
+    writeTopScore();
     setScreen(screen);
     startLoop();
   },
