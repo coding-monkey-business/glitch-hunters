@@ -315,8 +315,7 @@ var
 
     'build:compress' : [
       'build',
-      'compress',
-      'info'
+      'compress'
     ],
 
     'build:zopfli' : [
