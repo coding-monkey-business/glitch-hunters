@@ -135,7 +135,7 @@ var
 
     if (!tweetTag) {
       tweetTag            = doc.createElement('a');
-      tweetTag.innerHTML  = 'Tweet my record!';
+      tweetTag.innerHTML  = 'Tweet my record (' + topScore + ')!';
       d.insertBefore(tweetTag, d.firstChild);
     }
 
@@ -1149,6 +1149,7 @@ var
   },
 
   updatePlayerSpecifics = function updatePlayerSpecifics() {
+    currentAmmoAmount += (!frames % 300) ? 1 : 0;
     player.tpCD = Math.max(0, --player.tpCD);
   },
 
