@@ -1053,6 +1053,7 @@ var
       if (entity.cfg.type === AMMO) {
         removeEntity(entity);
         currentAmmoAmount += entity.cfg.amount;
+        currentAmmoAmount = Math.min(100, currentAmmoAmount);
         playSound(dropPickupSfx);
         player.say = [['GROOVY', 'OH YEAH!'][Math.random() * 2 | 0], 60];
       }
@@ -1151,6 +1152,8 @@ var
 
   updatePlayerSpecifics = function updatePlayerSpecifics() {
     currentAmmoAmount += (!frames % 300) ? 1 : 0;
+    currentAmmoAmount = Math.min(100, currentAmmoAmount);
+
     player.tpCD = Math.max(0, --player.tpCD);
   },
 
